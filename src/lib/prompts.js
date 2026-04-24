@@ -1,19 +1,18 @@
 /**
- * AI Image Generation Prompts — Professional Quality
- * Inspired by top marketplace card designs (Aidentika-level quality)
+ * AI Image Generation Prompts — Research-Based Professional Quality
+ * Sources: Midjourney community, Gemini prompt guides, e-commerce AI best practices
+ * Structure: [Subject] + [Surface/Placement] + [Lighting/Camera] + [Style] + [Negatives]
  */
 
-const SYSTEM_PREFIX = `You are a world-class e-commerce product card designer. You create stunning, conversion-optimized product listing images that look like they were made by a professional design agency. Your designs feature:
-- Clean, modern typography (Montserrat, Gilroy, SF Pro style — geometric sans-serif)
-- Professional color palettes with harmonious accent colors
-- Balanced compositions with clear visual hierarchy
-- High-end product photography aesthetics
-- Pixel-perfect alignment and spacing
-IMPORTANT: Generate the COMPLETE card as a single polished image. The product photo provided is your reference — enhance it, place it beautifully, but keep the product recognizable.`;
+// Negative prompt block to avoid common AI artifacts
+const NEGATIVES = `Avoid: distorted shapes, extra limbs, warped text, blurry edges, low resolution, amateur look, clip art, cartoon style, watermarks, AI artifacts, gibberish text.`;
+
+// Professional photography technical block
+const PHOTO_TECH = `photorealistic, ultra-sharp focus, 8k resolution, high-end commercial photography, professional color grading`;
 
 function fmt(name, bullets) {
   let s = `Product: "${name}"`;
-  if (bullets?.length) s += `\nKey selling points:\n${bullets.map(b => `• ${b}`).join('\n')}`;
+  if (bullets?.length) s += `\nKey features:\n${bullets.map(b => `• ${b}`).join('\n')}`;
   return s;
 }
 
@@ -22,72 +21,261 @@ function fmt(name, bullets) {
 // ========================================
 
 export const MARKETPLACE_PROMPTS = {
+
   'white-studio': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a premium STUDIO PRODUCT PHOTO for Amazon/eBay main listing image.\n${p}\n\nStrict requirements:\n- Pure white (#FFFFFF) background — Amazon-compliant\n- Product fills 85% of frame, centered\n- Professional studio lighting: soft key light from upper-left, subtle fill light\n- Natural contact shadow on surface (not floating)\n- Crisp focus, commercial photography quality\n- NO text, NO graphics, NO badges — pure product only\n- Square 1:1 format, high-resolution look\n- The product should look premium, aspirational, and trustworthy`
-      : `${SYSTEM_PREFIX}\n\nСоздай СТУДИЙНОЕ ФОТО товара для главного изображения маркетплейса.\n${p}\n\nТребования:\n- Чисто белый фон (#FFFFFF)\n- Товар занимает 85% кадра, по центру\n- Профессиональный студийный свет: мягкий ключевой свет сверху-слева\n- Естественная контактная тень (не парящий)\n- Резкий фокус, качество коммерческой фотографии\n- БЕЗ текста, БЕЗ графики — только товар\n- Квадрат 1:1`;
+      ? `Professional commercial product photography of the product from the reference image. ${p}
+
+The product is centered on a pure white seamless background (RGB 255,255,255). Soft, diffused studio lighting from upper-left with subtle fill light. Natural contact shadow beneath the product. The product fills 85% of the frame. Shot with an 85mm lens at f/8, ${PHOTO_TECH}. Minimalist composition, e-commerce ready, Amazon main image compliant. No text, no props, no graphics, no reflections — only the product.
+
+${NEGATIVES}`
+      : `Профессиональная коммерческая фотография товара с референсного изображения. ${p}
+
+Товар по центру на чисто белом бесшовном фоне (RGB 255,255,255). Мягкий студийный свет сверху-слева с заполняющим светом. Естественная контактная тень. Товар занимает 85% кадра. Объектив 85мм, ${PHOTO_TECH}. Минималистичная композиция для маркетплейса. Без текста, без реквизита, без графики — только товар.
+
+${NEGATIVES}`;
   },
 
   'minimal-clean': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a MINIMALIST PRODUCT CARD for e-commerce marketplace.\n${p}\n\nDesign specifications:\n- Background: clean white or very light gray (#F8F9FA)\n- Layout: product photo takes upper 55% of card, text block in lower 45%\n- Product: centered, with subtle soft shadow, professional lighting\n- Title: bold geometric sans-serif font (like Montserrat Bold), dark charcoal (#1A1A2E), 28-36pt\n- Bullet points: each on its own line with a rounded green checkmark icon (✓) in a small circle, medium weight font, gray (#4A4A5A)\n- Spacing: generous whitespace between elements, 24px margins\n- Optional: thin accent line or subtle divider between product and text\n- Vertical 3:4 ratio\n- Feel: Apple-store clean, Muji-inspired minimalism`
-      : `${SYSTEM_PREFIX}\n\nСоздай МИНИМАЛИСТИЧНУЮ КАРТОЧКУ ТОВАРА для маркетплейса (Wildberries/Ozon).\n${p}\n\nСпецификация дизайна:\n- Фон: чистый белый или очень светлый серый (#F8F9FA)\n- Компоновка: фото товара в верхних 55%, текстовый блок в нижних 45%\n- Товар: по центру, мягкая тень, профессиональное освещение\n- Заголовок: жирный геометрический шрифт без засечек (стиль Montserrat Bold), тёмный (#1A1A2E), крупный\n- Буллеты: каждый на своей строке, зелёная галочка в круге (✓), средний вес шрифта, серый (#4A4A5A)\n- Отступы: щедрые, 24px по краям\n- Тонкая акцентная линия между фото и текстом\n- Вертикальный формат 3:4\n- Текст на РУССКОМ языке\n- Ощущение: чистота Apple Store, минимализм Muji`;
+      ? `Create a professional minimalist product listing card based on the product from the reference image. ${p}
+
+COMPOSITION: Vertical 3:4 ratio product card. Upper 55%: the product displayed on a clean white (#F8F9FA) background, centered, with professional studio lighting and a subtle soft drop shadow. Lower 45%: text information block.
+
+TYPOGRAPHY: Product name in bold geometric sans-serif font (Montserrat/Inter style), dark charcoal (#1A1A2E), large prominent size. Below: feature bullet points, each with a green circle checkmark icon, medium-weight font in muted gray (#4A4A5A). Generous spacing between elements (24px margins). A thin hairline divider between the photo zone and text zone.
+
+STYLE: Apple Store product page aesthetic. Ultra-clean, generous white space, premium minimalism. ${PHOTO_TECH}.
+
+${NEGATIVES}`
+      : `Создай профессиональную минималистичную карточку товара для маркетплейса на основе товара с референсного изображения. ${p}
+
+КОМПОЗИЦИЯ: Вертикальная карточка 3:4. Верхние 55%: товар на чистом белом фоне (#F8F9FA), по центру, профессиональный студийный свет, мягкая тень. Нижние 45%: текстовый блок.
+
+ТИПОГРАФИКА: Название товара — жирный геометрический шрифт без засечек (стиль Montserrat/Inter), тёмный (#1A1A2E), крупный размер. Ниже: буллеты преимуществ, каждый с зелёной круглой галочкой, средний вес шрифта, серый (#4A4A5A). Щедрые отступы (24px). Тонкая разделительная линия между фото и текстом.
+
+СТИЛЬ: Эстетика Apple Store. Ультра-чистый, много воздуха, премиальный минимализм. ${PHOTO_TECH}. Текст на РУССКОМ языке.
+
+${NEGATIVES}`;
   },
 
   'gradient-modern': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a VIBRANT GRADIENT PRODUCT CARD for marketplace.\n${p}\n\nDesign specifications:\n- Background: rich gradient from deep violet (#4A00E0) through electric purple (#8E2DE2) to magenta (#FF006E), diagonal 135°\n- Product: centered in upper-middle area (50% of card), floating with dramatic drop shadow and subtle glow reflection\n- Remove or clean up product background — product should float on the gradient\n- Title: bold uppercase white text, geometric sans-serif (Montserrat/Gilroy style), large size with subtle text shadow\n- Bullets: white text with custom golden arrow icons (▸), each bullet in a semi-transparent white frosted glass pill/badge (glassmorphism style, 10% white opacity with blur)\n- Optional: subtle geometric shapes or light streaks in background for depth\n- Vertical 3:4 ratio\n- Feel: premium tech brand, Samsung/OnePlus product launch style`
-      : `${SYSTEM_PREFIX}\n\nСоздай ЯРКУЮ ГРАДИЕНТНУЮ КАРТОЧКУ ТОВАРА для маркетплейса.\n${p}\n\nСпецификация дизайна:\n- Фон: насыщенный градиент от глубокого фиолетового (#4A00E0) через электрик-пурпурный (#8E2DE2) к маджента (#FF006E), диагональ 135°\n- Товар: по центру в верхней-средней части (50% карточки), парит с драматичной тенью и лёгким отражением-свечением\n- Убрать фон товара — он должен парить на градиенте\n- Заголовок: жирный белый КАПС, геометрический шрифт (стиль Montserrat/Gilroy), крупный, с лёгкой тенью текста\n- Буллеты: белый текст с золотыми стрелками (▸), каждый буллет в полупрозрачной матовой стеклянной плашке (glassmorphism, 10% белый с блюром)\n- Лёгкие геометрические фигуры или световые лучи на фоне для глубины\n- Вертикальный 3:4\n- Текст на РУССКОМ\n- Ощущение: премиум-техно бренд, стиль презентации Samsung/OnePlus`;
+      ? `Create a vibrant, high-impact product card for marketplace listing, based on the product from the reference image. ${p}
+
+BACKGROUND: Rich diagonal gradient from deep violet (#4A00E0) through electric purple (#8E2DE2) to magenta-pink (#FF006E), 135 degrees. Add subtle decorative light streaks and geometric shapes for depth.
+
+PRODUCT: The product is cleanly cut out from its original background and placed floating in the center-upper area (50% of the card). Add a dramatic drop shadow below and a subtle reflection/glow underneath. Professional studio-quality product rendering.
+
+TITLE: Large bold uppercase text at the top — white color, geometric sans-serif (Montserrat Black style), with subtle text shadow for readability.
+
+FEATURES: 3-4 bullet points in the lower area. Each bullet is placed inside a semi-transparent frosted glass pill shape (glassmorphism effect: white at 12% opacity with backdrop blur). Text is white with a small golden/amber arrow icon (▸) before each line.
+
+STYLE: Premium tech brand launch aesthetic, Samsung Galaxy Unpacked / OnePlus reveal style. Vertical 3:4 ratio. ${PHOTO_TECH}.
+
+${NEGATIVES}`
+      : `Создай яркую, эффектную карточку товара для маркетплейса на основе товара с референсного изображения. ${p}
+
+ФОН: Насыщенный диагональный градиент от глубокого фиолетового (#4A00E0) через электрик-пурпурный (#8E2DE2) к маджента-розовому (#FF006E), 135 градусов. Добавь лёгкие декоративные световые лучи и геометрические фигуры для глубины.
+
+ТОВАР: Товар чисто вырезан из оригинального фона и парит в центре-верхней части (50% карточки). Драматичная тень снизу и лёгкое отражение/свечение. Профессиональная студийная обработка.
+
+ЗАГОЛОВОК: Крупный жирный текст ЗАГЛАВНЫМИ сверху — белый цвет, геометрический шрифт без засечек (стиль Montserrat Black), с лёгкой текстовой тенью.
+
+ПРЕИМУЩЕСТВА: 3-4 буллета в нижней части. Каждый буллет в полупрозрачной матовой стеклянной плашке (glassmorphism эффект: белый 12% прозрачность с блюром фона). Текст белый, перед каждой строкой маленькая золотая/янтарная стрелка (▸).
+
+СТИЛЬ: Эстетика презентации Samsung Galaxy / OnePlus. Вертикальный формат 3:4. ${PHOTO_TECH}. Текст на РУССКОМ языке.
+
+${NEGATIVES}`;
   },
 
   'dark-premium': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a LUXURY DARK PREMIUM product card.\n${p}\n\nDesign:\n- Background: deep dark gradient from #0A0A1A to #1A1A2E, with subtle radial glow behind product in warm gold (#D4AF37, 5% opacity)\n- Product: center, dramatic rim lighting effect, slight golden glow outline\n- Title: elegant champagne/gold (#D4AF37) text, thin uppercase with wide letter-spacing, serif or elegant sans-serif\n- Bullets: gold diamond icons (◆), cream white text (#F0E6D2), spaced elegantly\n- Badge: "PREMIUM" in top-right, gold border pill with thin gold text\n- Subtle gold dust particles or bokeh in background\n- Vertical 3:4\n- Feel: luxury brand — Chanel, Tom Ford, premium watches aesthetic`
-      : `${SYSTEM_PREFIX}\n\nСоздай ЛЮКСОВУЮ ТЁМНУЮ ПРЕМИУМ карточку товара.\n${p}\n\nДизайн:\n- Фон: глубокий тёмный градиент от #0A0A1A к #1A1A2E, лёгкое радиальное свечение за товаром в тёплом золоте (#D4AF37, 5% прозрачность)\n- Товар: по центру, драматичный контровой свет, лёгкий золотой контур-свечение\n- Заголовок: элегантный шампань/золотой (#D4AF37) текст, тонкий КАПС с широким letter-spacing\n- Буллеты: золотые ромбы (◆), кремово-белый текст (#F0E6D2)\n- Бейдж: "PREMIUM" справа сверху, золотая рамка с тонким золотым текстом\n- Лёгкие золотые частицы или боке на фоне\n- Вертикальный 3:4, текст на РУССКОМ\n- Ощущение: люкс-бренд — Chanel, Tom Ford`;
+      ? `Create a luxury premium product card. Based on the product from the reference image. ${p}
+
+BACKGROUND: Deep dark gradient from near-black (#0A0A1A) to dark navy (#1A1A2E). Subtle warm radial glow behind the product in champagne gold (#D4AF37 at 5% opacity). Fine gold dust particles or bokeh scattered in the background.
+
+PRODUCT: Centered with dramatic rim lighting effect highlighting product edges. Slight golden glow outline around the product silhouette. Placed on a subtle reflective dark surface.
+
+TITLE: Elegant champagne gold (#D4AF37) text. Thin uppercase letters with wide letter-spacing (tracking 200%). Serif or elegant sans-serif typeface.
+
+FEATURES: Gold diamond icons (◆) followed by cream-white text (#F0E6D2). Elegant spacing. Small "PREMIUM" badge in top-right corner: thin gold border pill with small gold text.
+
+STYLE: Luxury brand campaign — Chanel, Tom Ford, premium watches aesthetic. Vertical 3:4 ratio. ${PHOTO_TECH}, dramatic cinematic lighting.
+
+${NEGATIVES}`
+      : `Создай люксовую премиальную карточку товара. На основе товара с референсного изображения. ${p}
+
+ФОН: Глубокий тёмный градиент от почти чёрного (#0A0A1A) к тёмному navy (#1A1A2E). Лёгкое тёплое радиальное свечение за товаром в шампань-золоте (#D4AF37 при 5% прозрачности). Мелкие золотые частицы или боке на фоне.
+
+ТОВАР: По центру, драматичный контровой свет подчёркивает края. Лёгкий золотой контур-свечение. На тёмной отражающей поверхности.
+
+ЗАГОЛОВОК: Элегантный шампань-золотой (#D4AF37) текст. Тонкие заглавные буквы с широким letter-spacing. Шрифт с засечками или элегантный без засечек.
+
+ПРЕИМУЩЕСТВА: Золотые ромбы (◆), кремово-белый текст (#F0E6D2). Бейдж "PREMIUM" в правом верхнем углу: тонкая золотая pill-рамка.
+
+СТИЛЬ: Люксовый бренд — Chanel, Tom Ford. Вертикальный 3:4. ${PHOTO_TECH}, кинематографический свет. Текст на РУССКОМ.
+
+${NEGATIVES}`;
   },
 
   'neon-vibrant': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a CYBERPUNK NEON product card.\n${p}\n\nDesign:\n- Background: very dark (#050510) with subtle grid pattern, neon glow accents\n- Product: center, with cyan (#00F5FF) neon outline glow effect around edges\n- Title: electric cyan (#00F5FF) bold text with neon glow/bloom effect\n- Bullets: magenta (#FF00FF) lightning bolt icons, white text with subtle glow\n- Decorative: neon lines, circuit patterns, hexagonal grid elements\n- Color palette: cyan, magenta, electric purple accents on dark\n- Vertical 3:4\n- Feel: gaming peripherals, tech gadgets, Razer/Cyberpunk 2077 aesthetic`
-      : `${SYSTEM_PREFIX}\n\nСоздай КИБЕР-НЕОН карточку товара.\n${p}\n\nДизайн:\n- Фон: очень тёмный (#050510) с лёгкой сеткой, неоновые акценты\n- Товар: по центру, голубой (#00F5FF) неоновый контур-свечение по краям\n- Заголовок: электрик-голубой (#00F5FF) жирный текст с неоновым bloom-эффектом\n- Буллеты: маджента (#FF00FF) иконки-молнии, белый текст с лёгким свечением\n- Декор: неоновые линии, паттерны схем, гексагональная сетка\n- Вертикальный 3:4, текст на РУССКОМ\n- Ощущение: гейминг, Razer, Cyberpunk 2077`;
+      ? `Create a cyberpunk neon product card. Based on the product from the reference image. ${p}
+
+BACKGROUND: Very dark (#050510) with subtle hexagonal grid pattern. Neon glow accents in cyan and magenta.
+
+PRODUCT: Centered, with a bright cyan (#00F5FF) neon outline glow effect tracing the product edges. Neon light reflections on the product surface.
+
+TITLE: Electric cyan (#00F5FF) bold text with neon bloom/glow effect. Futuristic sans-serif typeface.
+
+FEATURES: Magenta (#FF00FF) lightning bolt icons. White text with subtle cyan glow. Circuit board trace line decorations connecting features to the product.
+
+STYLE: Gaming/tech — Razer, Cyberpunk 2077, TRON aesthetic. Neon lines, data streams, hexagonal elements. Vertical 3:4. ${PHOTO_TECH}.
+
+${NEGATIVES}`
+      : `Создай кибер-неон карточку товара. На основе товара с референсного изображения. ${p}
+
+ФОН: Очень тёмный (#050510) с лёгким гексагональным паттерном. Неоновые акценты — циан и маджента.
+
+ТОВАР: По центру, яркий голубой (#00F5FF) неоновый контур-свечение по краям товара. Неоновые отражения на поверхности товара.
+
+ЗАГОЛОВОК: Электрик-голубой (#00F5FF) жирный текст с неоновым bloom-эффектом. Футуристичный шрифт.
+
+ПРЕИМУЩЕСТВА: Маджента (#FF00FF) иконки-молнии. Белый текст с лёгким голубым свечением. Линии как на печатных платах.
+
+СТИЛЬ: Гейминг/тех — Razer, Cyberpunk 2077, TRON. Вертикальный 3:4. ${PHOTO_TECH}. Текст на РУССКОМ.
+
+${NEGATIVES}`;
   },
 
   'nature-organic': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate an ECO/ORGANIC product card.\n${p}\n\nDesign:\n- Background: warm natural palette — cream (#FFF8F0) with watercolor-style botanical illustrations (eucalyptus leaves, herbs) as subtle decorative border\n- Product: center, natural lighting, on a light wooden or linen textured surface\n- Title: earthy forest green (#2D5016) text, rounded friendly sans-serif font\n- Bullets: leaf/plant icons (🌿) in sage green, warm brown text (#5D4E37)\n- Badge: "ECO" or "ORGANIC" in top-left, sage green rounded badge with leaf icon\n- Subtle paper/kraft texture overlay\n- Vertical 3:4\n- Feel: Whole Foods, organic cosmetics, farm-to-table aesthetic`
-      : `${SYSTEM_PREFIX}\n\nСоздай ЭКО/ОРГАНИК карточку товара.\n${p}\n\nДизайн:\n- Фон: тёплая натуральная палитра — крем (#FFF8F0) с акварельными ботаническими иллюстрациями (эвкалипт, травы) как декоративная рамка\n- Товар: по центру, естественный свет, на светлой деревянной или льняной текстуре\n- Заголовок: лесной зелёный (#2D5016), округлый дружелюбный шрифт\n- Буллеты: иконки листьев (🌿) в шалфейном зелёном, тёплый коричневый текст (#5D4E37)\n- Бейдж: "ЭКО" слева сверху, зелёный округлый бейдж с листиком\n- Лёгкая текстура крафт-бумаги\n- Вертикальный 3:4, текст на РУССКОМ\n- Ощущение: органическая косметика, фермерский стиль`;
+      ? `Create an eco-organic product card. Based on the product from the reference image. ${p}
+
+BACKGROUND: Warm cream (#FFF8F0) with watercolor-style botanical illustrations (eucalyptus branches, herbs, leaves) as a subtle decorative border. Light kraft paper texture overlay.
+
+PRODUCT: Centered on a light natural wooden or linen textured surface. Natural soft daylight, as if near a window. Warm tones.
+
+TITLE: Earthy forest green (#2D5016) text, rounded friendly sans-serif typeface (like Nunito or Quicksand).
+
+FEATURES: Sage green leaf/plant icons (🌿). Warm brown text (#5D4E37). "ECO" or "ORGANIC" rounded badge in top-left corner in sage green.
+
+STYLE: Whole Foods, organic cosmetics, farm-to-table. Vertical 3:4. ${PHOTO_TECH}, warm natural color palette.
+
+${NEGATIVES}`
+      : `Создай эко-органик карточку товара. На основе товара с референсного изображения. ${p}
+
+ФОН: Тёплый крем (#FFF8F0) с акварельными ботаническими иллюстрациями (эвкалипт, травы, листья) как декоративная рамка. Лёгкая текстура крафт-бумаги.
+
+ТОВАР: По центру на светлой деревянной или льняной текстуре. Мягкий естественный дневной свет, как у окна.
+
+ЗАГОЛОВОК: Лесной зелёный (#2D5016), округлый дружелюбный шрифт (стиль Nunito).
+
+ПРЕИМУЩЕСТВА: Шалфейно-зелёные иконки листьев (🌿). Тёплый коричневый текст (#5D4E37). Бейдж "ЭКО" слева сверху в шалфейном зелёном.
+
+СТИЛЬ: Органическая косметика, фермерский стиль. Вертикальный 3:4. ${PHOTO_TECH}. Текст на РУССКОМ.
+
+${NEGATIVES}`;
   },
 
   'lifestyle-context': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a LIFESTYLE product photo showing this product in real-life use.\n${p}\n\nDesign:\n- Show product naturally placed in an appropriate environment (home interior, kitchen, bathroom, office, outdoors — choose the most fitting)\n- Warm, inviting natural lighting (golden hour feel)\n- Shallow depth of field — product sharp, background softly blurred\n- Complementary props that enhance the scene without distracting\n- Minimal text: small elegant product name in corner, thin weight\n- Editorial/magazine photography quality\n- Vertical 3:4 or square 1:1\n- Feel: West Elm catalog, Pinterest-worthy, aspirational lifestyle`
-      : `${SYSTEM_PREFIX}\n\nСоздай LIFESTYLE фото товара в реальном контексте использования.\n${p}\n\nДизайн:\n- Товар естественно размещён в подходящей среде (дом, кухня, ванная, офис — выбери наиболее подходящее)\n- Тёплое, уютное естественное освещение (golden hour)\n- Малая глубина резкости — товар резкий, фон мягко размыт\n- Дополнительные предметы, усиливающие сцену\n- Минимум текста: маленькое элегантное название в углу\n- Качество журнальной фотографии\n- Вертикальный 3:4`;
+      ? `Create a lifestyle editorial product photograph showing the product from the reference image in a real-life context. ${p}
+
+Place the product naturally in an appropriate environment (modern home interior, kitchen counter, bathroom shelf, office desk, or outdoors — choose the most fitting for this product type). Warm, inviting natural lighting — golden hour window light feel. Shallow depth of field (f/2.8) — product is tack-sharp, background is softly blurred bokeh. Complementary styled props that enhance the scene. Minimal text: only a small elegant product name in the bottom corner, thin weight sans-serif.
+
+${PHOTO_TECH}, 85mm lens, editorial magazine quality. West Elm catalog, Pinterest-worthy, aspirational lifestyle. Vertical 3:4.
+
+${NEGATIVES}`
+      : `Создай lifestyle-фото товара с референсного изображения в реальном контексте использования. ${p}
+
+Размести товар естественно в подходящей среде (современный интерьер, кухня, ванная, офис — выбери подходящее). Тёплое естественное освещение — golden hour из окна. Малая глубина резкости (f/2.8) — товар резкий, фон мягко размыт. Дополнительные стилизованные предметы. Минимум текста — маленькое название в углу.
+
+${PHOTO_TECH}, объектив 85мм, качество журнальной съёмки. Вертикальный 3:4.
+
+${NEGATIVES}`;
   },
 
   'infographic-pro': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a PROFESSIONAL INFOGRAPHIC product card.\n${p}\n\nDesign:\n- Background: light gray (#F4F5F7) or white\n- Product: center-left (40% of card width), clean cutout with shadow\n- Around the product: 4-5 infographic callout lines pointing to product features\n- Each callout: thin line from product → small circular icon → short text label\n- Icons: modern line-art style in accent color (blue #3B82F6 or teal #14B8A6)\n- Title: bold dark text at top, clean sans-serif\n- Bottom: specs bar with key dimensions/numbers in pill badges\n- Typography: clean, modern, well-spaced\n- Vertical 3:4\n- Feel: professional product datasheet, Apple product page infographic`
-      : `${SYSTEM_PREFIX}\n\nСоздай ПРОФЕССИОНАЛЬНУЮ ИНФОГРАФИКУ для карточки товара.\n${p}\n\nДизайн:\n- Фон: светло-серый (#F4F5F7) или белый\n- Товар: по центру-слева (40% ширины карточки), чистый вырез с тенью\n- Вокруг товара: 4-5 линий-выносок к характеристикам\n- Каждая выноска: тонкая линия от товара → маленькая круглая иконка → короткий текст\n- Иконки: современный линейный стиль в акцентном цвете (синий #3B82F6 или бирюзовый #14B8A6)\n- Заголовок: жирный тёмный текст сверху\n- Внизу: панель с ключевыми характеристиками в pill-бейджах\n- Вертикальный 3:4, текст на РУССКОМ\n- Ощущение: Apple product page, профессиональный datasheet`;
+      ? `Create a professional product infographic card. Based on the product from the reference image. ${p}
+
+LAYOUT: Vertical 3:4 ratio. The product is positioned center-left (taking 40% width), cleanly cut out with a professional shadow. On the right side and around the product: 4-5 infographic callout lines pointing from the product to feature descriptions.
+
+CALLOUTS: Each callout consists of: a thin connecting line from the product → a small circular icon (modern line-art style in blue #3B82F6 or teal #14B8A6) → short text label in clean sans-serif.
+
+HEADER: Bold dark (#1A1A2E) product name at the top. Clean modern sans-serif font.
+
+FOOTER: A specs bar at the bottom with key numbers/dimensions displayed in rounded pill-shaped badges.
+
+BACKGROUND: Light gray (#F4F5F7) or white. Clean, well-spaced, professional.
+
+STYLE: Apple product page infographic, professional datasheet layout. ${PHOTO_TECH}.
+
+${NEGATIVES}`
+      : `Создай профессиональную инфографику для карточки товара. На основе товара с референсного изображения. ${p}
+
+КОМПОНОВКА: Вертикальный 3:4. Товар — по центру-слева (40% ширины), чисто вырезан с профессиональной тенью. Справа и вокруг товара: 4-5 инфографических выносок к характеристикам.
+
+ВЫНОСКИ: Каждая: тонкая соединительная линия от товара → маленькая круглая иконка (линейный стиль, синий #3B82F6 или бирюзовый #14B8A6) → короткий текст описания.
+
+ЗАГОЛОВОК: Жирный тёмный (#1A1A2E) текст названия сверху.
+
+ПОДВАЛ: Панель характеристик — ключевые параметры в округлых pill-бейджах.
+
+ФОН: Светло-серый (#F4F5F7) или белый.
+
+СТИЛЬ: Инфографика Apple, профессиональный datasheet. ${PHOTO_TECH}. Текст на РУССКОМ.
+
+${NEGATIVES}`;
   },
 
   'amazon-a-plus': (name, bullets, lang) => {
     const p = fmt(name, bullets);
-    return `${SYSTEM_PREFIX}\n\nCreate an AMAZON A+ ENHANCED BRAND CONTENT module image.\n${p}\n\nDesign:\n- Horizontal layout 16:9 or 3:2 ratio\n- Left 40%: product photo on white/light background with subtle shadow\n- Right 60%: feature text block\n- Heading: bold serif font (Playfair Display style), dark navy (#1B2A4A)\n- Body: clean sans-serif, charcoal (#374151)\n- 3-4 features with custom line-art icons in brand accent color\n- Thin accent line or brand color bar on left edge\n- Clean, corporate, trustworthy brand storytelling feel\n- English text only`;
+    return `Create an Amazon A+ Enhanced Brand Content module image. Based on the product from the reference image. ${p}
+
+LAYOUT: Horizontal 16:9. Left 40%: product photo on white background with professional shadow. Right 60%: feature text block.
+
+TYPOGRAPHY: Heading in bold serif font (Playfair Display style), dark navy (#1B2A4A). Body text in clean sans-serif, charcoal (#374151). 3-4 features with custom line-art icons in teal accent (#14B8A6).
+
+STYLE: Corporate brand storytelling, trustworthy, professional. ${PHOTO_TECH}. English text only.
+
+${NEGATIVES}`;
   },
 
   'comparison-split': (name, bullets, lang) => {
     const p = fmt(name, bullets);
     return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a COMPARISON/BEFORE-AFTER product card.\n${p}\n\nDesign:\n- Split layout: left 50% = "WITHOUT" (muted, desaturated, red-tinted), right 50% = "WITH ${name}" (vibrant, bright, green-tinted)\n- Diagonal or clean vertical split line\n- Left side: sad/problem imagery, red ✗ marks\n- Right side: product prominently shown, green ✓ marks, happy/solved\n- Bold comparison text at top\n- Vertical 3:4 or square 1:1`
-      : `${SYSTEM_PREFIX}\n\nСоздай КАРТОЧКУ-СРАВНЕНИЕ товара.\n${p}\n\nДизайн:\n- Разделённый layout: лево 50% = "БЕЗ" (приглушённый, серый, красноватый), право 50% = "С ${name}" (яркий, зелёный)\n- Диагональная или вертикальная линия разделения\n- Слева: проблема, красные крестики ✗\n- Справа: товар крупно, зелёные галочки ✓, решение\n- Жирный текст сравнения сверху\n- Вертикальный 3:4, текст на РУССКОМ`;
+      ? `Create a comparison product card. Based on the product from the reference image. ${p}
+
+LAYOUT: Split down the middle — left 50% "WITHOUT" vs right 50% "WITH ${name}". Diagonal or vertical split line.
+
+LEFT SIDE: Muted, desaturated, gray/red-tinted. Problem imagery. Red cross marks (✗). Dull, unappealing.
+
+RIGHT SIDE: Vibrant, bright, green-tinted. The product prominently displayed. Green checkmarks (✓). Happy, solved, premium.
+
+Bold comparison heading at top. Vertical 3:4. ${PHOTO_TECH}.
+
+${NEGATIVES}`
+      : `Создай карточку-сравнение товара. На основе товара с референсного изображения. ${p}
+
+КОМПОНОВКА: Разделение пополам — лево 50% "БЕЗ" vs право 50% "С ${name}". Диагональная или вертикальная линия раздела.
+
+ЛЕВАЯ СТОРОНА: Приглушённая, обесцвеченная, серо-красная. Проблема. Красные крестики (✗).
+
+ПРАВАЯ СТОРОНА: Яркая, зелёная. Товар крупно. Зелёные галочки (✓). Решение.
+
+Жирный заголовок сравнения сверху. Вертикальный 3:4. ${PHOTO_TECH}. Текст на РУССКОМ.
+
+${NEGATIVES}`;
   },
 };
 
@@ -96,37 +284,80 @@ export const MARKETPLACE_PROMPTS = {
 // ========================================
 
 export const AD_PROMPTS = {
-  'ad-bold-sale': (name, headline, cta, lang) => {
-    return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a HIGH-CONVERTING SALE advertising creative.\nProduct: "${name}"\nHeadline: "${headline || 'UP TO 50% OFF'}"\nCTA: "${cta || 'Shop Now'}"\n\nDesign:\n- Background: energetic gradient from hot red (#FF416C) to warm orange (#FF4B2B)\n- Product: left side (45%), floating with dynamic shadow, slightly rotated 5°\n- Headline: HUGE bold white text (Montserrat Black), right side, with subtle black shadow for contrast\n- Price badge: circular or starburst shape, yellow (#FFD700) with red text, shows discount\n- CTA button: white pill-shaped button with red text, bold, centered bottom\n- Dynamic elements: speed lines, confetti particles, or geometric shapes for energy\n- Square 1:1 format\n- Feel: Black Friday energy, Shopify flash sale, high urgency`
-      : `${SYSTEM_PREFIX}\n\nСоздай ПРОДАЮЩИЙ рекламный креатив для РАСПРОДАЖИ.\nТовар: "${name}"\nЗаголовок: "${headline || 'СКИДКА ДО 50%'}"\nCTA: "${cta || 'Купить сейчас'}"\n\nДизайн:\n- Фон: энергичный градиент от красного (#FF416C) к оранжевому (#FF4B2B)\n- Товар: слева (45%), парит с динамичной тенью, лёгкий поворот 5°\n- Заголовок: ОГРОМНЫЙ жирный белый текст (Montserrat Black), справа\n- Ценовой бейдж: круглый или звёздочка, жёлтый (#FFD700) с красным текстом скидки\n- CTA кнопка: белая pill-кнопка с красным текстом, жирная, снизу по центру\n- Динамика: линии скорости, конфетти, геометрические фигуры\n- Квадрат 1:1, текст на РУССКОМ\n- Ощущение: энергия Black Friday, срочность`;
-  },
 
-  'ad-minimal-product': (name, headline, cta, lang) => {
-    return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a MINIMALIST product advertising creative.\nProduct: "${name}"\nHeadline: "${headline || name}"\nCTA: "${cta || 'Learn More'}"\n\nDesign:\n- Background: pure white or very light gray (#FAFAFA)\n- Product: centered, large (60% of frame), with precise soft shadow\n- Headline: thin dark text below product, clean sans-serif, charcoal (#1A1A2E)\n- CTA: dark rounded rectangle button, white text, subtle hover state implied\n- Massive whitespace — breathing room everywhere\n- Square 1:1\n- Feel: Apple product page, Braun, Dieter Rams "less is more"`
-      : `${SYSTEM_PREFIX}\n\nСоздай МИНИМАЛИСТИЧНЫЙ рекламный креатив.\nТовар: "${name}"\nЗаголовок: "${headline || name}"\nCTA: "${cta || 'Подробнее'}"\n\nДизайн:\n- Фон: чисто белый или очень светлый серый (#FAFAFA)\n- Товар: по центру, крупно (60%), с точной мягкой тенью\n- Заголовок: тонкий тёмный текст под товаром, чистый sans-serif\n- CTA: тёмная скруглённая кнопка, белый текст\n- Много воздуха\n- Квадрат 1:1, текст на РУССКОМ\n- Ощущение: Apple, Braun, "less is more"`;
-  },
+  'ad-bold-sale': (name, headline, cta, lang) => lang === 'en'
+    ? `Create a high-conversion sale advertisement creative. Product from the reference image.
+Product: "${name}" | Headline: "${headline || 'UP TO 50% OFF'}" | CTA: "${cta || 'Shop Now'}"
 
-  'ad-dark-luxury': (name, headline, cta, lang) => {
-    return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a LUXURY DARK advertising creative.\nProduct: "${name}"\nHeadline: "${headline || name}"\nCTA: "${cta || 'Discover'}"\n\nDesign:\n- Background: deep black (#0A0A0A) to dark navy (#0F1628)\n- Product: center, dramatic side lighting, volumetric light rays\n- Headline: thin uppercase champagne gold (#D4AF37), wide letter-spacing (200%)\n- CTA: gold (#D4AF37) border pill, no fill, thin uppercase text\n- Subtle bokeh or gold dust particles\n- Square 1:1\n- Feel: luxury watch ad, Bentley, Dom Pérignon`
-      : `${SYSTEM_PREFIX}\n\nСоздай ЛЮКСОВЫЙ ТЁМНЫЙ рекламный креатив.\nТовар: "${name}"\nЗаголовок: "${headline || name}"\nCTA: "${cta || 'Узнать больше'}"\n\nДизайн:\n- Фон: глубокий чёрный (#0A0A0A) в тёмный navy (#0F1628)\n- Товар: по центру, драматичный боковой свет\n- Заголовок: тонкий КАПС шампань-золотой (#D4AF37), широкий letter-spacing\n- CTA: золотая рамка pill, без заливки, тонкий КАПС текст\n- Лёгкое боке или золотые частицы\n- Квадрат 1:1, текст на РУССКОМ`;
-  },
+BACKGROUND: Energetic diagonal gradient from hot red (#FF416C) to warm orange (#FF4B2B). Dynamic speed lines and confetti particles for energy.
+PRODUCT: Left side (45%), floating with dramatic shadow, slightly rotated 5° for dynamism.
+HEADLINE: HUGE bold white text (Montserrat Black), right side. Subtle black shadow for contrast.
+PRICE: Circular starburst badge in yellow (#FFD700) with red discount text.
+CTA: White pill-shaped button with red bold text, centered at bottom.
+Square 1:1. ${PHOTO_TECH}. Black Friday energy aesthetic.
+${NEGATIVES}`
+    : `Создай продающий рекламный креатив для распродажи. Товар с референсного изображения.
+Товар: "${name}" | Заголовок: "${headline || 'СКИДКА ДО 50%'}" | CTA: "${cta || 'Купить сейчас'}"
 
-  'ad-social-story': (name, headline, cta, lang) => {
-    return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a SOCIAL MEDIA STORY advertising creative.\nProduct: "${name}"\nHeadline: "${headline || name}"\nCTA: "${cta || 'Swipe Up'}"\n\nDesign:\n- Background: vibrant gradient indigo (#6366F1) to violet (#A855F7) to pink (#EC4899)\n- Product: center area, with white glow halo behind\n- Headline: bold white text, large, Montserrat style, with subtle drop shadow\n- CTA: white rounded pill button at bottom with dark text, swipe-up arrow ↑ above it\n- Decorative: abstract blob shapes, floating circles, sparkle elements\n- Vertical 9:16 story format\n- Feel: Instagram-native, Gen-Z appeal, vibrant energy`
-      : `${SYSTEM_PREFIX}\n\nСоздай ВЕРТИКАЛЬНЫЙ рекламный креатив для STORIES.\nТовар: "${name}"\nЗаголовок: "${headline || name}"\nCTA: "${cta || 'Узнать'}"\n\nДизайн:\n- Фон: яркий градиент индиго (#6366F1) → фиолетовый (#A855F7) → розовый (#EC4899)\n- Товар: по центру, белое гало-свечение за ним\n- Заголовок: жирный белый текст, крупный, с тенью\n- CTA: белая pill-кнопка снизу с тёмным текстом, стрелка ↑ над ней\n- Декор: абстрактные blob-формы, летающие круги, искры\n- Вертикальный 9:16, текст на РУССКОМ`;
-  },
+ФОН: Энергичный градиент от красного (#FF416C) к оранжевому (#FF4B2B). Линии скорости и конфетти.
+ТОВАР: Слева (45%), парит с тенью, поворот 5°.
+ЗАГОЛОВОК: ОГРОМНЫЙ жирный белый текст, справа.
+ЦЕНА: Круглый бейдж-звёздочка жёлтый (#FFD700) с красным текстом скидки.
+CTA: Белая pill-кнопка с красным текстом, снизу по центру.
+Квадрат 1:1. ${PHOTO_TECH}. Текст на РУССКОМ.
+${NEGATIVES}`,
 
-  'ad-google-banner': (name, headline, cta, lang) => {
-    return `${SYSTEM_PREFIX}\n\nCreate a GOOGLE DISPLAY NETWORK banner ad.\nProduct: "${name}"\nHeadline: "${headline || name}"\nCTA: "${cta || 'Shop Now'}"\n\nDesign:\n- Horizontal 1200x628 banner format\n- Left 35%: product photo, clean cutout with shadow\n- Right 65%: headline in bold sans-serif + CTA button\n- Background: white or light with subtle brand-color accent stripe\n- CTA: rounded button in accent color (blue #3B82F6), white text\n- Clean, corporate, high CTR optimized\n- English text`;
-  },
+  'ad-minimal-product': (name, headline, cta, lang) => lang === 'en'
+    ? `Create a minimalist product advertisement. Product from the reference image.
+Product: "${name}" | Headline: "${headline || name}" | CTA: "${cta || 'Learn More'}"
 
-  'ad-retargeting': (name, headline, cta, lang) => {
-    return lang === 'en'
-      ? `${SYSTEM_PREFIX}\n\nCreate a RETARGETING advertising creative.\nProduct: "${name}"\nHeadline: "${headline || 'Still thinking about it?'}"\nCTA: "${cta || 'Complete Purchase'}"\n\nDesign:\n- Background: warm white (#FFF9F5) with subtle urgency elements\n- Product: large, center, with soft warm lighting\n- Headline: friendly but urgent dark text, medium weight\n- Urgency badge: "Limited Stock" or "X% off today only" in coral/red (#FF6B6B) pill\n- CTA: bright accent button (coral #FF6B6B or green #10B981)\n- Timer icon or clock element suggesting urgency\n- Square 1:1\n- Feel: friendly nudge, not aggressive — Casper/Warby Parker retargeting style`
-      : `${SYSTEM_PREFIX}\n\nСоздай креатив для РЕТАРГЕТИНГА.\nТовар: "${name}"\nЗаголовок: "${headline || 'Всё ещё думаете?'}"\nCTA: "${cta || 'Оформить заказ'}"\n\nДизайн:\n- Фон: тёплый белый (#FFF9F5) с элементами срочности\n- Товар: крупно, по центру, тёплый свет\n- Заголовок: дружелюбный но срочный тёмный текст\n- Бейдж срочности: "Осталось мало" в коралловом (#FF6B6B) pill\n- CTA: яркая кнопка (коралл или зелёный)\n- Иконка таймера/часов\n- Квадрат 1:1, текст на РУССКОМ`;
-  },
+Pure white (#FAFAFA) background. Product centered, large (60%), precise soft shadow. Thin dark headline below. Dark rounded CTA button with white text at bottom. Massive whitespace. Square 1:1. ${PHOTO_TECH}. Apple/Braun "less is more" aesthetic.
+${NEGATIVES}`
+    : `Создай минималистичный рекламный креатив. Товар с референсного изображения.
+Товар: "${name}" | Заголовок: "${headline || name}" | CTA: "${cta || 'Подробнее'}"
+
+Чисто белый фон (#FAFAFA). Товар по центру, крупно (60%), мягкая тень. Тонкий тёмный заголовок снизу. Тёмная скруглённая CTA кнопка. Много воздуха. Квадрат 1:1. ${PHOTO_TECH}. Текст на РУССКОМ.
+${NEGATIVES}`,
+
+  'ad-dark-luxury': (name, headline, cta, lang) => lang === 'en'
+    ? `Create a luxury dark advertisement. Product from the reference image.
+Product: "${name}" | Headline: "${headline || name}" | CTA: "${cta || 'Discover'}"
+
+Deep black (#0A0A0A) to dark navy background. Product center, dramatic side lighting, volumetric rays. Thin uppercase champagne gold (#D4AF37) headline, wide letter-spacing. Gold border pill CTA, no fill. Bokeh and gold dust. Square 1:1. ${PHOTO_TECH}, cinematic. Luxury watch/Bentley aesthetic.
+${NEGATIVES}`
+    : `Создай люксовый тёмный рекламный креатив. Товар с референсного изображения.
+Товар: "${name}" | Заголовок: "${headline || name}" | CTA: "${cta || 'Узнать больше'}"
+
+Глубокий чёрный (#0A0A0A) → тёмный navy фон. Товар по центру, драматичный свет. Тонкий КАПС шампань-золотой (#D4AF37) заголовок. CTA — золотая рамка. Боке и золотые частицы. Квадрат 1:1. ${PHOTO_TECH}. Текст на РУССКОМ.
+${NEGATIVES}`,
+
+  'ad-social-story': (name, headline, cta, lang) => lang === 'en'
+    ? `Create a vertical social media story ad. Product from the reference image.
+Product: "${name}" | Headline: "${headline || name}" | CTA: "${cta || 'Swipe Up'}"
+
+Vibrant gradient: indigo (#6366F1) → violet (#A855F7) → pink (#EC4899). Product center with white glow halo. Bold large white headline. White pill CTA at bottom with swipe-up arrow ↑. Abstract blobs and sparkles. Vertical 9:16. ${PHOTO_TECH}. Instagram-native Gen-Z energy.
+${NEGATIVES}`
+    : `Создай вертикальный рекламный креатив для stories. Товар с референсного изображения.
+Товар: "${name}" | Заголовок: "${headline || name}" | CTA: "${cta || 'Узнать'}"
+
+Яркий градиент: индиго (#6366F1) → фиолетовый (#A855F7) → розовый (#EC4899). Товар по центру с белым гало. Крупный белый заголовок. Белая pill CTA снизу, стрелка ↑. Абстрактные формы и искры. Вертикальный 9:16. ${PHOTO_TECH}. Текст на РУССКОМ.
+${NEGATIVES}`,
+
+  'ad-google-banner': (name, headline, cta) => `Create a Google Display Network banner. Product from the reference image.
+Product: "${name}" | Headline: "${headline || name}" | CTA: "${cta || 'Shop Now'}"
+
+Horizontal 1200x628. Left 35%: product, clean cutout with shadow. Right 65%: bold headline + CTA button. White background with subtle accent stripe. Blue (#3B82F6) CTA button. Corporate, high CTR. ${PHOTO_TECH}. English text.
+${NEGATIVES}`,
+
+  'ad-retargeting': (name, headline, cta, lang) => lang === 'en'
+    ? `Create a retargeting ad creative. Product from the reference image.
+Product: "${name}" | Headline: "${headline || 'Still thinking about it?'}" | CTA: "${cta || 'Complete Purchase'}"
+
+Warm white (#FFF9F5) background. Product large, centered, warm lighting. Friendly urgent headline. "Limited Stock" coral (#FF6B6B) pill badge. Bright CTA button. Timer/clock urgency element. Square 1:1. ${PHOTO_TECH}. Friendly nudge style.
+${NEGATIVES}`
+    : `Создай креатив для ретаргетинга. Товар с референсного изображения.
+Товар: "${name}" | Заголовок: "${headline || 'Всё ещё думаете?'}" | CTA: "${cta || 'Оформить заказ'}"
+
+Тёплый белый (#FFF9F5) фон. Товар крупно, тёплый свет. Дружелюбный срочный заголовок. Бейдж "Осталось мало" коралловый (#FF6B6B). Яркая CTA кнопка. Таймер/часы. Квадрат 1:1. ${PHOTO_TECH}. Текст на РУССКОМ.
+${NEGATIVES}`,
 };
