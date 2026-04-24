@@ -115,35 +115,39 @@ export async function POST(request) {
       }, { status: 500 });
     }
 
-    // Save the generated image
-    const outputDir = path.join(process.cwd(), 'public', 'generated');
-    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+    // Save the generated image to disk (best-effort, may not persist on Railway)
+    let outputUrl = null;
+    let imageDataUrl = result.imageData; // base64 data URL for direct display
 
-    let outputUrl;
+    try {
+      const outputDir = path.join(process.cwd(), 'public', 'generated');
+      if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
-    if (result.imageData.startsWith('data:image')) {
-      // Base64 data URL → save as file
-      const base64Match = result.imageData.match(/^data:image\/(\w+);base64,(.+)$/);
-      if (base64Match) {
-        const ext = base64Match[1] === 'jpeg' ? 'jpg' : base64Match[1];
-        const filename = `${generationId}.${ext}`;
-        const filepath = path.join(outputDir, filename);
-        fs.writeFileSync(filepath, Buffer.from(base64Match[2], 'base64'));
-        outputUrl = `/generated/${filename}`;
+      if (result.imageData.startsWith('data:image')) {
+        const base64Match = result.imageData.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (base64Match) {
+          const ext = base64Match[1] === 'jpeg' ? 'jpg' : base64Match[1];
+          const filename = `${generationId}.${ext}`;
+          const filepath = path.join(outputDir, filename);
+          fs.writeFileSync(filepath, Buffer.from(base64Match[2], 'base64'));
+          outputUrl = `/generated/${filename}`;
+        }
+      } else if (result.imageData.startsWith('http')) {
+        try {
+          const imgRes = await fetch(result.imageData);
+          const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+          const filename = `${generationId}.png`;
+          const filepath = path.join(outputDir, filename);
+          fs.writeFileSync(filepath, imgBuf);
+          outputUrl = `/generated/${filename}`;
+          imageDataUrl = `data:image/png;base64,${imgBuf.toString('base64')}`;
+        } catch (dlErr) {
+          console.error('[Generate] Failed to download image:', dlErr.message);
+          outputUrl = result.imageData;
+        }
       }
-    } else if (result.imageData.startsWith('http')) {
-      // External URL → download and save
-      try {
-        const imgRes = await fetch(result.imageData);
-        const imgBuf = Buffer.from(await imgRes.arrayBuffer());
-        const filename = `${generationId}.png`;
-        const filepath = path.join(outputDir, filename);
-        fs.writeFileSync(filepath, imgBuf);
-        outputUrl = `/generated/${filename}`;
-      } catch (dlErr) {
-        console.error('[Generate] Failed to download image:', dlErr.message);
-        outputUrl = result.imageData; // Fallback to direct URL
-      }
+    } catch (fsErr) {
+      console.error('[Generate] File save error (non-fatal):', fsErr.message);
     }
 
     // Update generation record
@@ -152,11 +156,12 @@ export async function POST(request) {
       incrementGenerations(user.id);
     }
 
-    console.log(`[Generate] ✅ Done: ${generationId} → ${outputUrl}`);
+    console.log(`[Generate] ✅ Done: ${generationId} → ${outputUrl || 'data URL only'}`);
 
     return NextResponse.json({
       success: true,
-      imageUrl: outputUrl,
+      imageUrl: outputUrl || imageDataUrl,
+      imageDataUrl,
       generationId,
       template: templateId,
       size: sizeId,

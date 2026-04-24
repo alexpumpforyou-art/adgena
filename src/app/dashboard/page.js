@@ -404,34 +404,59 @@ export default function DashboardPage() {
             <div className={styles.stepContent}>
               <div className={styles.resultLayout}>
                 <div className={styles.resultPreview}>
-                  {generatedResult?.imageUrl ? (
-                    <img src={generatedResult.imageUrl} alt="Result" className={styles.resultImg} />
+                  {(generatedResult?.imageDataUrl || generatedResult?.imageUrl) ? (
+                    <img
+                      src={generatedResult.imageDataUrl || generatedResult.imageUrl}
+                      alt="Generated product card"
+                      className={styles.resultImg}
+                      onError={(e) => {
+                        console.error('Image failed to load:', generatedResult.imageUrl);
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = '<div style="padding:40px;text-align:center;color:#ff6b6b"><p>⚠️ Изображение не загрузилось</p><p style="font-size:12px;margin-top:8px;color:#888">URL: ' + generatedResult.imageUrl + '</p></div>';
+                      }}
+                    />
+                  ) : generatedResult?.error ? (
+                    <div style={{padding: '40px', textAlign: 'center'}}>
+                      <p style={{color: '#ff6b6b', fontSize: '18px'}}>❌ Ошибка генерации</p>
+                      <p style={{color: '#888', fontSize: '14px', marginTop: '8px'}}>{generatedResult.error}</p>
+                      <button className="btn btn-primary" style={{marginTop: '16px'}} onClick={() => setStep(3)}>
+                        Попробовать снова
+                      </button>
+                    </div>
                   ) : (
-                    <div className={styles.resultPlaceholder}>
-                      <div className={styles.resultMockup}>
-                        <div className={styles.mockupBg} style={{
-                          background: TEMPLATES.find(t=>t.id===selectedTemplate)?.bg || '#1a1a2e'
-                        }}>
-                          {imagePreview && <img src={imagePreview} alt="" className={styles.mockupProduct} />}
-                          <div className={styles.mockupText} style={{
-                            color: TEMPLATES.find(t=>t.id===selectedTemplate)?.color || '#fff'
-                          }}>
-                            <h3>{generatedText?.title || generatedText?.headline || productName}</h3>
-                            {(generatedText?.bullets || []).slice(0,3).map((b,i) => (
-                              <p key={i} className={styles.mockupBullet}>✓ {b}</p>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                    <div style={{padding: '40px', textAlign: 'center'}}>
+                      <span className={styles.spinner} />
+                      <p style={{marginTop: '12px', color: '#888'}}>Загрузка...</p>
                     </div>
                   )}
                 </div>
                 <div className={styles.resultActions}>
                   <h3>🎉 Карточка готова!</h3>
                   <p className={styles.resultInfo}>Ваша карточка сгенерирована с использованием AI</p>
+                  {generatedResult?.model && (
+                    <p style={{fontSize: '12px', color: '#666', marginBottom: '16px'}}>
+                      Модель: {generatedResult.model}
+                    </p>
+                  )}
                   <div className={styles.resultBtns}>
-                    <button className="btn btn-primary btn-lg">📥 Скачать PNG</button>
-                    <button className="btn btn-secondary">📥 Скачать JPG</button>
+                    {generatedResult?.imageUrl && (
+                      <>
+                        <a
+                          href={generatedResult.imageUrl}
+                          download={`adgena-card-${generatedResult.generationId || 'result'}.png`}
+                          className="btn btn-primary btn-lg"
+                        >
+                          📥 Скачать PNG
+                        </a>
+                        <a
+                          href={generatedResult.imageUrl}
+                          download={`adgena-card-${generatedResult.generationId || 'result'}.jpg`}
+                          className="btn btn-secondary"
+                        >
+                          📥 Скачать JPG
+                        </a>
+                      </>
+                    )}
                     <button className="btn btn-ghost" onClick={handleReset}>🔄 Создать новую</button>
                   </div>
                 </div>
