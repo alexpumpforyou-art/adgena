@@ -1,0 +1,76 @@
+/**
+ * Auth utilities — JWT-based session management
+ */
+
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
+import { getUserById, getSessionByToken } from './db';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
+const COOKIE_NAME = 'adgena_session';
+
+/**
+ * Create JWT token for a user session
+ */
+export function signToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+}
+
+/**
+ * Verify JWT token
+ */
+export function verifyToken(token) {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get current user from request cookies (for server components / API routes)
+ */
+export async function getCurrentUser() {
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(COOKIE_NAME);
+    if (!sessionCookie?.value) return null;
+
+    const decoded = verifyToken(sessionCookie.value);
+    if (!decoded?.userId) return null;
+
+    const user = getUserById(decoded.userId);
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      plan: user.plan,
+      generationsUsed: user.generations_used,
+      generationsLimit: user.generations_limit,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Set session cookie in response
+ */
+export function buildSessionCookie(token) {
+  return {
+    name: COOKIE_NAME,
+    value: token,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  };
+}
+
+/**
+ * Cookie name export for logout
+ */
+export { COOKIE_NAME };
