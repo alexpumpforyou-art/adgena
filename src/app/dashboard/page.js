@@ -4,35 +4,54 @@ import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './dashboard.module.css';
 
-const TEMPLATES = [
-  { id:'minimal-clean', name:'Минимализм', cat:'marketplace', pro:false, bg:'#ffffff', color:'#1a1a1a', desc:'Чистый белый фон' },
-  { id:'gradient-modern', name:'Градиент', cat:'marketplace', pro:false, bg:'linear-gradient(135deg,#667eea,#764ba2)', color:'#fff', desc:'Яркий градиентный фон' },
-  { id:'dark-premium', name:'Премиум', cat:'marketplace', pro:true, bg:'linear-gradient(180deg,#0f0f1a,#1a1a2e)', color:'#f0e6d2', desc:'Тёмный фон, золото' },
-  { id:'neon-vibrant', name:'Неон', cat:'marketplace', pro:true, bg:'linear-gradient(135deg,#0a0a1a,#1a0a2e)', color:'#00f5ff', desc:'Киберпанк стиль' },
-  { id:'nature-organic', name:'Натуральный', cat:'marketplace', pro:false, bg:'linear-gradient(180deg,#f5f0e8,#e8e0d0)', color:'#2d5016', desc:'Эко-стиль' },
-  { id:'ad-bold-sale', name:'Распродажа', cat:'ads', pro:false, bg:'linear-gradient(135deg,#ff416c,#ff4b2b)', color:'#fff', desc:'Яркий со скидкой' },
-  { id:'ad-minimal-product', name:'Минимал', cat:'ads', pro:false, bg:'#fafafa', color:'#1a1a1a', desc:'Фокус на товаре' },
-  { id:'ad-dark-luxury', name:'Люкс', cat:'ads', pro:true, bg:'linear-gradient(180deg,#0c0c1d,#1a1a3e)', color:'#e0d5c5', desc:'Премиальный креатив' },
-  { id:'ad-social-story', name:'Stories', cat:'ads', pro:false, bg:'linear-gradient(180deg,#6366f1,#a855f7)', color:'#fff', desc:'Для сторис' },
+// Content type tabs
+const CONTENT_TYPES = [
+  { id: 'photo', label: '📸 Фото', labelEn: '📸 Photo' },
+  { id: 'card', label: '🃏 Карточка', labelEn: '🃏 Card' },
+  { id: 'ads', label: '🎯 Реклама', labelEn: '🎯 Ads' },
 ];
 
-const SIZES = {
-  marketplace: [
-    { id:'wb', name:'Wildberries', w:900, h:1200 },
-    { id:'ozon', name:'Ozon', w:1200, h:1200 },
-    { id:'yandex', name:'Яндекс Маркет', w:1200, h:1200 },
+// Concepts per content type (like Aidentika)
+const CONCEPTS = {
+  photo: [
+    { id: 'in-use', name: 'В использовании', icon: '👤', desc: 'Товар в руках у человека' },
+    { id: 'in-context', name: 'В окружении', icon: '🏠', desc: 'На столе, в интерьере, flat lay' },
+    { id: 'studio', name: 'Каталог (студийно)', icon: '📸', desc: 'Чистый студийный фон' },
+  ],
+  card: [
+    { id: 'infographic', name: 'Инфографика', icon: '📊', desc: 'Иконки, выноски, характеристики' },
+    { id: 'minimal-card', name: 'Минималистичная', icon: '✨', desc: 'Чистая с названием и буллетами' },
+    { id: 'gradient-card', name: 'Градиентная', icon: '🎨', desc: 'Яркий градиентный фон' },
   ],
   ads: [
-    { id:'fb-feed', name:'Facebook Feed', w:1080, h:1080 },
-    { id:'fb-story', name:'FB/IG Story', w:1080, h:1920 },
-    { id:'vk-post', name:'VK Пост', w:1080, h:1080 },
-    { id:'tg-ad', name:'Telegram Ads', w:1080, h:1080 },
-    { id:'google', name:'Google Display', w:1200, h:628 },
+    { id: 'ad-sale', name: 'Распродажа', icon: '🔥', desc: 'Баннер для скидок' },
+    { id: 'ad-minimal', name: 'Минимал', icon: '🤍', desc: 'Apple-стиль' },
+    { id: 'ad-story', name: 'Stories', icon: '📱', desc: 'Вертикальный для сторис' },
+  ],
+};
+
+const SIZES = {
+  photo: [
+    { id: 'wb', name: 'Wildberries', w: 900, h: 1200 },
+    { id: 'ozon', name: 'Ozon', w: 900, h: 1200 },
+    { id: 'amazon', name: 'Amazon', w: 2000, h: 2000 },
+    { id: 'ebay', name: 'eBay', w: 1600, h: 1600 },
+  ],
+  card: [
+    { id: 'wb', name: 'Wildberries', w: 900, h: 1200 },
+    { id: 'ozon', name: 'Ozon', w: 900, h: 1200 },
+    { id: 'amazon', name: 'Amazon', w: 2000, h: 2000 },
+  ],
+  ads: [
+    { id: 'fb-feed', name: 'Facebook/Instagram', w: 1080, h: 1080 },
+    { id: 'fb-story', name: 'Stories/Reels', w: 1080, h: 1920 },
+    { id: 'google-gdn', name: 'Google Display', w: 1200, h: 628 },
+    { id: 'vk-post', name: 'ВКонтакте', w: 1080, h: 607 },
   ],
 };
 
 export default function DashboardPage() {
-  const [tab, setTab] = useState('marketplace');
+  const [tab, setTab] = useState('photo');
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -47,7 +66,7 @@ export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const fileInputRef = useRef(null);
 
-  const filteredTemplates = TEMPLATES.filter(t => t.cat === tab);
+  const concepts = CONCEPTS[tab] || [];
   const sizes = SIZES[tab] || [];
 
   const handleFileUpload = useCallback((e) => {
@@ -193,12 +212,11 @@ export default function DashboardPage() {
           <div className={styles.topBarLeft}>
             <h1 className={styles.pageTitle}>Генератор</h1>
             <div className={styles.tabs}>
-              <button className={`${styles.tab} ${tab==='marketplace'?styles.tabActive:''}`} onClick={()=>{setTab('marketplace');setSelectedTemplate(null);setSelectedSize(null);}}>
-                📦 Карточки товара
-              </button>
-              <button className={`${styles.tab} ${tab==='ads'?styles.tabActive:''}`} onClick={()=>{setTab('ads');setSelectedTemplate(null);setSelectedSize(null);}}>
-                🎯 Рекламные креативы
-              </button>
+              {CONTENT_TYPES.map(ct => (
+                <button key={ct.id} className={`${styles.tab} ${tab===ct.id?styles.tabActive:''}`} onClick={()=>{setTab(ct.id);setSelectedTemplate(null);setSelectedSize(null);}}>
+                  {ct.label}
+                </button>
+              ))}
             </div>
           </div>
           <div className={styles.topBarRight}>
@@ -258,23 +276,23 @@ export default function DashboardPage() {
                   </button>
                 </div>
 
-                {/* Templates + Sizes */}
+                {/* Concepts + Sizes */}
                 <div className={styles.configPanel}>
-                  <h3 className={styles.configTitle}>Выберите шаблон</h3>
+                  <h3 className={styles.configTitle}>Как показать товар?</h3>
                   <div className={styles.templateGrid}>
-                    {filteredTemplates.map(t => (
+                    {concepts.map(c => (
                       <div
-                        key={t.id}
-                        className={`${styles.templateCard} ${selectedTemplate===t.id?styles.templateCardSelected:''}`}
-                        onClick={() => setSelectedTemplate(t.id)}
+                        key={c.id}
+                        className={`${styles.templateCard} ${selectedTemplate===c.id?styles.templateCardSelected:''}`}
+                        onClick={() => setSelectedTemplate(c.id)}
                       >
-                        <div className={styles.templatePreview} style={{background: t.bg}}>
-                          <span style={{color: t.color, fontSize: '20px', fontWeight: 700}}>Aa</span>
+                        <div className={styles.templatePreview} style={{background: 'var(--bg-tertiary)', fontSize: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                          {c.icon}
                         </div>
                         <div className={styles.templateInfo}>
-                          <span className={styles.templateName}>{t.name}</span>
-                          {t.pro && <span className={styles.proBadge}>PRO</span>}
+                          <span className={styles.templateName}>{c.name}</span>
                         </div>
+                        <span style={{fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center', padding: '0 4px'}}>{c.desc}</span>
                       </div>
                     ))}
                   </div>
@@ -315,7 +333,7 @@ export default function DashboardPage() {
                     {imagePreview && <img src={imagePreview} alt="Preview" className={styles.previewImg} />}
                   </div>
                   <div className={styles.previewMeta}>
-                    <span>Шаблон: {TEMPLATES.find(t=>t.id===selectedTemplate)?.name}</span>
+                    <span>Концепция: {concepts.find(c=>c.id===selectedTemplate)?.name}</span>
                     <span>Размер: {sizes.find(s=>s.id===selectedSize)?.name || sizes[0]?.name}</span>
                   </div>
                 </div>

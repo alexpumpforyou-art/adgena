@@ -25,19 +25,21 @@ export async function generateProductCard({
   templateId,
   productName,
   bullets = [],
-  type = 'marketplace',
+  type = 'photo',
   headline = '',
   cta = '',
   lang = 'ru',
 }) {
   let prompt;
 
-  if (type === 'marketplace') {
-    const promptFn = MARKETPLACE_PROMPTS[templateId] || MARKETPLACE_PROMPTS['minimal-clean'];
-    prompt = typeof promptFn === 'function' ? promptFn(productName, bullets, lang) : promptFn;
-  } else {
-    const promptFn = AD_PROMPTS[templateId] || AD_PROMPTS['ad-minimal-product'];
+  if (type === 'ads') {
+    const promptFn = AD_PROMPTS[templateId] || AD_PROMPTS['ad-minimal'];
     prompt = typeof promptFn === 'function' ? promptFn(productName, headline, cta, lang) : promptFn;
+  } else {
+    // 'photo' and 'card' both use MARKETPLACE_PROMPTS
+    const fallback = type === 'card' ? 'infographic' : 'in-context';
+    const promptFn = MARKETPLACE_PROMPTS[templateId] || MARKETPLACE_PROMPTS[fallback];
+    prompt = typeof promptFn === 'function' ? promptFn(productName, bullets, lang) : promptFn;
   }
 
   console.log(`[APIYI] Generating ${type} card | template: ${templateId} | lang: ${lang}`);
