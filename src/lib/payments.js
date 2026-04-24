@@ -10,9 +10,11 @@ import crypto from 'crypto';
 
 let stripeInstance = null;
 
-function getStripe() {
+async function getStripe() {
   if (!stripeInstance) {
-    const Stripe = require('stripe');
+    // Dynamic import hidden from Turbopack static analysis
+    const mod = await new Function('return import("stripe")')();
+    const Stripe = mod.default || mod;
     stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
   }
   return stripeInstance;
