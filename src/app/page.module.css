@@ -443,7 +443,9 @@
 }
 
 @media (max-width: 640px) {
-  .hero { height: 300vh; }
+  .hero { height: 200vh; }
+  .showcaseSticky { display: flex; align-items: center; }
+  .showcaseTrack { align-items: center; padding: 0 16px; gap: 14px; }
   .header { padding: 0 16px; height: 56px; }
   .logo img { width: 36px !important; height: 36px !important; }
   .logo span:last-child { font-size: 18px; }
@@ -477,12 +479,11 @@
   .stepCard { padding: 20px; }
   .priceGrid { grid-template-columns: 1fr; gap: 16px; }
   .priceCard { padding: 24px; }
-  .showcaseTrack { padding: 0 20px; gap: 16px; }
-  .showcaseCard { width: 260px; padding: 16px; }
-  .showcaseTitleCard { width: 220px; }
-  .showcaseTitle { font-size: 28px; }
-  .showcaseDesc { font-size: 13px; }
-  .cardPair { gap: 8px; }
+  .showcaseCard { width: 260px; padding: 14px; }
+  .showcaseTitleCard { width: 200px; }
+  .showcaseTitle { font-size: 24px; }
+  .showcaseDesc { font-size: 12px; }
+  .cardPair { gap: 6px; }
   .container { padding: 0 16px; }
   .footerGrid { flex-direction: column; gap: 32px; }
   .footerLinks { flex-direction: column; gap: 24px; }

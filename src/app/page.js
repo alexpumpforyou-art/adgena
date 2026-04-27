@@ -320,9 +320,11 @@ function Showcase() {
 
     function measure() {
       const vw = window.innerWidth;
+      const isMobile = vw < 768;
       const scrollDistance = Math.max(0, track.scrollWidth - vw);
-      // Section height = viewport + horizontal scroll distance + intro/outro padding
-      const totalHeight = window.innerHeight + scrollDistance + 200;
+      // Less padding on mobile to keep scroll tight
+      const pad = isMobile ? 60 : 200;
+      const totalHeight = window.innerHeight + scrollDistance + pad;
       section.style.height = `${Math.ceil(totalHeight)}px`;
       section.dataset.scrollDistance = String(scrollDistance);
     }
