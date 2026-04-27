@@ -122,7 +122,16 @@
 .heroAccent {
   background: var(--accent-gradient);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: fadeInUp 0.35s ease;
+}
+.cursor {
+  display: inline-block;
+  background: none; -webkit-text-fill-color: var(--accent-primary);
+  animation: blink 0.7s step-end infinite;
+  margin-left: 2px; font-weight: 300;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 .heroLight { font-weight: 400; color: var(--text-secondary); }
 .heroDesc { font-size: 17px; color: var(--text-secondary); max-width: 440px; }

@@ -6,18 +6,57 @@ import Script from 'next/script';
 import styles from './page.module.css';
 
 // ========================================
-// LOGO SVG
+// LOGO SVG (Brand Kit — A-arrow mark)
 // ========================================
 function Logo({ className }) {
   return (
     <span className={className}>
-      <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
-        <path d="M20 4L36 36H28L24.5 28H15.5L12 36H4L20 4Z" fill="#FF6A00"/>
-        <path d="M20 14L25 26H15L20 14Z" fill="#0B0D14"/>
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Outer A-shape with arrow */}
+        <path d="M18.5 2L4 38h8.5l3-7h17L36 38h-8.5L18.5 2Z" fill="#FF6A00"/>
+        {/* Inner arrow cutout */}
+        <path d="M18.5 16l-4 10h14.5L18.5 16Z" fill="#0B0D14"/>
+        {/* Arrow tip accent */}
+        <path d="M26 10l6-6v10l-6-4Z" fill="#FF6A00"/>
       </svg>
       <span>Adgena</span>
     </span>
   );
+}
+
+// ========================================
+// TYPEWRITER HOOK
+// ========================================
+function useTypewriter(words, typingSpeed = 80, deletingSpeed = 40, pauseTime = 1600) {
+  const [display, setDisplay] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    const currentWord = words[wordIndex];
+
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        // Typing
+        setDisplay(currentWord.substring(0, display.length + 1));
+        if (display.length + 1 === currentWord.length) {
+          // Pause at full word, then start deleting
+          setTimeout(() => setIsDeleting(true), pauseTime);
+        }
+      } else {
+        // Deleting
+        setDisplay(currentWord.substring(0, display.length - 1));
+        if (display.length - 1 === 0) {
+          setIsDeleting(false);
+          setWordIndex((wordIndex + 1) % words.length);
+        }
+      }
+    }, isDeleting ? deletingSpeed : (display.length === 0 ? 300 : typingSpeed));
+
+    return () => clearTimeout(timeout);
+  }, [display, isDeleting, wordIndex, words, typingSpeed, deletingSpeed, pauseTime]);
+
+  return display;
 }
 
 // ========================================
@@ -56,9 +95,7 @@ function Hero() {
   const framesRef = useRef([]);
   const currentFrameRef = useRef(0);
 
-  const words = ['карточки товаров', 'lifestyle-фото', 'рекламные баннеры'];
-  const [wordIdx, setWordIdx] = useState(0);
-  useEffect(() => { const t = setInterval(() => setWordIdx(p => (p + 1) % words.length), 2800); return () => clearInterval(t); }, []);
+  const typedWord = useTypewriter(['карточки товаров', 'lifestyle-фото', 'рекламные баннеры'], 70, 35, 1400);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -193,7 +230,7 @@ function Hero() {
         <p className={styles.heroLabel}>AI-генератор для маркетплейсов</p>
         <h1 className={styles.heroTitle}>
           Создавайте<br />
-          <span className={styles.heroAccent} key={wordIdx}>{words[wordIdx]}</span><br />
+          <span className={styles.heroAccent}>{typedWord}<span className={styles.cursor}>|</span></span><br />
           <span className={styles.heroLight}>за секунды</span>
         </h1>
         <p className={styles.heroDesc}>
