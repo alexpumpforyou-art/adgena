@@ -10,7 +10,7 @@ function getBaseUrl(request) {
 }
 
 // Fetch with timeout + retry for Railway network issues
-async function fetchWithRetry(url, options, { timeout = 15000, retries = 3 } = {}) {
+async function fetchWithRetry(url, options, { timeout = 20000, retries = 3 } = {}) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const controller = new AbortController();
@@ -49,7 +49,7 @@ export async function GET(request) {
 
     // Exchange code for token (with retry)
     console.log('[Yandex] Exchanging code for token...');
-    const tokenRes = await fetchWithRetry('https://oauth.yandex.ru/token', {
+    const tokenRes = await fetchWithRetry('https://oauth.yandex.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -70,7 +70,7 @@ export async function GET(request) {
 
     // Get user info (with retry)
     console.log('[Yandex] Getting user info...');
-    const userRes = await fetchWithRetry('https://login.yandex.ru/info?format=json', {
+    const userRes = await fetchWithRetry('https://login.yandex.com/info?format=json', {
       headers: { Authorization: `OAuth ${tokens.access_token}` },
     });
 

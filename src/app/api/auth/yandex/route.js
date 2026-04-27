@@ -29,5 +29,5 @@ export async function GET(request) {
     scope: 'login:email',
   });
 
-  return NextResponse.redirect(`https://oauth.yandex.ru/authorize?${params.toString()}`);
+  return NextResponse.redirect(`https://oauth.yandex.com/authorize?${params.toString()}`);
 }
