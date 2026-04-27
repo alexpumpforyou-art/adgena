@@ -102,7 +102,7 @@ export default function DashboardPage() {
   const [productName, setProductName] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generatedResult, setGeneratedResult] = useState(null);
-  const [fullscreen, setFullscreen] = useState(false);
+  const [showResult, setShowResult] = useState(false);
   const fileInputRef = useRef(null);
 
   // Photo
@@ -113,6 +113,10 @@ export default function DashboardPage() {
   const [creativity, setCreativity] = useState(0.5);
   // Shared
   const [aspectRatio, setAspectRatio] = useState('3:4');
+  // Result modal
+  const [improveText, setImproveText] = useState('');
+  const [versions, setVersions] = useState([]);
+  const [activeVersion, setActiveVersion] = useState(0);
 
   const concepts = tab === 'photo'
     ? (PHOTO_CONCEPTS[category] || PHOTO_CONCEPTS.other)
@@ -164,11 +168,54 @@ export default function DashboardPage() {
 
       const res = await fetch('/api/generate', { method: 'POST', body: formData });
       const data = await res.json();
-      setGeneratedResult(data.success ? data : { error: data.error || 'Ошибка генерации' });
+      if (data.success) {
+        const v = { imageDataUrl: data.imageDataUrl, timestamp: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}), label: `V${versions.length}`, note: wishes || '—' };
+        setVersions(prev => [...prev, v]);
+        setActiveVersion(versions.length);
+        setGeneratedResult(data);
+        setShowResult(true);
+      } else {
+        setGeneratedResult({ error: data.error || 'Ошибка генерации' });
+        setShowResult(true);
+      }
     } catch (err) {
       setGeneratedResult({ error: err.message });
+      setShowResult(true);
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleImprove = async () => {
+    if (!improveText.trim() || !uploadedImage) return;
+    const oldWishes = wishes;
+    setWishes(improveText);
+    setGenerating(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', uploadedImage);
+      formData.append('templateId', selectedConcept || 'infographic');
+      formData.append('productName', productName);
+      formData.append('type', tab);
+      formData.append('category', category);
+      formData.append('lang', 'ru');
+      formData.append('wishes', improveText);
+      formData.append('aspectRatio', aspectRatio);
+
+      const res = await fetch('/api/generate', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        const v = { imageDataUrl: data.imageDataUrl, timestamp: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}), label: `V${versions.length}`, note: improveText };
+        setVersions(prev => [...prev, v]);
+        setActiveVersion(versions.length);
+        setGeneratedResult(data);
+        setImproveText('');
+      }
+    } catch (err) {
+      console.error('Improve error:', err);
+    } finally {
+      setGenerating(false);
+      setWishes(oldWishes);
     }
   };
 
@@ -180,6 +227,9 @@ export default function DashboardPage() {
     setGeneratedResult(null);
     setWishes('');
     setCardText('');
+    setVersions([]);
+    setActiveVersion(0);
+    setShowResult(false);
   };
 
   // --- Render ---
@@ -374,87 +424,128 @@ export default function DashboardPage() {
 
       {/* RIGHT PANEL — Results */}
       <main className={styles.rightPanel}>
-        {/* Empty state */}
-        {!generatedResult && !generating && (
+        {!generating && !generatedResult && (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>🎨</div>
             <h2>Ваши результаты</h2>
             <p>Загрузите фото, выберите настройки и нажмите «Сгенерировать»</p>
           </div>
         )}
-
-        {/* Loading state */}
         {generating && (
           <div className={styles.emptyState}>
-            <div className={styles.loadingPulse}>
-              <span className={styles.spinner} />
-            </div>
+            <div className={styles.loadingPulse}><span className={styles.spinner} /></div>
             <h2>Генерация...</h2>
             <p>Обычно занимает 20-30 секунд</p>
           </div>
         )}
-
-        {/* Result */}
-        {generatedResult && !generating && (
-          <div className={styles.resultArea}>
+        {generatedResult && !generating && !showResult && (
+          <div className={styles.emptyState}>
             {generatedResult.error ? (
               <div className={styles.errorBlock}>
                 <p>❌ {generatedResult.error}</p>
                 <button className={styles.linkBtn} onClick={() => setGeneratedResult(null)}>Попробовать снова</button>
               </div>
             ) : (
-              <>
-                <div className={styles.resultImageWrap}>
-                  <img
-                    src={generatedResult.imageDataUrl}
-                    alt="Generated"
-                    className={styles.resultImage}
-                    onClick={() => setFullscreen(true)}
-                  />
+              <div className={styles.resultArea}>
+                <div className={styles.resultImageWrap} onClick={() => setShowResult(true)}>
+                  <img src={generatedResult.imageDataUrl} alt="Generated" className={styles.resultImage} />
                 </div>
-                <div className={styles.resultMeta}>
-                  {generatedResult.dimensions && (
-                    <span className={styles.metaBadge}>{generatedResult.dimensions.w}×{generatedResult.dimensions.h}</span>
-                  )}
-                  {generatedResult.model && (
-                    <span className={styles.metaBadge}>{generatedResult.model}</span>
-                  )}
-                </div>
-                <div className={styles.resultActions}>
-                  <a
-                    href={generatedResult.imageDataUrl}
-                    download={`adgena-${generatedResult.generationId || 'result'}.jpg`}
-                    className={styles.btnPrimary}
-                  >
-                    📥 Скачать
-                  </a>
-                  <button className={styles.btnSecondary} onClick={() => setFullscreen(true)}>
-                    🔍 На весь экран
-                  </button>
-                  <button className={styles.btnGhost} onClick={handleReset}>
-                    🔄 Создать новую
-                  </button>
-                </div>
-              </>
+                <button className={styles.btnPrimary} onClick={() => setShowResult(true)}>Открыть</button>
+              </div>
             )}
           </div>
         )}
       </main>
 
-      {/* Fullscreen Lightbox */}
-      {fullscreen && generatedResult?.imageDataUrl && (
-        <div className={styles.lightbox} onClick={() => setFullscreen(false)}>
-          <button className={styles.lightboxClose} onClick={() => setFullscreen(false)}>✕</button>
-          <img
-            src={generatedResult.imageDataUrl}
-            alt="Fullscreen"
-            className={styles.lightboxImg}
-            onClick={(e) => e.stopPropagation()}
-          />
-          <div className={styles.lightboxActions} onClick={(e) => e.stopPropagation()}>
-            <a href={generatedResult.imageDataUrl} download={`adgena-${generatedResult.generationId || 'result'}.jpg`} className={styles.btnPrimary}>
-              📥 Скачать
-            </a>
+      {/* RESULT MODAL (Aidentika-style) */}
+      {showResult && generatedResult && !generatedResult.error && (
+        <div className={styles.resultModal}>
+          <div className={styles.resultModalContent}>
+            {/* Close */}
+            <button className={styles.modalClose} onClick={() => setShowResult(false)}>✕</button>
+
+            {/* Left: Image */}
+            <div className={styles.modalLeft}>
+              <div className={styles.modalImageWrap}>
+                <img src={versions[activeVersion]?.imageDataUrl || generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
+              </div>
+              <div className={styles.modalImageActions}>
+                <button className={styles.iconBtn} title="Нравится">👍</button>
+                <button className={styles.iconBtn} title="Не нравится">👎</button>
+                <a
+                  href={versions[activeVersion]?.imageDataUrl || generatedResult.imageDataUrl}
+                  download={`adgena-${generatedResult.generationId || 'result'}.jpg`}
+                  className={styles.downloadBtn}
+                >
+                  ⬇ Скачать оригинал
+                </a>
+              </div>
+            </div>
+
+            {/* Right: Info + Improve + Versions */}
+            <div className={styles.modalRight}>
+              {/* Concept info */}
+              <div className={styles.modalSection}>
+                <span className={styles.modalLabel}>Концепция</span>
+                <h3 className={styles.modalConceptName}>
+                  {concepts.find(c => c.id === selectedConcept)?.name || (tab === 'card' ? `Карточка (${cardStyle})` : '—')}
+                </h3>
+              </div>
+              <div className={styles.modalSection}>
+                <span className={styles.modalLabel}>Пожелания</span>
+                <p className={styles.modalValue}>{wishes || '—'}</p>
+              </div>
+
+              {/* Quick actions */}
+              <div className={styles.modalQuickActions}>
+                <button className={styles.quickBtn} onClick={() => { setTab('card'); setShowResult(false); }}>🃏 Создать карточку</button>
+                <button className={styles.quickBtn} disabled title="Скоро">📹 Создать видео</button>
+              </div>
+
+              {/* Improve */}
+              <div className={styles.modalSection}>
+                <div className={styles.modalLabelRow}>
+                  <span className={styles.modalLabel}>Улучшения</span>
+                  <span className={styles.modalCount}>Сделано: {versions.length > 0 ? versions.length - 1 : 0}</span>
+                </div>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Например: сделай фон темнее"
+                  value={improveText}
+                  onChange={(e) => setImproveText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
+                />
+                <button
+                  className={styles.improveBtn}
+                  disabled={!improveText.trim() || generating}
+                  onClick={handleImprove}
+                >
+                  {generating ? 'Улучшаю...' : '✨ Улучшить'}
+                </button>
+              </div>
+
+              {/* Versions */}
+              <div className={styles.modalSection}>
+                <div className={styles.modalLabelRow}>
+                  <span className={styles.modalLabel}>Версии</span>
+                  <span className={styles.modalCount}>Текущая: V{activeVersion}</span>
+                </div>
+                <div className={styles.versionList}>
+                  {versions.map((v, i) => (
+                    <div
+                      key={i}
+                      className={`${styles.versionItem} ${activeVersion === i ? styles.versionItemActive : ''}`}
+                      onClick={() => { setActiveVersion(i); setGeneratedResult(prev => ({...prev, imageDataUrl: v.imageDataUrl})); }}
+                    >
+                      <span className={styles.versionLabel}>{v.label} {i === 0 ? '- Оригинал' : ''}</span>
+                      <span className={styles.versionTime}>{v.timestamp}</span>
+                      <span className={styles.versionNote}>{v.note}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
