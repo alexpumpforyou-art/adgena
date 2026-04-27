@@ -4,20 +4,29 @@ import { getUserByEmail, createSession } from '@/lib/db';
 import crypto from 'crypto';
 import bcryptjs from 'bcryptjs';
 
-const YANDEX_CLIENT_ID = process.env.YANDEX_CLIENT_ID;
-const YANDEX_CLIENT_SECRET = process.env.YANDEX_CLIENT_SECRET;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+function getBaseUrl(request) {
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  try { return new URL(request.url).origin; } catch { return 'https://adgena.pro'; }
+}
 
 export async function GET(request) {
+  const base = getBaseUrl(request);
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
 
   if (error || !code) {
-    return NextResponse.redirect(`${APP_URL}/auth?error=yandex_denied`);
+    return NextResponse.redirect(`${base}/auth?error=yandex_denied`);
   }
 
   try {
+    const clientId = process.env.YANDEX_CLIENT_ID;
+    const clientSecret = process.env.YANDEX_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      return NextResponse.redirect(`${base}/auth?error=yandex_not_configured`);
+    }
+
     // Exchange code for token
     const tokenRes = await fetch('https://oauth.yandex.ru/token', {
       method: 'POST',
@@ -25,15 +34,15 @@ export async function GET(request) {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        client_id: YANDEX_CLIENT_ID,
-        client_secret: YANDEX_CLIENT_SECRET,
+        client_id: clientId,
+        client_secret: clientSecret,
       }),
     });
 
     const tokens = await tokenRes.json();
     if (!tokens.access_token) {
       console.error('Yandex token error:', tokens);
-      return NextResponse.redirect(`${APP_URL}/auth?error=yandex_token_failed`);
+      return NextResponse.redirect(`${base}/auth?error=yandex_token_failed`);
     }
 
     // Get user info
@@ -45,7 +54,7 @@ export async function GET(request) {
     const email = yandexUser.default_email || yandexUser.emails?.[0];
 
     if (!email) {
-      return NextResponse.redirect(`${APP_URL}/auth?error=yandex_no_email`);
+      return NextResponse.redirect(`${base}/auth?error=yandex_no_email`);
     }
 
     // Find or create user
@@ -70,12 +79,12 @@ export async function GET(request) {
     const session = createSession(user.id);
     const token = signToken({ userId: user.id, email: user.email });
 
-    const response = NextResponse.redirect(`${APP_URL}/dashboard`);
+    const response = NextResponse.redirect(`${base}/dashboard`);
     response.cookies.set(buildSessionCookie(token));
     return response;
 
   } catch (err) {
     console.error('Yandex OAuth error:', err);
-    return NextResponse.redirect(`${APP_URL}/auth?error=yandex_failed`);
+    return NextResponse.redirect(`${base}/auth?error=yandex_failed`);
   }
 }

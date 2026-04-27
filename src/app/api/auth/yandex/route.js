@@ -1,17 +1,31 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 
-const YANDEX_CLIENT_ID = process.env.YANDEX_CLIENT_ID;
-const YANDEX_REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/yandex/callback`;
-
-export async function GET() {
-  if (!YANDEX_CLIENT_ID) {
-    return NextResponse.redirect(new URL('/auth?error=yandex_not_configured', process.env.NEXT_PUBLIC_APP_URL));
+function getBaseUrl(request) {
+  // Use env var first, fallback to request origin
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  try {
+    const url = new URL(request.url);
+    return url.origin;
+  } catch {
+    return 'https://adgena.pro';
   }
+}
+
+export async function GET(request) {
+  const base = getBaseUrl(request);
+  const clientId = process.env.YANDEX_CLIENT_ID;
+
+  if (!clientId) {
+    return NextResponse.redirect(`${base}/auth?error=yandex_not_configured`);
+  }
+
+  const redirectUri = `${base}/api/auth/yandex/callback`;
 
   const params = new URLSearchParams({
     response_type: 'code',
-    client_id: YANDEX_CLIENT_ID,
-    redirect_uri: YANDEX_REDIRECT_URI,
+    client_id: clientId,
+    redirect_uri: redirectUri,
     scope: 'login:email login:info',
   });
 

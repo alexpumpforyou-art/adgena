@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
+function getBaseUrl(request) {
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  try { return new URL(request.url).origin; } catch { return 'https://adgena.pro'; }
+}
 
-export async function GET() {
-  if (!GOOGLE_CLIENT_ID) {
-    return NextResponse.redirect(new URL('/auth?error=google_not_configured', process.env.NEXT_PUBLIC_APP_URL));
+export async function GET(request) {
+  const base = getBaseUrl(request);
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+
+  if (!clientId) {
+    return NextResponse.redirect(`${base}/auth?error=google_not_configured`);
   }
 
+  const redirectUri = `${base}/api/auth/google/callback`;
+
   const params = new URLSearchParams({
-    client_id: GOOGLE_CLIENT_ID,
-    redirect_uri: GOOGLE_REDIRECT_URI,
+    client_id: clientId,
+    redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'openid email profile',
     access_type: 'offline',
