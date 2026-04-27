@@ -9,20 +9,33 @@ function getBaseUrl(request) {
   try { return new URL(request.url).origin; } catch { return 'https://adgena.pro'; }
 }
 
+// Fetch with timeout + retry for Railway network issues
+async function fetchWithRetry(url, options, { timeout = 15000, retries = 3 } = {}) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
+      return res;
+    } catch (err) {
+      console.error(`[Yandex] Fetch attempt ${attempt}/${retries} to ${url} failed:`, err.message);
+      if (attempt === retries) throw err;
+      // Wait before retry (500ms, 1s, 1.5s)
+      await new Promise(r => setTimeout(r, attempt * 500));
+    }
+  }
+}
+
 export async function GET(request) {
   const base = getBaseUrl(request);
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const error = url.searchParams.get('error');
 
-  // Debug logging — check Railway logs
-  console.log('[Yandex Callback] Full URL:', request.url);
-  console.log('[Yandex Callback] code:', code ? 'present' : 'MISSING');
-  console.log('[Yandex Callback] error:', error || 'none');
-  console.log('[Yandex Callback] all params:', Object.fromEntries(url.searchParams));
+  console.log('[Yandex Callback] code:', code ? 'present' : 'MISSING', 'error:', error || 'none');
 
   if (error || !code) {
-    console.error('[Yandex Callback] DENIED — error:', error, 'code:', !!code);
     return NextResponse.redirect(`${base}/auth?error=yandex_denied`);
   }
 
@@ -34,8 +47,9 @@ export async function GET(request) {
       return NextResponse.redirect(`${base}/auth?error=yandex_not_configured`);
     }
 
-    // Exchange code for token
-    const tokenRes = await fetch('https://oauth.yandex.ru/token', {
+    // Exchange code for token (with retry)
+    console.log('[Yandex] Exchanging code for token...');
+    const tokenRes = await fetchWithRetry('https://oauth.yandex.ru/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -47,18 +61,22 @@ export async function GET(request) {
     });
 
     const tokens = await tokenRes.json();
+    console.log('[Yandex] Token response:', tokens.access_token ? 'OK' : 'FAIL', tokens.error || '');
+
     if (!tokens.access_token) {
-      console.error('Yandex token error:', tokens);
+      console.error('[Yandex] Token error:', JSON.stringify(tokens));
       return NextResponse.redirect(`${base}/auth?error=yandex_token_failed`);
     }
 
-    // Get user info
-    const userRes = await fetch('https://login.yandex.ru/info?format=json', {
+    // Get user info (with retry)
+    console.log('[Yandex] Getting user info...');
+    const userRes = await fetchWithRetry('https://login.yandex.ru/info?format=json', {
       headers: { Authorization: `OAuth ${tokens.access_token}` },
     });
 
     const yandexUser = await userRes.json();
     const email = yandexUser.default_email || yandexUser.emails?.[0];
+    console.log('[Yandex] User email:', email || 'MISSING');
 
     if (!email) {
       return NextResponse.redirect(`${base}/auth?error=yandex_no_email`);
@@ -80,6 +98,9 @@ export async function GET(request) {
       `).run(id, email.toLowerCase().trim(), passwordHash, displayName);
 
       user = { id, email, name: displayName };
+      console.log('[Yandex] Created new user:', email);
+    } else {
+      console.log('[Yandex] Existing user:', email);
     }
 
     // Create session
@@ -88,10 +109,11 @@ export async function GET(request) {
 
     const response = NextResponse.redirect(`${base}/dashboard`);
     response.cookies.set(buildSessionCookie(token));
+    console.log('[Yandex] Login success, redirecting to dashboard');
     return response;
 
   } catch (err) {
-    console.error('Yandex OAuth error:', err);
+    console.error('[Yandex] OAuth error:', err.message, err.cause?.message || '');
     return NextResponse.redirect(`${base}/auth?error=yandex_failed`);
   }
 }
