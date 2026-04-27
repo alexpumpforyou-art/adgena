@@ -11,7 +11,7 @@ import styles from './page.module.css';
 function Logo({ className }) {
   return (
     <span className={className}>
-      <img src="/logo-icon.png" alt="Adgena" className="logoMark" style={{width: 32, height: 32, objectFit: 'contain'}} />
+      <img src="/logo-icon.png" alt="Adgena" style={{width: 44, height: 44, objectFit: 'contain'}} />
       <span>Adgena</span>
     </span>
   );
