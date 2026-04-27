@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import styles from './dashboard.module.css';
 
 // ========================================
@@ -117,6 +117,20 @@ export default function DashboardPage() {
   const [improveText, setImproveText] = useState('');
   const [versions, setVersions] = useState([]);
   const [activeVersion, setActiveVersion] = useState(0);
+  // User & History
+  const [user, setUser] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
+    fetch('/api/generations').then(r => r.json()).then(d => { if (d.success) setHistory(d.generations || []); }).catch(() => {});
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/';
+  };
 
   const concepts = tab === 'photo'
     ? (PHOTO_CONCEPTS[category] || PHOTO_CONCEPTS.other)
@@ -236,6 +250,48 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.page}>
+      {/* NAVBAR */}
+      <header className={styles.navbar}>
+        <div className={styles.navLeft}>
+          <span className={styles.logo}>⚡ AdGena</span>
+        </div>
+        <div className={styles.navRight}>
+          <button className={styles.navBtn} onClick={() => setShowHistory(!showHistory)}>
+            🕐 История
+          </button>
+          {user && (
+            <div className={styles.userMenu}>
+              <span className={styles.userAvatar}>{user.email?.[0]?.toUpperCase() || '?'}</span>
+              <button className={styles.navBtn} onClick={handleLogout}>Выйти</button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* HISTORY PANEL */}
+      {showHistory && (
+        <div className={styles.historyPanel}>
+          <div className={styles.historyHeader}>
+            <h3>История генераций</h3>
+            <button className={styles.historyClose} onClick={() => setShowHistory(false)}>✕</button>
+          </div>
+          <div className={styles.historyList}>
+            {history.length === 0 && <p className={styles.historyEmpty}>Пока нет генераций</p>}
+            {history.map(g => (
+              <div key={g.id} className={styles.historyItem}>
+                <div className={styles.historyItemInfo}>
+                  <span className={styles.historyName}>{g.productName || '—'}</span>
+                  <span className={styles.historyMeta}>{g.type} • {g.templateId} • {new Date(g.createdAt).toLocaleDateString('ru-RU')}</span>
+                </div>
+                <span className={`${styles.historyStatus} ${g.status === 'done' ? styles.historyStatusDone : ''}`}>
+                  {g.status === 'done' ? '✓' : '…'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* LEFT PANEL — Settings */}
       <aside className={styles.leftPanel}>
         {/* Section 1: Product */}

@@ -1,12 +1,97 @@
 /* ========================================
-   PAGE LAYOUT — Single Screen
+   PAGE LAYOUT — Navbar + Single Screen
    ======================================== */
 .page {
   display: grid;
   grid-template-columns: 380px 1fr;
+  grid-template-rows: auto 1fr;
   min-height: 100vh;
   background: var(--bg-primary);
 }
+
+/* ========================================
+   NAVBAR
+   ======================================== */
+.navbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  position: sticky; top: 0; z-index: 100;
+}
+.navLeft { display: flex; align-items: center; gap: 12px; }
+.navRight { display: flex; align-items: center; gap: 8px; }
+
+.logo {
+  font-size: 18px; font-weight: 800;
+  background: linear-gradient(135deg, var(--brand-primary), #a855f7);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.navBtn {
+  padding: 6px 14px; border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-primary); color: var(--text-secondary);
+  font-size: 13px; cursor: pointer; transition: all 0.15s;
+  font-family: inherit;
+}
+.navBtn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+.userMenu { display: flex; align-items: center; gap: 8px; }
+.userAvatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--brand-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+
+/* ========================================
+   HISTORY PANEL
+   ======================================== */
+.historyPanel {
+  position: fixed; top: 52px; right: 0; bottom: 0;
+  width: 340px; z-index: 90;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-primary);
+  box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+  display: flex; flex-direction: column;
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.historyHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border-primary);
+}
+.historyHeader h3 { margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.historyClose {
+  background: none; border: none; font-size: 18px;
+  color: var(--text-tertiary); cursor: pointer; padding: 4px;
+}
+
+.historyList { flex: 1; overflow-y: auto; padding: 12px; }
+.historyEmpty { text-align: center; color: var(--text-tertiary); font-size: 13px; padding: 40px 0; }
+
+.historyItem {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--border-primary);
+  margin-bottom: 6px; cursor: pointer;
+  transition: background 0.15s;
+}
+.historyItem:hover { background: var(--bg-tertiary); }
+
+.historyItemInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.historyName { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.historyMeta { font-size: 11px; color: var(--text-tertiary); }
+
+.historyStatus { font-size: 14px; color: var(--text-tertiary); flex-shrink: 0; }
+.historyStatusDone { color: #22c55e; }
 
 /* ========================================
    LEFT PANEL (Settings)
@@ -19,9 +104,9 @@
   flex-direction: column;
   gap: 0;
   overflow-y: auto;
-  max-height: 100vh;
+  max-height: calc(100vh - 52px);
   position: sticky;
-  top: 0;
+  top: 52px;
 }
 
 .section { display: flex; flex-direction: column; gap: 12px; }
