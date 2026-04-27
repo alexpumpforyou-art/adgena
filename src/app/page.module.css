@@ -1,6 +1,6 @@
 /* ========================================
-   LANDING — Adgena Brand Kit v3
-   Video scroll hero + horizontal gallery
+   LANDING — Adgena v4
+   Canvas video scroll + pinned horiz gallery
    ======================================== */
 
 .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
@@ -21,8 +21,6 @@
   width: 100%; max-width: 1200px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between;
 }
-
-/* Logo */
 .logo {
   display: inline-flex; align-items: center; gap: 10px;
   text-decoration: none; color: var(--text-primary);
@@ -33,7 +31,6 @@
 }
 .footerLogo { composes: logo; }
 
-/* Nav */
 .nav { display: flex; gap: 32px; }
 .nav a {
   font-size: 14px; font-weight: 500; color: var(--text-secondary);
@@ -44,69 +41,13 @@
 .btnStart {
   padding: 10px 24px; border-radius: 999px;
   background: var(--accent-gradient); color: #fff;
-  font-size: 13px; font-weight: 600; text-decoration: none;
-  transition: all 0.2s;
+  font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.2s;
 }
-.btnStart:hover { box-shadow: 0 4px 20px rgba(255, 106, 0, 0.3); transform: translateY(-1px); }
+.btnStart:hover { box-shadow: 0 4px 20px rgba(255, 106, 0, 0.3); }
 
 /* ========================================
-   HERO — Video Scroll
+   BUTTONS
    ======================================== */
-.hero {
-  height: 300vh; /* scroll distance */
-  position: relative;
-}
-.heroSticky {
-  position: sticky; top: 0;
-  width: 100%; height: 100vh;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-
-/* Video */
-.heroVideo {
-  position: absolute; inset: 0; z-index: 0;
-}
-.video {
-  width: 100%; height: 100%; object-fit: cover;
-}
-.videoOverlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(11, 13, 20, 0.7) 0%,
-    rgba(11, 13, 20, 0.4) 40%,
-    rgba(11, 13, 20, 0.7) 100%
-  );
-}
-
-/* Hero text */
-.heroContent {
-  position: relative; z-index: 1;
-  display: flex; flex-direction: column; align-items: center; text-align: center;
-  gap: 24px; max-width: 720px; padding: 0 24px;
-}
-.heroLabel {
-  font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
-  color: var(--accent-primary);
-}
-.heroTitle {
-  font-family: var(--font-display);
-  font-size: clamp(40px, 7vw, 72px);
-  font-weight: 900; line-height: 1.0; letter-spacing: -2px;
-}
-.heroAccent {
-  background: var(--accent-gradient);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  animation: fadeInUp 0.35s ease;
-}
-.heroTitleLight { font-weight: 400; color: var(--text-secondary); }
-.heroDesc {
-  font-size: 17px; line-height: 1.7; color: var(--text-secondary); max-width: 480px;
-}
-.heroCta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-
-/* Buttons */
 .btnPrimary {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 14px 32px; border-radius: 999px; border: none;
@@ -135,23 +76,79 @@
 }
 .btnOutline:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
 
-/* Scroll indicator */
-.scrollIndicator {
-  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  transition: opacity 0.3s;
+/* ========================================
+   HERO — Canvas Video Scroll
+   ======================================== */
+.hero {
+  height: 400vh; /* scroll distance for video */
+  position: relative;
 }
-.scrollIndicator span {
+
+.canvasWrap {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh; z-index: 0;
+  pointer-events: none;
+}
+.canvas { display: block; }
+.canvasOverlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(11, 13, 20, 0.5) 0%,
+    rgba(11, 13, 20, 0.15) 40%,
+    rgba(11, 13, 20, 0.5) 100%
+  );
+  pointer-events: none;
+}
+
+.heroContent {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 20px; padding: 0 24px;
+  pointer-events: none;
+}
+.heroContent > * { pointer-events: auto; }
+
+.heroLabel {
+  font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--accent-primary);
+}
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 7vw, 72px);
+  font-weight: 900; line-height: 1.0; letter-spacing: -2px;
+}
+.heroAccent {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: fadeInUp 0.35s ease;
+}
+.heroLight { font-weight: 400; color: var(--text-secondary); }
+.heroDesc { font-size: 17px; color: var(--text-secondary); max-width: 440px; }
+.heroCta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* Scroll hint */
+.scrollHint {
+  position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
+  z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.scrollHint span {
   font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px;
   color: var(--text-tertiary);
 }
 .scrollLine {
-  width: 1px; height: 40px; background: linear-gradient(to bottom, var(--text-tertiary), transparent);
+  width: 1px; height: 36px;
+  background: linear-gradient(to bottom, var(--text-tertiary), transparent);
   animation: scrollPulse 2s infinite;
 }
 @keyframes scrollPulse {
-  0%, 100% { opacity: 1; transform: scaleY(1); }
-  50% { opacity: 0.4; transform: scaleY(0.6); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ========================================
@@ -169,39 +166,45 @@
 .sectionDesc { font-size: 16px; color: var(--text-secondary); max-width: 500px; }
 
 /* ========================================
-   SHOWCASE — Horizontal Scroll
+   SHOWCASE — Pinned Horizontal Scroll
    ======================================== */
-.showcase { padding: 100px 0 80px; overflow: hidden; }
-
-.scrollTrack {
-  overflow-x: auto; overflow-y: hidden;
-  padding: 0 24px 20px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-default) transparent;
-  cursor: grab;
+.showcase {
+  position: relative; z-index: 2;
+  background: var(--bg-primary);
+  overflow: hidden;
 }
-.scrollTrack::-webkit-scrollbar { height: 4px; }
-.scrollTrack::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
 
-.scrollInner {
-  display: flex; gap: 20px;
-  width: max-content;
-  padding-right: 48px;
+.showcaseTrack {
+  display: flex; align-items: center; gap: 24px;
+  height: 100vh;
+  padding: 0 48px;
+  will-change: transform;
 }
+
+.showcaseTitleCard {
+  flex-shrink: 0; width: 340px;
+  display: flex; flex-direction: column; gap: 12px;
+  padding-right: 32px;
+}
+.showcaseTitle {
+  font-family: var(--font-display); font-size: 40px; font-weight: 900;
+  line-height: 1.05; letter-spacing: -1.5px;
+}
+.showcaseDesc { font-size: 15px; color: var(--text-secondary); }
 
 .showcaseCard {
-  width: 380px; flex-shrink: 0;
+  flex-shrink: 0; width: 380px;
   padding: 20px; border-radius: 16px;
   background: var(--bg-secondary); border: 1px solid var(--border-default);
   transition: all 0.25s;
 }
-.showcaseCard:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.showcaseCard:hover { border-color: var(--border-hover); box-shadow: var(--shadow-lg); }
 
 .cardHeader {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-.cardLabel { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.cardLabel { font-size: 15px; font-weight: 700; }
 .cardBadge {
   font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
   padding: 4px 10px; border-radius: 6px;
@@ -215,11 +218,7 @@
   color: var(--text-tertiary);
 }
 .cardCaption { font-size: 11px; color: var(--text-secondary); }
-
-.cardArrow {
-  display: flex; align-items: center; color: var(--accent-primary);
-  flex-shrink: 0;
-}
+.cardArrow { display: flex; align-items: center; color: var(--accent-primary); flex-shrink: 0; }
 
 /* Placeholder */
 .placeholder {
@@ -237,7 +236,7 @@
 /* ========================================
    FEATURES
    ======================================== */
-.features { padding: 100px 0; }
+.features { position: relative; z-index: 2; padding: 100px 0; background: var(--bg-primary); }
 
 .featGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .featCard {
@@ -260,7 +259,7 @@
 /* ========================================
    HOW IT WORKS
    ======================================== */
-.howItWorks { padding: 100px 0; background: var(--bg-secondary); }
+.howItWorks { position: relative; z-index: 2; padding: 100px 0; background: var(--bg-secondary); }
 
 .stepsRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .stepCard {
@@ -281,7 +280,7 @@
 /* ========================================
    PRICING
    ======================================== */
-.pricing { padding: 100px 0; }
+.pricing { position: relative; z-index: 2; padding: 100px 0; background: var(--bg-primary); }
 
 .priceGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .priceCard {
@@ -291,19 +290,16 @@
   position: relative; transition: all 0.25s;
 }
 .priceCard:hover { border-color: var(--border-hover); }
-
 .priceCardHl {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 1px var(--accent-primary), var(--accent-glow);
 }
-
 .priceBadge {
   position: absolute; top: -12px; left: 24px;
   padding: 4px 14px; border-radius: 999px;
   background: var(--accent-gradient); color: #fff;
   font-size: 11px; font-weight: 700;
 }
-
 .priceName { font-family: var(--font-display); font-size: 22px; font-weight: 800; }
 .priceDesc { font-size: 13px; color: var(--text-tertiary); }
 .priceAmount { font-family: var(--font-display); font-size: 36px; font-weight: 900; }
@@ -317,36 +313,27 @@
   content: ''; position: absolute; left: 0; top: 7px;
   width: 6px; height: 6px; border-radius: 50%; background: var(--accent-primary);
 }
-
 .priceCta { width: 100%; text-align: center; }
 
 /* ========================================
    FOOTER
    ======================================== */
 .footer {
+  position: relative; z-index: 2;
   padding: 64px 0 32px; border-top: 1px solid var(--border-subtle);
+  background: var(--bg-primary);
 }
 .footerGrid {
   display: flex; justify-content: space-between; gap: 48px; margin-bottom: 48px;
 }
 .footerDesc { font-size: 13px; color: var(--text-tertiary); margin-top: 12px; max-width: 280px; }
-
 .footerLinks { display: flex; gap: 64px; }
 .footerLinks div { display: flex; flex-direction: column; gap: 8px; }
 .footerLinks h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
 .footerLinks a { font-size: 13px; color: var(--text-tertiary); text-decoration: none; transition: color 0.15s; }
 .footerLinks a:hover { color: var(--text-primary); }
-
 .footerBottom { padding-top: 24px; border-top: 1px solid var(--border-subtle); }
 .footerBottom p { font-size: 12px; color: var(--text-tertiary); }
-
-/* ========================================
-   ANIMATIONS
-   ======================================== */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
 /* ========================================
    RESPONSIVE
@@ -356,16 +343,16 @@
   .stepsRow { grid-template-columns: repeat(2, 1fr); }
   .priceGrid { grid-template-columns: repeat(2, 1fr); }
   .showcaseCard { width: 320px; }
+  .showcaseTitleCard { width: 280px; }
 }
 
 @media (max-width: 640px) {
-  .hero { height: 250vh; }
-  .heroTitle { letter-spacing: -1px; }
+  .hero { height: 300vh; }
   .nav { display: none; }
   .featGrid { grid-template-columns: 1fr; }
   .stepsRow { grid-template-columns: 1fr; }
   .priceGrid { grid-template-columns: 1fr; }
   .showcaseCard { width: 300px; }
+  .showcaseTitleCard { width: 260px; }
   .footerGrid { flex-direction: column; gap: 32px; }
-  .footerLinks { gap: 32px; }
 }
