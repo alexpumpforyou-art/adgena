@@ -306,42 +306,54 @@ function Hero() {
 }
 
 // ========================================
-// SHOWCASE — Horizontal Scroll (pinned)
+// SHOWCASE — Horizontal Scroll (native sticky)
 // ========================================
 function Showcase() {
   const sectionRef = useRef(null);
+  const stickyRef = useRef(null);
   const trackRef = useRef(null);
 
   useEffect(() => {
-    const waitForGsap = setInterval(() => {
-      if (typeof window.gsap === 'undefined' || typeof window.ScrollTrigger === 'undefined') return;
-      clearInterval(waitForGsap);
+    const section = sectionRef.current;
+    const track = trackRef.current;
+    if (!section || !track) return;
 
-      const gsap = window.gsap;
-      const ScrollTrigger = window.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
+    function measure() {
+      const vw = window.innerWidth;
+      const scrollDistance = Math.max(0, track.scrollWidth - vw);
+      // Section height = viewport + horizontal scroll distance + intro/outro padding
+      const totalHeight = window.innerHeight + scrollDistance + 200;
+      section.style.height = `${Math.ceil(totalHeight)}px`;
+      section.dataset.scrollDistance = String(scrollDistance);
+    }
 
-      const track = trackRef.current;
-      const section = sectionRef.current;
-      if (!track || !section) return;
+    function onScroll() {
+      const rect = section.getBoundingClientRect();
+      const scrollDistance = parseFloat(section.dataset.scrollDistance || '0');
+      if (scrollDistance <= 0) return;
 
-      const scrollWidth = track.scrollWidth - window.innerWidth;
+      // How far into the section we've scrolled (after it reaches top)
+      const raw = Math.min(Math.max(-rect.top, 0), scrollDistance);
+      const progress = raw / scrollDistance;
 
-      gsap.to(track, {
-        x: -scrollWidth,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: section,
-          start: 'top top',
-          end: () => `+=${scrollWidth}`,
-          scrub: 1,
-          pin: true,
-          anticipatePin: 1,
-        }
-      });
-    }, 100);
+      // Ease out for smoother feel
+      const eased = 1 - Math.pow(1 - progress, 3);
+      track.style.transform = `translate3d(${-eased * scrollDistance}px, 0, 0)`;
+    }
 
-    return () => clearInterval(waitForGsap);
+    measure();
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', () => { measure(); onScroll(); });
+
+    // Recalculate after fonts load
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => { measure(); onScroll(); });
+    }
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   const cards = [
@@ -355,40 +367,42 @@ function Showcase() {
 
   return (
     <section className={styles.showcase} id="showcase" ref={sectionRef}>
-      <div className={styles.showcaseTrack} ref={trackRef}>
-        {/* Title card */}
-        <div className={styles.showcaseTitleCard}>
-          <span className={styles.sectionLabel}>Примеры</span>
-          <h2 className={styles.showcaseTitle}>Загрузил — получил</h2>
-          <p className={styles.showcaseDesc}>Одно фото товара превращается в продающий креатив</p>
-        </div>
-
-        {/* Before/After cards */}
-        {cards.map(card => (
-          <div key={card.id} className={styles.showcaseCard}>
-            <div className={styles.cardHeader}>
-              <span className={styles.cardLabel}>{card.label}</span>
-              <span className={styles.cardBadge}>{card.type}</span>
-            </div>
-            <div className={styles.cardPair}>
-              <div className={styles.cardSide}>
-                <span className={styles.cardTag}>Загрузил</span>
-                <div className={styles.placeholder} style={{aspectRatio: '3/4'}} />
-                <span className={styles.cardCaption}>{card.before}</span>
-              </div>
-              <div className={styles.cardArrow}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className={styles.cardSide}>
-                <span className={styles.cardTag}>Получил</span>
-                <div className={styles.placeholder} style={{aspectRatio: '3/4'}} />
-                <span className={styles.cardCaption}>{card.after}</span>
-              </div>
-            </div>
+      <div className={styles.showcaseSticky} ref={stickyRef}>
+        <div className={styles.showcaseTrack} ref={trackRef}>
+          {/* Title card */}
+          <div className={styles.showcaseTitleCard}>
+            <span className={styles.sectionLabel}>Примеры</span>
+            <h2 className={styles.showcaseTitle}>Загрузил — получил</h2>
+            <p className={styles.showcaseDesc}>Одно фото товара превращается в продающий креатив</p>
           </div>
-        ))}
+
+          {/* Before/After cards */}
+          {cards.map(card => (
+            <div key={card.id} className={styles.showcaseCard}>
+              <div className={styles.cardHeader}>
+                <span className={styles.cardLabel}>{card.label}</span>
+                <span className={styles.cardBadge}>{card.type}</span>
+              </div>
+              <div className={styles.cardPair}>
+                <div className={styles.cardSide}>
+                  <span className={styles.cardTag}>Загрузил</span>
+                  <div className={styles.placeholder} style={{aspectRatio: '3/4'}} />
+                  <span className={styles.cardCaption}>{card.before}</span>
+                </div>
+                <div className={styles.cardArrow}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className={styles.cardSide}>
+                  <span className={styles.cardTag}>Получил</span>
+                  <div className={styles.placeholder} style={{aspectRatio: '3/4'}} />
+                  <span className={styles.cardCaption}>{card.after}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
