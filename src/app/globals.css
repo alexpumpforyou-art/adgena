@@ -28,6 +28,10 @@
   --accent-gradient: linear-gradient(135deg, #FF6A00 0%, #FF8A33 100%);
   --accent-gradient-hover: linear-gradient(135deg, #E05E00 0%, #FF6A00 100%);
   --accent-gradient-teal: linear-gradient(135deg, #00C2A8 0%, #33D4BF 100%);
+
+  /* Status */
+  --success: #22C55E;
+  --success-bg: rgba(34, 197, 94, 0.08);
   --accent-glow: 0 0 24px rgba(255, 106, 0, 0.2);
   --accent-glow-strong: 0 0 48px rgba(255, 106, 0, 0.3), 0 0 96px rgba(255, 138, 51, 0.15);
 

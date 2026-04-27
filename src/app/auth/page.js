@@ -21,12 +21,16 @@ const OAUTH_ERRORS = {
 function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [step, setStep] = useState('email'); // 'email' | 'code' | 'password'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
     const errCode = searchParams.get('error');
@@ -35,40 +39,146 @@ function AuthForm() {
     }
   }, [searchParams]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Countdown timer for resend
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+  // Send verification code
+  const handleSendCode = async () => {
+    if (!email) { setError('Введите email'); return; }
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
-      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const body = mode === 'login'
-        ? { email, password }
-        : { email, password, name };
-
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email }),
       });
-
       const data = await res.json();
 
       if (data.success) {
-        router.push('/dashboard');
+        setStep('code');
+        setSuccess(`Код отправлен на ${email}`);
+        setCountdown(60);
       } else {
-        setError(data.error || 'Произошла ошибка');
+        setError(data.error || 'Не удалось отправить код');
       }
-    } catch (err) {
+    } catch {
       setError('Ошибка сети. Попробуйте позже.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Verify code
+  const handleVerifyCode = async () => {
+    if (!code || code.length !== 6) { setError('Введите 6-значный код'); return; }
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+      const data = await res.json();
+
+      if (data.verified) {
+        setStep('password');
+        setSuccess('Email подтверждён! Задайте пароль.');
+        setError('');
+      } else {
+        setError(data.error || 'Неверный код');
+      }
+    } catch {
+      setError('Ошибка сети.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Final registration (after code verified)
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!password || password.length < 6) { setError('Пароль минимум 6 символов'); return; }
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name, verified: true }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        router.push('/dashboard');
+      } else {
+        setError(data.error || 'Ошибка регистрации');
+      }
+    } catch {
+      setError('Ошибка сети.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Login (no verification needed)
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        router.push('/dashboard');
+      } else {
+        setError(data.error || 'Неверный email или пароль');
+      }
+    } catch {
+      setError('Ошибка сети.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOAuth = (provider) => {
-    // OAuth redirect — will be implemented via API routes
     window.location.href = `/api/auth/${provider}`;
+  };
+
+  const switchMode = (newMode) => {
+    setMode(newMode);
+    setStep('email');
+    setError('');
+    setSuccess('');
+    setCode('');
+  };
+
+  // Registration title/subtitle by step
+  const getRegisterTitle = () => {
+    if (step === 'email') return 'Регистрация';
+    if (step === 'code') return 'Подтверждение';
+    return 'Завершение';
+  };
+
+  const getRegisterSubtitle = () => {
+    if (step === 'email') return 'Укажите email для получения кода';
+    if (step === 'code') return `Введите 6-значный код, отправленный на ${email}`;
+    return 'Задайте пароль для входа';
   };
 
   return (
@@ -79,26 +189,121 @@ function AuthForm() {
           <img src="/logo-icon.webp" alt="" width={32} height={32} />
           <span>Adgena</span>
         </Link>
-        <Link href="/" className={styles.headerBtn}>
-          {mode === 'login' ? 'Войти' : 'Регистрация'}
-        </Link>
+        <Link href="/" className={styles.headerBtn}>На главную</Link>
       </header>
 
       {/* Auth Card */}
       <main className={styles.main}>
         <div className={styles.card}>
           <h1 className={styles.title}>
-            {mode === 'login' ? 'Авторизация' : 'Регистрация'}
+            {mode === 'login' ? 'Авторизация' : getRegisterTitle()}
           </h1>
           <p className={styles.subtitle}>
             {mode === 'login'
               ? 'Для доступа к сервису необходимо войти'
-              : 'Создайте аккаунт для начала работы'}
+              : getRegisterSubtitle()}
           </p>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className={styles.form}>
-            {mode === 'register' && (
+          {/* ===== LOGIN MODE ===== */}
+          {mode === 'login' && (
+            <form onSubmit={handleLogin} className={styles.form}>
+              <input
+                type="email"
+                className={styles.input}
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+              <input
+                type="password"
+                className={styles.input}
+                placeholder="Пароль"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="current-password"
+              />
+
+              {error && <p className={styles.error}>{error}</p>}
+
+              <button type="submit" className={styles.submitBtn} disabled={loading}>
+                {loading ? 'Загрузка...' : 'Войти'}
+              </button>
+            </form>
+          )}
+
+          {/* ===== REGISTER: STEP 1 — Email ===== */}
+          {mode === 'register' && step === 'email' && (
+            <div className={styles.form}>
+              <input
+                type="email"
+                className={styles.input}
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+
+              {error && <p className={styles.error}>{error}</p>}
+
+              <button
+                type="button"
+                className={styles.submitBtn}
+                disabled={loading || !email}
+                onClick={handleSendCode}
+              >
+                {loading ? 'Отправка...' : 'Получить код'}
+              </button>
+            </div>
+          )}
+
+          {/* ===== REGISTER: STEP 2 — Code ===== */}
+          {mode === 'register' && step === 'code' && (
+            <div className={styles.form}>
+              {success && <p className={styles.success}>{success}</p>}
+
+              <input
+                type="text"
+                className={styles.codeInput}
+                placeholder="000000"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                maxLength={6}
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                autoFocus
+              />
+
+              {error && <p className={styles.error}>{error}</p>}
+
+              <button
+                type="button"
+                className={styles.submitBtn}
+                disabled={loading || code.length !== 6}
+                onClick={handleVerifyCode}
+              >
+                {loading ? 'Проверка...' : 'Подтвердить'}
+              </button>
+
+              <button
+                type="button"
+                className={styles.resendBtn}
+                disabled={countdown > 0}
+                onClick={handleSendCode}
+              >
+                {countdown > 0 ? `Отправить повторно (${countdown}с)` : 'Отправить код повторно'}
+              </button>
+            </div>
+          )}
+
+          {/* ===== REGISTER: STEP 3 — Password ===== */}
+          {mode === 'register' && step === 'password' && (
+            <form onSubmit={handleRegister} className={styles.form}>
+              {success && <p className={styles.success}>{success}</p>}
+
               <input
                 type="text"
                 className={styles.input}
@@ -106,40 +311,26 @@ function AuthForm() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
+                autoFocus
               />
-            )}
-            <input
-              type="email"
-              className={styles.input}
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-            <input
-              type="password"
-              className={styles.input}
-              placeholder="Пароль"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            />
+              <input
+                type="password"
+                className={styles.input}
+                placeholder="Пароль (мин. 6 символов)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
 
-            {error && <p className={styles.error}>{error}</p>}
+              {error && <p className={styles.error}>{error}</p>}
 
-            <button
-              type="submit"
-              className={styles.submitBtn}
-              disabled={loading}
-            >
-              {loading
-                ? 'Загрузка...'
-                : mode === 'login' ? 'Войти' : 'Создать аккаунт'}
-            </button>
-          </form>
+              <button type="submit" className={styles.submitBtn} disabled={loading}>
+                {loading ? 'Создание...' : 'Создать аккаунт'}
+              </button>
+            </form>
+          )}
 
           {/* Divider */}
           <div className={styles.divider}>
@@ -184,14 +375,14 @@ function AuthForm() {
             {mode === 'login' ? (
               <>
                 Нет аккаунта?{' '}
-                <button className={styles.toggleBtn} onClick={() => { setMode('register'); setError(''); }}>
+                <button className={styles.toggleBtn} onClick={() => switchMode('register')}>
                   Зарегистрироваться
                 </button>
               </>
             ) : (
               <>
                 Уже есть аккаунт?{' '}
-                <button className={styles.toggleBtn} onClick={() => { setMode('login'); setError(''); }}>
+                <button className={styles.toggleBtn} onClick={() => switchMode('login')}>
                   Войти
                 </button>
               </>
