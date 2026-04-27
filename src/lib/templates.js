@@ -1,126 +1,109 @@
 /**
- * Template definitions — matching real competitor concepts
- * 3 photo types + infographic card
+ * Categories & context-dependent photo concepts (Aidentika-style)
  */
 
-export const MARKETPLACE_SIZES = {
-  wb:       { width: 900,  height: 1200, name: 'Wildberries',   aspect: '3:4',  region: 'ru' },
-  ozon:     { width: 900,  height: 1200, name: 'Ozon',          aspect: '3:4',  region: 'ru' },
-  ymarket:  { width: 800,  height: 800,  name: 'Яндекс Маркет', aspect: '1:1',  region: 'ru' },
-  avito:    { width: 800,  height: 800,  name: 'Авито',         aspect: '1:1',  region: 'ru' },
-  amazon:   { width: 2000, height: 2000, name: 'Amazon',        aspect: '1:1',  region: 'en' },
-  ebay:     { width: 1600, height: 1600, name: 'eBay',          aspect: '1:1',  region: 'en' },
-  etsy:     { width: 2000, height: 2000, name: 'Etsy',          aspect: '1:1',  region: 'en' },
-  shopify:  { width: 2048, height: 2048, name: 'Shopify',       aspect: '1:1',  region: 'en' },
+// ========================================
+// PRODUCT CATEGORIES
+// ========================================
+
+export const CATEGORIES = [
+  { id: 'clothing',    name: 'Одежда и обувь',       nameEn: 'Clothing & Shoes',   icon: '👗' },
+  { id: 'accessories', name: 'Аксессуары',            nameEn: 'Accessories',         icon: '💍' },
+  { id: 'food',        name: 'Еда и напитки',         nameEn: 'Food & Drinks',       icon: '🍕' },
+  { id: 'beauty',      name: 'Косметика и уход',      nameEn: 'Beauty & Care',       icon: '💄' },
+  { id: 'gadgets',     name: 'Гаджеты и техника',     nameEn: 'Gadgets & Tech',      icon: '📱' },
+  { id: 'home',        name: 'Дом и сад',             nameEn: 'Home & Garden',       icon: '🏠' },
+  { id: 'kids',        name: 'Детские товары',         nameEn: 'Kids',                icon: '🧸' },
+  { id: 'other',       name: 'Прочее',                nameEn: 'Other',               icon: '📦' },
+];
+
+// ========================================
+// PHOTO CONCEPTS PER CATEGORY
+// ========================================
+
+export const PHOTO_CONCEPTS = {
+  clothing: [
+    { id: 'on-model',   name: 'На модели',           nameEn: 'On Model',        icon: '👤', desc: 'Носимый контекст, акцент на посадке',   descEn: 'Worn context, fit focus' },
+    { id: 'in-store',   name: 'Как в магазине',      nameEn: 'In Store',        icon: '🏪', desc: 'На вешалке или подставке',              descEn: 'On hanger or mannequin' },
+    { id: 'flat-lay',   name: 'Раскладка сверху',    nameEn: 'Flat Lay',        icon: '📐', desc: 'Вид строго сверху',                    descEn: 'Top-down view' },
+    { id: 'studio',     name: 'Каталог (студийно)',   nameEn: 'Studio Catalog',  icon: '📸', desc: 'Чистый объект на нейтральном фоне',    descEn: 'Clean neutral background' },
+  ],
+  accessories: [
+    { id: 'on-model',   name: 'На модели',           nameEn: 'On Model',        icon: '👤', desc: 'На руке, шее, в ушах',                 descEn: 'On hand, neck, ears' },
+    { id: 'flat-lay',   name: 'Раскладка сверху',    nameEn: 'Flat Lay',        icon: '📐', desc: 'Flat lay с аксессуарами',              descEn: 'Flat lay arrangement' },
+    { id: 'in-context', name: 'В окружении',         nameEn: 'In Context',      icon: '🏠', desc: 'На столе, у зеркала',                  descEn: 'On table, by mirror' },
+    { id: 'studio',     name: 'Каталог (студийно)',   nameEn: 'Studio Catalog',  icon: '📸', desc: 'Чистый объект на нейтральном фоне',    descEn: 'Clean neutral background' },
+  ],
+  food: [
+    { id: 'plated',     name: 'Сервировка',          nameEn: 'Plated',          icon: '🍽️', desc: 'На тарелке, в бокале, готово к подаче', descEn: 'Ready to serve' },
+    { id: 'in-context', name: 'В окружении',         nameEn: 'In Context',      icon: '🏠', desc: 'На кухне, с ингредиентами',            descEn: 'Kitchen, with ingredients' },
+    { id: 'flat-lay',   name: 'Раскладка сверху',    nameEn: 'Flat Lay',        icon: '📐', desc: 'Вид сверху с ингредиентами',           descEn: 'Top-down with ingredients' },
+    { id: 'studio',     name: 'Каталог (студийно)',   nameEn: 'Studio Catalog',  icon: '📸', desc: 'Упаковка на чистом фоне',             descEn: 'Packaging on clean bg' },
+  ],
+  beauty: [
+    { id: 'in-use',     name: 'В использовании',     nameEn: 'In Use',          icon: '👤', desc: 'Нанесение на кожу, в руках',           descEn: 'Applied on skin, in hands' },
+    { id: 'in-context', name: 'В окружении',         nameEn: 'In Context',      icon: '🏠', desc: 'Ванная, полка, зеркало',               descEn: 'Bathroom, shelf, mirror' },
+    { id: 'texture',    name: 'Текстура крупно',     nameEn: 'Texture Close-up',icon: '🧪', desc: 'Текстура крема, масла, средства',      descEn: 'Cream, oil texture macro' },
+    { id: 'studio',     name: 'Каталог (студийно)',   nameEn: 'Studio Catalog',  icon: '📸', desc: 'Чистый объект на нейтральном фоне',    descEn: 'Clean neutral background' },
+  ],
+  gadgets: [
+    { id: 'in-use',     name: 'В использовании',     nameEn: 'In Use',          icon: '👐', desc: 'Руки, рабочий процесс',                descEn: 'Hands, work process' },
+    { id: 'in-context', name: 'В окружении',         nameEn: 'In Context',      icon: '🏠', desc: 'Стол, рабочее место',                  descEn: 'Desk, workspace' },
+    { id: 'close-up',   name: 'Крупный план',        nameEn: 'Close-up',        icon: '🔍', desc: 'Кнопки, экраны, детали',               descEn: 'Buttons, screens, details' },
+    { id: 'studio',     name: 'Каталог (студийно)',   nameEn: 'Studio Catalog',  icon: '📸', desc: 'Чистый объект на нейтральном фоне',    descEn: 'Clean neutral background' },
+  ],
+  home: [
+    { id: 'in-interior',name: 'В интерьере',         nameEn: 'In Interior',     icon: '🏠', desc: 'В комнате, на своём месте',            descEn: 'In room, in place' },
+    { id: 'in-use',     name: 'В использовании',     nameEn: 'In Use',          icon: '👤', desc: 'Человек использует предмет',           descEn: 'Person using the item' },
+    { id: 'close-up',   name: 'Крупный план',        nameEn: 'Close-up',        icon: '🔍', desc: 'Текстура, материал, детали',           descEn: 'Texture, material, details' },
+    { id: 'studio',     name: 'Каталог (студийно)',   nameEn: 'Studio Catalog',  icon: '📸', desc: 'Чистый объект на нейтральном фоне',    descEn: 'Clean neutral background' },
+  ],
+  kids: [
+    { id: 'in-use',     name: 'Ребёнок с товаром',   nameEn: 'Child Using',     icon: '👶', desc: 'Ребёнок играет, использует',           descEn: 'Child playing, using' },
+    { id: 'in-context', name: 'В детской',           nameEn: 'In Nursery',      icon: '🏠', desc: 'В детской комнате',                    descEn: 'In kids room' },
+    { id: 'flat-lay',   name: 'Раскладка сверху',    nameEn: 'Flat Lay',        icon: '📐', desc: 'Вид сверху среди игрушек',             descEn: 'Top-down among toys' },
+    { id: 'studio',     name: 'Каталог (студийно)',   nameEn: 'Studio Catalog',  icon: '📸', desc: 'Чистый объект на нейтральном фоне',    descEn: 'Clean neutral background' },
+  ],
+  other: [
+    { id: 'in-use',     name: 'В использовании',     nameEn: 'In Use',          icon: '👤', desc: 'Товар в процессе использования',       descEn: 'Product being used' },
+    { id: 'in-context', name: 'В окружении',         nameEn: 'In Context',      icon: '🏠', desc: 'В подходящей обстановке',              descEn: 'In fitting environment' },
+    { id: 'flat-lay',   name: 'Раскладка сверху',    nameEn: 'Flat Lay',        icon: '📐', desc: 'Вид строго сверху',                    descEn: 'Top-down view' },
+    { id: 'studio',     name: 'Каталог (студийно)',   nameEn: 'Studio Catalog',  icon: '📸', desc: 'Чистый объект на нейтральном фоне',    descEn: 'Clean neutral background' },
+  ],
 };
 
-export const AD_SIZES = {
-  'fb-feed':    { width: 1080, height: 1080, name: 'Facebook/Instagram Feed', aspect: '1:1' },
-  'fb-story':   { width: 1080, height: 1920, name: 'Stories/Reels',           aspect: '9:16' },
-  'google-gdn': { width: 1200, height: 628,  name: 'Google Display',          aspect: '1.91:1' },
-  'vk-post':    { width: 1080, height: 607,  name: 'ВКонтакте',               aspect: '16:9' },
+// ========================================
+// CARD STYLES
+// ========================================
+
+export const CARD_STYLES = [
+  { id: 'classic', name: 'Классический', nameEn: 'Classic' },
+  { id: 'premium', name: 'Премиум',     nameEn: 'Premium' },
+];
+
+// ========================================
+// ASPECT RATIOS
+// ========================================
+
+export const ASPECT_RATIOS = [
+  { id: '9:16', label: '9:16', desc: 'Stories' },
+  { id: '3:4',  label: '3:4',  desc: 'WB / Ozon' },
+  { id: '1:1',  label: '1:1',  desc: 'Amazon / eBay' },
+  { id: '4:3',  label: '4:3',  desc: 'Горизонтальный' },
+  { id: '16:9', label: '16:9', desc: 'Баннер' },
+];
+
+// ========================================
+// PLATFORM SIZES (for sharp resize)
+// ========================================
+
+export const PLATFORM_SIZES = {
+  wb:         { w: 900,  h: 1200, aspect: '3:4' },
+  ozon:       { w: 900,  h: 1200, aspect: '3:4' },
+  amazon:     { w: 2000, h: 2000, aspect: '1:1' },
+  ebay:       { w: 1600, h: 1600, aspect: '1:1' },
+  'fb-feed':  { w: 1080, h: 1080, aspect: '1:1' },
+  'fb-story': { w: 1080, h: 1920, aspect: '9:16' },
+  'google':   { w: 1200, h: 628,  aspect: '16:9' },
+  'vk':       { w: 1080, h: 607,  aspect: '16:9' },
 };
-
-// ========================================
-// PHOTO CONCEPTS (like Aidentika)
-// ========================================
-
-export const PHOTO_TEMPLATES = [
-  {
-    id: 'in-use',
-    name: { ru: 'В использовании', en: 'In Use' },
-    icon: '👤',
-    description: {
-      ru: 'Товар в руках у человека, в процессе использования',
-      en: 'Product being used by a person in a natural setting',
-    },
-  },
-  {
-    id: 'in-context',
-    name: { ru: 'В окружении', en: 'In Context' },
-    icon: '🏠',
-    description: {
-      ru: 'Товар в красивом окружении — на столе, в интерьере, flat lay',
-      en: 'Product in a styled environment — table, interior, flat lay',
-    },
-  },
-  {
-    id: 'studio',
-    name: { ru: 'Каталог (студийно)', en: 'Studio Catalog' },
-    icon: '📸',
-    description: {
-      ru: 'Чистое студийное фото на нейтральном фоне',
-      en: 'Clean studio photo on neutral background',
-    },
-  },
-];
-
-// ========================================
-// CARD TEMPLATES (infographic overlays)
-// ========================================
-
-export const CARD_TEMPLATES = [
-  {
-    id: 'infographic',
-    name: { ru: 'Инфографика', en: 'Infographic' },
-    icon: '📊',
-    description: {
-      ru: 'Карточка с иконками, выносками и характеристиками',
-      en: 'Card with icons, callouts, and feature highlights',
-    },
-  },
-  {
-    id: 'minimal-card',
-    name: { ru: 'Минималистичная', en: 'Minimal Card' },
-    icon: '✨',
-    description: {
-      ru: 'Чистая карточка с названием и буллетами',
-      en: 'Clean card with title and bullet points',
-    },
-  },
-  {
-    id: 'gradient-card',
-    name: { ru: 'Градиентная', en: 'Gradient Card' },
-    icon: '🎨',
-    description: {
-      ru: 'Яркая карточка с градиентным фоном',
-      en: 'Vibrant card with gradient background',
-    },
-  },
-];
-
-// ========================================
-// AD TEMPLATES
-// ========================================
-
-export const AD_TEMPLATES = [
-  {
-    id: 'ad-sale',
-    name: { ru: 'Распродажа', en: 'Sale' },
-    icon: '🔥',
-    description: {
-      ru: 'Яркий баннер для скидок и акций',
-      en: 'Bold banner for sales and discounts',
-    },
-  },
-  {
-    id: 'ad-minimal',
-    name: { ru: 'Минимал', en: 'Minimal Ad' },
-    icon: '🤍',
-    description: {
-      ru: 'Фокус на товаре, Apple-стиль',
-      en: 'Product focus, Apple style',
-    },
-  },
-  {
-    id: 'ad-story',
-    name: { ru: 'Stories', en: 'Story Ad' },
-    icon: '📱',
-    description: {
-      ru: 'Вертикальный для сторис и рилс',
-      en: 'Vertical for stories and reels',
-    },
-  },
-];
-
-export const ALL_TEMPLATES = [...PHOTO_TEMPLATES, ...CARD_TEMPLATES, ...AD_TEMPLATES];

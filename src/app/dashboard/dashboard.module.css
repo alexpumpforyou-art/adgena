@@ -237,6 +237,65 @@
   .stepTwoLayout { grid-template-columns: 1fr; }
   .resultLayout { grid-template-columns: 1fr; }
 }
+/* ========================================
+   STEP ONE LAYOUT
+   ======================================== */
+.stepOneLayout {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;
+}
+.productInfo { display: flex; flex-direction: column; gap: 20px; }
+.fieldGroup { display: flex; flex-direction: column; gap: 6px; }
+.fieldLabel { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.fieldHint { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; font-style: italic; }
+
+.textInput, .selectInput {
+  padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary); color: var(--text-primary);
+  font-size: 14px; transition: border-color 0.2s;
+}
+.textInput:focus, .selectInput:focus {
+  outline: none; border-color: var(--brand-primary);
+}
+
+.textArea {
+  padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary); color: var(--text-primary);
+  font-size: 14px; resize: vertical; min-height: 60px;
+  font-family: inherit; transition: border-color 0.2s;
+}
+.textArea:focus { outline: none; border-color: var(--brand-primary); }
+
+/* ========================================
+   CARD STYLE + CREATIVITY
+   ======================================== */
+.styleBtns { display: flex; gap: 8px; }
+.styleBtn {
+  padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border-primary);
+  background: var(--bg-secondary); color: var(--text-secondary);
+  font-size: 13px; cursor: pointer; transition: all 0.2s;
+}
+.styleBtnActive {
+  background: var(--brand-primary); color: #fff; border-color: var(--brand-primary);
+}
+
+.sliderRow { display: flex; align-items: center; gap: 12px; }
+.slider { flex: 1; accent-color: var(--brand-primary); }
+
+/* ========================================
+   ASPECT RATIO GRID
+   ======================================== */
+.ratioGrid { display: flex; gap: 6px; flex-wrap: wrap; }
+.ratioBtn {
+  padding: 6px 16px; border-radius: 8px; border: 1px solid var(--border-primary);
+  background: var(--bg-secondary); color: var(--text-secondary);
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.ratioBtnActive {
+  background: var(--text-primary); color: var(--bg-primary); border-color: var(--text-primary);
+}
+
 @media (max-width: 768px) {
   .sidebar { display: none; }
   .main { margin-left: 0 !important; }
@@ -245,6 +304,7 @@
   .stepsBar { overflow-x: auto; justify-content: flex-start; padding: 12px 16px; }
   .stepItem span:not(.stepDot) { display: none; }
   .templateGrid { grid-template-columns: repeat(3, 1fr); }
+  .stepOneLayout { grid-template-columns: 1fr; }
 }
 
 /* ========================================

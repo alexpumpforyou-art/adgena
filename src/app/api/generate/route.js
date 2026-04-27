@@ -27,8 +27,14 @@ export async function POST(request) {
     const productName = formData.get('productName');
     const productDesc = formData.get('productDesc');
     const type = formData.get('type') || 'photo';
+    const category = formData.get('category') || 'other';
     const lang = formData.get('lang') || 'ru';
     const textJson = formData.get('text');
+    const wishes = formData.get('wishes') || '';
+    const cardText = formData.get('cardText') || '';
+    const cardStyle = formData.get('cardStyle') || 'classic';
+    const creativity = parseFloat(formData.get('creativity') || '0.5');
+    const aspectRatioOverride = formData.get('aspectRatio') || '';
 
     if (!image || !templateId) {
       return NextResponse.json(
@@ -98,6 +104,9 @@ export async function POST(request) {
 
     console.log(`[Generate] Starting: ${generationId} | template: ${templateId} | size: ${sizeId} (${sizeConfig.w}x${sizeConfig.h}, ${aspectRatio})`);
 
+    // Override aspect ratio if explicitly set by user
+    const finalAspectRatio = aspectRatioOverride || aspectRatio;
+
     // === CORE: Generate via AI ===
     const result = await generateProductCard({
       imageBase64,
@@ -106,10 +115,15 @@ export async function POST(request) {
       productName: productName || 'Product',
       bullets,
       type,
+      category,
       headline,
       cta,
       lang,
-      aspectRatio,
+      aspectRatio: finalAspectRatio,
+      wishes,
+      cardText,
+      cardStyle,
+      creativity,
     });
 
     if (!result.success || !result.imageData) {

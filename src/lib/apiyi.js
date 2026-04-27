@@ -5,7 +5,7 @@
  */
 
 import OpenAI from 'openai';
-import { MARKETPLACE_PROMPTS, AD_PROMPTS } from './prompts.js';
+import { getPhotoPrompt, getCardPrompt, AD_PROMPTS } from './prompts.js';
 
 const client = new OpenAI({
   apiKey: process.env.APIYI_API_KEY,
@@ -17,7 +17,7 @@ const client = new OpenAI({
 // ========================================
 
 /**
- * Generate a complete product card or ad creative via AI
+ * Generate a product photo, card, or ad creative via AI
  */
 export async function generateProductCard({
   imageBase64,
@@ -26,27 +26,32 @@ export async function generateProductCard({
   productName,
   bullets = [],
   type = 'photo',
+  category = 'other',
   headline = '',
   cta = '',
   lang = 'ru',
   aspectRatio = '3:4',
+  wishes = '',
+  cardText = '',
+  cardStyle = 'classic',
+  creativity = 0.5,
 }) {
   let prompt;
 
   if (type === 'ads') {
     const promptFn = AD_PROMPTS[templateId] || AD_PROMPTS['ad-minimal'];
     prompt = typeof promptFn === 'function' ? promptFn(productName, headline, cta, lang) : promptFn;
+  } else if (type === 'card') {
+    prompt = getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes });
   } else {
-    // 'photo' and 'card' both use MARKETPLACE_PROMPTS
-    const fallback = type === 'card' ? 'infographic' : 'in-context';
-    const promptFn = MARKETPLACE_PROMPTS[templateId] || MARKETPLACE_PROMPTS[fallback];
-    prompt = typeof promptFn === 'function' ? promptFn(productName, bullets, lang) : promptFn;
+    // 'photo' — category-aware
+    prompt = getPhotoPrompt({ conceptId: templateId, category, productName, bullets, lang, wishes });
   }
 
-  // Inject aspect ratio instruction
+  // Inject aspect ratio
   prompt += `\n\nIMPORTANT: Generate the image in ${aspectRatio} aspect ratio.`;
 
-  console.log(`[APIYI] Generating ${type} | template: ${templateId} | ratio: ${aspectRatio} | lang: ${lang}`);
+  console.log(`[APIYI] ${type} | concept: ${templateId} | cat: ${category} | ratio: ${aspectRatio} | lang: ${lang}`);
   console.log(`[APIYI] Product: ${productName}`);
 
   const response = await client.chat.completions.create({
