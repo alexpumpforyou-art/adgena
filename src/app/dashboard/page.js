@@ -8,77 +8,77 @@ import styles from './dashboard.module.css';
 // ========================================
 
 const CONTENT_TYPES = [
-  { id: 'photo', label: '📸 Фото' },
-  { id: 'card', label: '🃏 Карточка' },
-  { id: 'ads', label: '🎯 Реклама' },
+  { id: 'photo', label: 'Фото' },
+  { id: 'card', label: 'Карточка' },
+  { id: 'ads', label: 'Реклама' },
 ];
 
 const CATEGORIES = [
-  { id: 'clothing',    name: 'Одежда и обувь',   icon: '👗' },
-  { id: 'accessories', name: 'Аксессуары',        icon: '💍' },
-  { id: 'food',        name: 'Еда и напитки',     icon: '🍕' },
-  { id: 'beauty',      name: 'Косметика и уход',  icon: '💄' },
-  { id: 'gadgets',     name: 'Гаджеты и техника', icon: '📱' },
-  { id: 'home',        name: 'Дом и сад',         icon: '🏠' },
-  { id: 'kids',        name: 'Детские товары',     icon: '🧸' },
-  { id: 'other',       name: 'Прочее',            icon: '📦' },
+  { id: 'clothing',    name: 'Одежда и обувь' },
+  { id: 'accessories', name: 'Аксессуары' },
+  { id: 'food',        name: 'Еда и напитки' },
+  { id: 'beauty',      name: 'Косметика и уход' },
+  { id: 'gadgets',     name: 'Гаджеты и техника' },
+  { id: 'home',        name: 'Дом и сад' },
+  { id: 'kids',        name: 'Детские товары' },
+  { id: 'other',       name: 'Прочее' },
 ];
 
 const PHOTO_CONCEPTS = {
   clothing: [
-    { id: 'on-model', name: 'На модели', icon: '👤', desc: 'Носимый контекст, акцент на посадке' },
-    { id: 'in-store', name: 'Как в магазине', icon: '🏪', desc: 'На вешалке или подставке' },
-    { id: 'flat-lay', name: 'Раскладка сверху', icon: '📐', desc: 'Вид строго сверху' },
-    { id: 'studio',   name: 'Каталог (студийно)', icon: '📸', desc: 'Чистый объект на нейтральном фоне' },
+    { id: 'on-model', name: 'На модели', desc: 'Носимый контекст, акцент на посадке' },
+    { id: 'in-store', name: 'Как в магазине', desc: 'На вешалке или подставке' },
+    { id: 'flat-lay', name: 'Раскладка сверху', desc: 'Вид строго сверху' },
+    { id: 'studio',   name: 'Каталог (студийно)', desc: 'Чистый объект на нейтральном фоне' },
   ],
   accessories: [
-    { id: 'on-model',   name: 'На модели', icon: '👤', desc: 'На руке, шее, в ушах' },
-    { id: 'flat-lay',   name: 'Раскладка сверху', icon: '📐', desc: 'Flat lay с аксессуарами' },
-    { id: 'in-context', name: 'В окружении', icon: '🏠', desc: 'На столе, у зеркала' },
-    { id: 'studio',     name: 'Каталог (студийно)', icon: '📸', desc: 'Чистый объект на нейтральном фоне' },
+    { id: 'on-model',   name: 'На модели', desc: 'На руке, шее, в ушах' },
+    { id: 'flat-lay',   name: 'Раскладка сверху', desc: 'Flat lay с аксессуарами' },
+    { id: 'in-context', name: 'В окружении', desc: 'На столе, у зеркала' },
+    { id: 'studio',     name: 'Каталог (студийно)', desc: 'Чистый объект на нейтральном фоне' },
   ],
   food: [
-    { id: 'plated',     name: 'Сервировка', icon: '🍽️', desc: 'На тарелке, в бокале' },
-    { id: 'in-context', name: 'В окружении', icon: '🏠', desc: 'На кухне, с ингредиентами' },
-    { id: 'flat-lay',   name: 'Раскладка сверху', icon: '📐', desc: 'Вид сверху с ингредиентами' },
-    { id: 'studio',     name: 'Каталог (студийно)', icon: '📸', desc: 'Упаковка на чистом фоне' },
+    { id: 'plated',     name: 'Сервировка', desc: 'На тарелке, в бокале' },
+    { id: 'in-context', name: 'В окружении', desc: 'На кухне, с ингредиентами' },
+    { id: 'flat-lay',   name: 'Раскладка сверху', desc: 'Вид сверху с ингредиентами' },
+    { id: 'studio',     name: 'Каталог (студийно)', desc: 'Упаковка на чистом фоне' },
   ],
   beauty: [
-    { id: 'in-use',     name: 'В использовании', icon: '👤', desc: 'Нанесение на кожу, в руках' },
-    { id: 'in-context', name: 'В окружении', icon: '🏠', desc: 'Ванная, полка, зеркало' },
-    { id: 'texture',    name: 'Текстура крупно', icon: '🧪', desc: 'Текстура крема, масла' },
-    { id: 'studio',     name: 'Каталог (студийно)', icon: '📸', desc: 'Чистый объект на нейтральном фоне' },
+    { id: 'in-use',     name: 'В использовании', desc: 'Нанесение на кожу, в руках' },
+    { id: 'in-context', name: 'В окружении', desc: 'Ванная, полка, зеркало' },
+    { id: 'texture',    name: 'Текстура крупно', desc: 'Текстура крема, масла' },
+    { id: 'studio',     name: 'Каталог (студийно)', desc: 'Чистый объект на нейтральном фоне' },
   ],
   gadgets: [
-    { id: 'in-use',     name: 'В использовании', icon: '👐', desc: 'Руки, рабочий процесс' },
-    { id: 'in-context', name: 'В окружении', icon: '🏠', desc: 'Стол, рабочее место' },
-    { id: 'close-up',   name: 'Крупный план', icon: '🔍', desc: 'Кнопки, экраны, детали' },
-    { id: 'studio',     name: 'Каталог (студийно)', icon: '📸', desc: 'Чистый объект на нейтральном фоне' },
+    { id: 'in-use',     name: 'В использовании', desc: 'Руки, рабочий процесс' },
+    { id: 'in-context', name: 'В окружении', desc: 'Стол, рабочее место' },
+    { id: 'close-up',   name: 'Крупный план', desc: 'Кнопки, экраны, детали' },
+    { id: 'studio',     name: 'Каталог (студийно)', desc: 'Чистый объект на нейтральном фоне' },
   ],
   home: [
-    { id: 'in-interior', name: 'В интерьере', icon: '🏠', desc: 'В комнате, на своём месте' },
-    { id: 'in-use',      name: 'В использовании', icon: '👤', desc: 'Человек использует предмет' },
-    { id: 'close-up',    name: 'Крупный план', icon: '🔍', desc: 'Текстура, материал, детали' },
-    { id: 'studio',      name: 'Каталог (студийно)', icon: '📸', desc: 'Чистый объект на нейтральном фоне' },
+    { id: 'in-interior', name: 'В интерьере', desc: 'В комнате, на своём месте' },
+    { id: 'in-use',      name: 'В использовании', desc: 'Человек использует предмет' },
+    { id: 'close-up',    name: 'Крупный план', desc: 'Текстура, материал, детали' },
+    { id: 'studio',      name: 'Каталог (студийно)', desc: 'Чистый объект на нейтральном фоне' },
   ],
   kids: [
-    { id: 'in-use',     name: 'Ребёнок с товаром', icon: '👶', desc: 'Ребёнок играет, использует' },
-    { id: 'in-context', name: 'В детской', icon: '🏠', desc: 'В детской комнате' },
-    { id: 'flat-lay',   name: 'Раскладка сверху', icon: '📐', desc: 'Вид сверху среди игрушек' },
-    { id: 'studio',     name: 'Каталог (студийно)', icon: '📸', desc: 'Чистый объект на нейтральном фоне' },
+    { id: 'in-use',     name: 'Ребёнок с товаром', desc: 'Ребёнок играет, использует' },
+    { id: 'in-context', name: 'В детской', desc: 'В детской комнате' },
+    { id: 'flat-lay',   name: 'Раскладка сверху', desc: 'Вид сверху среди игрушек' },
+    { id: 'studio',     name: 'Каталог (студийно)', desc: 'Чистый объект на нейтральном фоне' },
   ],
   other: [
-    { id: 'in-use',     name: 'В использовании', icon: '👤', desc: 'Товар в процессе использования' },
-    { id: 'in-context', name: 'В окружении', icon: '🏠', desc: 'В подходящей обстановке' },
-    { id: 'flat-lay',   name: 'Раскладка сверху', icon: '📐', desc: 'Вид строго сверху' },
-    { id: 'studio',     name: 'Каталог (студийно)', icon: '📸', desc: 'Чистый объект на нейтральном фоне' },
+    { id: 'in-use',     name: 'В использовании', desc: 'Товар в процессе использования' },
+    { id: 'in-context', name: 'В окружении', desc: 'В подходящей обстановке' },
+    { id: 'flat-lay',   name: 'Раскладка сверху', desc: 'Вид строго сверху' },
+    { id: 'studio',     name: 'Каталог (студийно)', desc: 'Чистый объект на нейтральном фоне' },
   ],
 };
 
 const AD_CONCEPTS = [
-  { id: 'ad-sale',    name: 'Распродажа', icon: '🔥', desc: 'Баннер для скидок' },
-  { id: 'ad-minimal', name: 'Минимал', icon: '🤍', desc: 'Apple-стиль' },
-  { id: 'ad-story',   name: 'Stories', icon: '📱', desc: 'Вертикальный для сторис' },
+  { id: 'ad-sale',    name: 'Распродажа', desc: 'Баннер для скидок' },
+  { id: 'ad-minimal', name: 'Минимал', desc: 'Apple-стиль' },
+  { id: 'ad-story',   name: 'Stories', desc: 'Вертикальный для сторис' },
 ];
 
 const ASPECT_RATIOS = [
@@ -121,11 +121,21 @@ export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
     fetch('/api/generations').then(r => r.json()).then(d => { if (d.success) setHistory(d.generations || []); }).catch(() => {});
+    const saved = localStorage.getItem('adgena-theme');
+    if (saved) { setTheme(saved); document.documentElement.setAttribute('data-theme', saved); }
   }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('adgena-theme', next);
+  };
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -253,11 +263,14 @@ export default function DashboardPage() {
       {/* NAVBAR */}
       <header className={styles.navbar}>
         <div className={styles.navLeft}>
-          <span className={styles.logo}>⚡ AdGena</span>
+          <span className={styles.logo}>AdGena</span>
         </div>
         <div className={styles.navRight}>
+          <button className={styles.navBtn} onClick={toggleTheme}>
+            {theme === 'dark' ? '☀️' : '☽'}
+          </button>
           <button className={styles.navBtn} onClick={() => setShowHistory(!showHistory)}>
-            🕐 История
+            История
           </button>
           {user && (
             <div className={styles.userMenu}>
@@ -481,7 +494,7 @@ export default function DashboardPage() {
           {generating ? (
             <><span className={styles.spinner} /> Генерирую...</>
           ) : (
-            <>⚡ Сгенерировать</>
+            <>Сгенерировать</>
           )}
         </button>
       </aside>
@@ -490,7 +503,7 @@ export default function DashboardPage() {
       <main className={styles.rightPanel}>
         {!generating && !generatedResult && (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>🎨</div>
+            <div className={styles.emptyIcon}></div>
             <h2>Ваши результаты</h2>
             <p>Загрузите фото, выберите настройки и нажмите «Сгенерировать»</p>
           </div>
@@ -506,7 +519,7 @@ export default function DashboardPage() {
           <div className={styles.emptyState}>
             {generatedResult.error ? (
               <div className={styles.errorBlock}>
-                <p>❌ {generatedResult.error}</p>
+                <p>{generatedResult.error}</p>
                 <button className={styles.linkBtn} onClick={() => setGeneratedResult(null)}>Попробовать снова</button>
               </div>
             ) : (
@@ -534,14 +547,14 @@ export default function DashboardPage() {
                 <img src={versions[activeVersion]?.imageDataUrl || generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
               </div>
               <div className={styles.modalImageActions}>
-                <button className={styles.iconBtn} title="Нравится">👍</button>
-                <button className={styles.iconBtn} title="Не нравится">👎</button>
+                <button className={styles.iconBtn} title="Нравится">+</button>
+                <button className={styles.iconBtn} title="Не нравится">&minus;</button>
                 <a
                   href={versions[activeVersion]?.imageDataUrl || generatedResult.imageDataUrl}
                   download={`adgena-${generatedResult.generationId || 'result'}.jpg`}
                   className={styles.downloadBtn}
                 >
-                  ⬇ Скачать оригинал
+                  Скачать оригинал
                 </a>
               </div>
             </div>
@@ -562,8 +575,8 @@ export default function DashboardPage() {
 
               {/* Quick actions */}
               <div className={styles.modalQuickActions}>
-                <button className={styles.quickBtn} onClick={() => { setTab('card'); setShowResult(false); }}>🃏 Создать карточку</button>
-                <button className={styles.quickBtn} disabled title="Скоро">📹 Создать видео</button>
+                <button className={styles.quickBtn} onClick={() => { setTab('card'); setShowResult(false); }}>Создать карточку</button>
+                <button className={styles.quickBtn} disabled title="Скоро">Создать видео</button>
               </div>
 
               {/* Improve */}
@@ -585,7 +598,7 @@ export default function DashboardPage() {
                   disabled={!improveText.trim() || generating}
                   onClick={handleImprove}
                 >
-                  {generating ? 'Улучшаю...' : '✨ Улучшить'}
+                  {generating ? 'Улучшаю...' : 'Улучшить'}
                 </button>
               </div>
 
