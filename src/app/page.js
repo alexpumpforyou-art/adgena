@@ -144,7 +144,7 @@ function Hero() {
     let loaded = 0;
     for (let i = 1; i <= FRAME_COUNT; i++) {
       const img = new Image();
-      img.src = `/frames/${String(i).padStart(3, '0')}.webp`;
+      img.src = `/frames/${String(i).padStart(4, '0')}.webp`;
       img.onload = () => {
         loaded++;
         if (loaded === 1) { resize(); drawFrame(0); }
