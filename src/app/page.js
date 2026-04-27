@@ -6,26 +6,12 @@ import Script from 'next/script';
 import styles from './page.module.css';
 
 // ========================================
-// LOGO SVG (Brand Kit — geometric A + arrow)
-// Matches brand kit: bold A-shape with
-// integrated upward-right arrow, inner cutout
+// LOGO (Brand images)
 // ========================================
 function Logo({ className }) {
   return (
     <span className={className}>
-      <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Left leg of A */}
-        <path d="M24 6L8 42h9l3.5-8h7L24 6Z" fill="#FF6A00"/>
-        {/* Right leg of A */}
-        <path d="M27.5 34l3.5 8h9L24 6l3.5 28Z" fill="#FF6A00"/>
-        {/* Crossbar fills */}
-        <path d="M18.5 30l2-5h7l2 5h-11Z" fill="#FF6A00"/>
-        {/* Arrow extending from top-right */}
-        <path d="M32 4h10v10l-5-3-5-7Z" fill="#FF6A00"/>
-        <path d="M32 4l5 7-9 11 4-18Z" fill="#FF6A00"/>
-        {/* Inner A cutout */}
-        <path d="M21.5 27l2.5-7 2.5 7h-5Z" fill="#0B0D14"/>
-      </svg>
+      <img src="/logo-icon.png" alt="Adgena" className="logoMark" style={{width: 32, height: 32, objectFit: 'contain'}} />
       <span>Adgena</span>
     </span>
   );
@@ -131,8 +117,8 @@ function Hero() {
       const cw = canvas.width / (window.devicePixelRatio || 1);
       const ch = canvas.height / (window.devicePixelRatio || 1);
       const iw = img.naturalWidth, ih = img.naturalHeight;
-      // Full cover — no borders
-      const scale = Math.max(cw / iw, ch / ih);
+      // Full cover with slight overscan to eliminate edge strips
+      const scale = Math.max(cw / iw, ch / ih) * 1.02;
       const dw = iw * scale, dh = ih * scale;
       const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
       ctx.fillStyle = '#0B0D14';

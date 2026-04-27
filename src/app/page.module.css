@@ -114,7 +114,7 @@
 .floatCard {
   position: fixed; top: 50%; z-index: 3;
   transform: translateY(40px);
-  padding: 16px 18px; border-radius: 14px;
+  padding: 20px 22px; border-radius: 16px;
   background: rgba(17, 20, 32, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-default);
@@ -147,8 +147,8 @@
   flex-shrink: 0;
 }
 .floatImg {
-  width: 100px; aspect-ratio: 4/5; object-fit: cover;
-  border-radius: 8px; border: 1px solid var(--border-subtle);
+  width: 140px; aspect-ratio: 4/5; object-fit: cover;
+  border-radius: 10px; border: 1px solid var(--border-subtle);
 }
 
 .heroContent {
