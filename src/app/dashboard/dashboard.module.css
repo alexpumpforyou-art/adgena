@@ -201,26 +201,43 @@
 .slider { flex: 1; accent-color: var(--brand-primary); }
 
 /* ========================================
-   ASPECT RATIO
+   ASPECT RATIO — Visual Shapes
    ======================================== */
-.ratioRow { display: flex; gap: 4px; }
+.ratioRow { display: flex; gap: 6px; flex-wrap: wrap; }
 
 .ratioBtn {
-  padding: 6px 14px;
-  border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
   border: 1px solid var(--border-primary);
   background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
   font-family: inherit;
+  min-width: 52px;
 }
+.ratioBtn:hover { border-color: var(--text-tertiary); }
+
 .ratioBtnActive {
-  background: var(--text-primary);
-  color: var(--bg-primary);
-  border-color: var(--text-primary);
+  border-color: var(--brand-primary);
+  background: rgba(var(--brand-rgb, 99,102,241), 0.08);
+}
+
+.ratioShape {
+  border: 2px solid var(--text-tertiary);
+  border-radius: 3px;
+  transition: border-color 0.15s;
+}
+.ratioBtnActive .ratioShape {
+  border-color: var(--brand-primary);
+}
+
+.ratioLabel {
+  font-size: 11px; font-weight: 600;
+  color: var(--text-tertiary);
+}
+.ratioBtnActive .ratioLabel {
+  color: var(--brand-primary);
 }
 
 /* ========================================

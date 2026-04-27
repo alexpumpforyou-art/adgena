@@ -393,18 +393,26 @@ export default function DashboardPage() {
             </>
           )}
 
-          {/* Format */}
+          {/* Format — visual shapes */}
           <label className={styles.label} style={{marginTop: 16}}>Формат</label>
           <div className={styles.ratioRow}>
-            {ASPECT_RATIOS.map(r => (
-              <button
-                key={r.id}
-                className={`${styles.ratioBtn} ${aspectRatio === r.id ? styles.ratioBtnActive : ''}`}
-                onClick={() => setAspectRatio(r.id)}
-              >
-                {r.label}
-              </button>
-            ))}
+            {ASPECT_RATIOS.map(r => {
+              const [w, h] = r.id.split(':').map(Number);
+              const maxSize = 28;
+              const ratio = w / h;
+              const shapeW = ratio >= 1 ? maxSize : Math.round(maxSize * ratio);
+              const shapeH = ratio <= 1 ? maxSize : Math.round(maxSize / ratio);
+              return (
+                <button
+                  key={r.id}
+                  className={`${styles.ratioBtn} ${aspectRatio === r.id ? styles.ratioBtnActive : ''}`}
+                  onClick={() => setAspectRatio(r.id)}
+                >
+                  <span className={styles.ratioShape} style={{ width: shapeW, height: shapeH }} />
+                  <span className={styles.ratioLabel}>{r.label}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
 

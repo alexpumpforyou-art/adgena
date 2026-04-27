@@ -233,21 +233,115 @@ ${NEGATIVES}`;
 // ========================================
 
 export const AD_PROMPTS = {
-  'ad-sale': (name, headline, cta, lang) => lang === 'en'
-    ? `High-conversion sale ad. Product from reference. Product: "${name}" | Headline: "${headline || 'UP TO 50% OFF'}" | CTA: "${cta || 'Shop Now'}"
-Energetic gradient red to orange. Product left (45%), floating. HUGE bold white headline. Yellow price badge. White pill CTA. Confetti. Square 1:1. ${PHOTO_TECH}. ${NEGATIVES}`
-    : `Продающий рекламный креатив. Товар с референса. Товар: "${name}" | Заголовок: "${headline || 'СКИДКА ДО 50%'}" | CTA: "${cta || 'Купить сейчас'}"
-Энергичный градиент красный→оранжевый. Товар слева, парит. ОГРОМНЫЙ белый заголовок. Жёлтый бейдж цены. Белая CTA кнопка. Конфетти. Квадрат 1:1. ${PHOTO_TECH}. Текст на РУССКОМ. ${NEGATIVES}`,
+  'ad-sale': (name, headline, cta, lang) => {
+    const h = headline || (lang === 'en' ? 'SPECIAL OFFER' : 'ВЫГОДНОЕ ПРЕДЛОЖЕНИЕ');
+    const c = cta || (lang === 'en' ? 'Shop Now' : 'Купить сейчас');
+    return lang === 'en'
+      ? `Create a high-conversion SALE advertising banner. Use the product from the reference image.
 
-  'ad-minimal': (name, headline, cta, lang) => lang === 'en'
-    ? `Minimalist product ad. Product from reference. Product: "${name}" | Headline: "${headline || name}" | CTA: "${cta || 'Learn More'}"
-White background. Product centered, large. Thin headline. Dark CTA button. Whitespace. Square 1:1. ${PHOTO_TECH}. ${NEGATIVES}`
-    : `Минималистичный рекламный креатив. Товар с референса. Товар: "${name}" | Заголовок: "${headline || name}" | CTA: "${cta || 'Подробнее'}"
-Белый фон. Товар по центру, крупно. Тонкий заголовок. Тёмная CTA кнопка. Много воздуха. Квадрат 1:1. ${PHOTO_TECH}. Текст на РУССКОМ. ${NEGATIVES}`,
+Product: "${name}"
 
-  'ad-story': (name, headline, cta, lang) => lang === 'en'
-    ? `Vertical story ad. Product from reference. Product: "${name}" | Headline: "${headline || name}" | CTA: "${cta || 'Swipe Up'}"
-Vibrant gradient. Product center with glow. Bold white headline. White pill CTA at bottom. Vertical 9:16. ${PHOTO_TECH}. ${NEGATIVES}`
-    : `Вертикальный креатив для stories. Товар с референса. Товар: "${name}" | Заголовок: "${headline || name}" | CTA: "${cta || 'Узнать'}"
-Яркий градиент. Товар по центру с свечением. Крупный белый заголовок. Белая pill CTA снизу. Вертикальный 9:16. ${PHOTO_TECH}. Текст на РУССКОМ. ${NEGATIVES}`,
+COMPOSITION: The product is placed on the left side (occupying ~40% of the frame), slightly angled and elevated with a subtle drop shadow to create depth. The product must be clearly visible, well-lit, and the hero element.
+
+TYPOGRAPHY: 
+- Main headline "${h}" — positioned top-right, bold sans-serif font (like Montserrat Black), white color, large size dominating the right half.
+- A circular or pill-shaped price badge in bright yellow/orange with bold dark text showing a price or discount percentage.
+- CTA button "${c}" — rounded rectangle at bottom-right, solid white or yellow background, dark bold text, with a subtle shadow.
+
+BACKGROUND: Smooth gradient from deep red (#DC2626) to warm orange (#F97316), with subtle radial light behind the product. Optional: tiny confetti or sparkle particles for energy.
+
+LIGHTING: Product lit with a soft key light from top-left, rim light on the right edge. Clean, no harsh shadows.
+
+${PHOTO_TECH}. Render all text clearly and legibly. ${NEGATIVES}`
+      : `Создай продающий рекламный баннер. Используй товар с референсного изображения.
+
+Товар: "${name}"
+
+КОМПОЗИЦИЯ: Товар расположен слева (~40% кадра), слегка под углом, приподнят с мягкой тенью для глубины. Товар — главный герой, хорошо освещён и чётко виден.
+
+ТИПОГРАФИКА:
+- Главный заголовок "${h}" — справа сверху, жирный шрифт без засечек (как Montserrat Black), белый, крупный, доминирует правую половину.
+- Круглый или pill-бейдж цены — ярко-жёлтый/оранжевый фон, тёмный жирный текст со скидкой или ценой.
+- CTA кнопка "${c}" — скруглённый прямоугольник внизу справа, белый или жёлтый фон, тёмный жирный текст.
+
+ФОН: Плавный градиент от насыщенного красного (#DC2626) к тёплому оранжевому (#F97316). Мягкое свечение за товаром. По желанию: мелкое конфетти для энергии.
+
+СВЕТ: Мягкий ключевой свет сверху-слева на товар, контровой свет по правому краю.
+
+${PHOTO_TECH}. Весь текст — ЧИТАЕМЫЙ, на РУССКОМ языке. ${NEGATIVES}`;
+  },
+
+  'ad-minimal': (name, headline, cta, lang) => {
+    const h = headline || name;
+    const c = cta || (lang === 'en' ? 'Learn More' : 'Подробнее');
+    return lang === 'en'
+      ? `Create a minimalist, premium advertising creative in Apple/MUJI style. Use the product from the reference image.
+
+Product: "${name}"
+
+COMPOSITION: Product perfectly centered, occupying ~60% of the frame height. Floating on pure white (#FFFFFF) background with a very subtle contact shadow beneath. Lots of negative space (whitespace).
+
+TYPOGRAPHY:
+- Product name "${h}" — thin, elegant sans-serif (like SF Pro Display Thin or Helvetica Neue Light), dark gray (#1A1A1A), centered above the product, modest size.
+- One line of subtle description or tagline below the product name in lighter gray.
+- CTA "${c}" — minimal dark rounded button, centered at bottom, thin border or solid dark background with white text.
+
+BACKGROUND: Pure white, no gradients, no patterns. Absolute minimalism.
+
+LIGHTING: Even, diffused studio lighting. No dramatic shadows. The product speaks for itself.
+
+${PHOTO_TECH}. Ultra-clean, gallery-quality. ${NEGATIVES}`
+      : `Создай минималистичный премиальный рекламный креатив в стиле Apple/MUJI. Используй товар с референсного изображения.
+
+Товар: "${name}"
+
+КОМПОЗИЦИЯ: Товар идеально по центру, ~60% высоты кадра. Парит на чисто белом фоне (#FFFFFF) с едва заметной контактной тенью. Много воздуха и пустого пространства.
+
+ТИПОГРАФИКА:
+- Название "${h}" — тонкий элегантный шрифт без засечек (как SF Pro Display Thin), тёмно-серый (#1A1A1A), по центру над товаром, сдержанный размер.
+- Одна строка лёгкого описания или слогана ниже — светло-серый.
+- CTA "${c}" — минимальная тёмная кнопка по центру внизу, тонкая рамка или тёмный фон с белым текстом.
+
+ФОН: Чисто белый. Никаких градиентов, паттернов. Абсолютный минимализм.
+
+СВЕТ: Равномерный рассеянный студийный свет. Без драматичных теней.
+
+${PHOTO_TECH}. Галерейное качество. Текст на РУССКОМ. ${NEGATIVES}`;
+  },
+
+  'ad-story': (name, headline, cta, lang) => {
+    const h = headline || name;
+    const c = cta || (lang === 'en' ? 'Swipe Up' : 'Смотреть');
+    return lang === 'en'
+      ? `Create a vertical STORY/REELS advertising creative (9:16 format). Use the product from the reference image.
+
+Product: "${name}"
+
+COMPOSITION: Vertical format. Product centered in the middle third of the frame, slightly enlarged, with a soft glow or light halo behind it. Top third: headline. Bottom third: CTA.
+
+TYPOGRAPHY:
+- Headline "${h}" — bold condensed sans-serif, white, positioned in the top quarter. Maximum 2 lines. Drop shadow for readability.
+- CTA "${c}" — pill-shaped button at the very bottom, white background, dark text, with upward arrow icon. Centered.
+
+BACKGROUND: Vibrant gradient — choose between deep purple to electric blue, or dark teal to emerald green. Subtle bokeh or lens flare effects for premium feel. Optional: thin geometric lines or shapes as accents.
+
+LIGHTING: Product dramatically lit with a strong rim light creating a glowing silhouette effect. Soft fill light from front.
+
+${PHOTO_TECH}. Optimized for mobile viewing. ${NEGATIVES}`
+      : `Создай вертикальный рекламный креатив для STORIES/REELS (формат 9:16). Используй товар с референсного изображения.
+
+Товар: "${name}"
+
+КОМПОЗИЦИЯ: Вертикальный формат. Товар по центру в средней трети кадра, слегка увеличен, мягкое свечение или световой ореол позади. Верхняя треть: заголовок. Нижняя треть: CTA.
+
+ТИПОГРАФИКА:
+- Заголовок "${h}" — жирный узкий шрифт без засечек, белый, в верхней четверти. Максимум 2 строки. Тень для читаемости.
+- CTA "${c}" — pill-кнопка в самом низу, белый фон, тёмный текст, иконка стрелки вверх. По центру.
+
+ФОН: Яркий градиент — глубокий фиолетовый в электрик-синий, или тёмный изумрудный в бирюзовый. Лёгкое боке или блики для премиальности. По желанию: тонкие геометрические линии.
+
+СВЕТ: Драматичный контровой свет, создающий светящийся силуэт. Мягкий заполняющий свет спереди.
+
+${PHOTO_TECH}. Оптимизировано для мобильного просмотра. Текст на РУССКОМ. ${NEGATIVES}`;
+  },
 };
