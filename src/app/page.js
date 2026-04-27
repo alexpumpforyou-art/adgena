@@ -67,7 +67,7 @@ function Header() {
           <a href="#features">Возможности</a>
           <a href="#pricing">Тарифы</a>
         </nav>
-        <Link href="/dashboard" className={styles.btnStart}>Начать генерацию</Link>
+        <Link href="/auth" className={styles.btnStart}>Начать генерацию</Link>
       </div>
     </header>
   );
@@ -241,7 +241,7 @@ function Hero() {
             Загрузите фото товара — получите профессиональные креативы.
           </p>
           <div className={styles.heroCta}>
-            <Link href="/dashboard" className={styles.btnPrimary}>Начать генерацию</Link>
+            <Link href="/auth" className={styles.btnPrimary}>Начать генерацию</Link>
             <a href="#showcase" className={styles.btnGhost}>Смотреть примеры</a>
           </div>
         </div>

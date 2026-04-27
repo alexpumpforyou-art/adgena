@@ -1,0 +1,229 @@
+/* ========================================
+   AUTH PAGE — Premium Clean Design
+   Inspired by Aidentika.com auth
+   ======================================== */
+
+.page {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Header */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.headerLogo {
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none; color: var(--text-primary);
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+}
+
+.headerBtn {
+  padding: 8px 20px; border-radius: 999px;
+  background: var(--bg-secondary); color: var(--text-primary);
+  font-size: 13px; font-weight: 600; text-decoration: none;
+  border: 1px solid var(--border-default);
+  transition: all 0.2s;
+}
+.headerBtn:hover {
+  background: var(--bg-tertiary); border-color: var(--border-default);
+}
+
+/* Main */
+.main {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 24px;
+  gap: 24px;
+}
+
+/* Card */
+.card {
+  width: 100%; max-width: 420px;
+  padding: 40px 36px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 20px;
+  display: flex; flex-direction: column; gap: 0;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 800;
+  text-align: center;
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 14px; color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+/* Form */
+.form {
+  display: flex; flex-direction: column; gap: 14px;
+  margin-bottom: 20px;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--accent-primary);
+}
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.error {
+  font-size: 13px; color: #ef4444;
+  text-align: center;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 8px;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent-gradient);
+  color: #fff;
+  font-size: 15px; font-weight: 700;
+  border: none; border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.submitBtn:hover:not(:disabled) {
+  box-shadow: 0 4px 20px rgba(255, 106, 0, 0.3);
+  transform: translateY(-1px);
+}
+.submitBtn:disabled {
+  opacity: 0.6; cursor: not-allowed;
+}
+
+/* Divider */
+.divider {
+  display: flex; align-items: center; gap: 16px;
+  margin: 20px 0;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: var(--border-default);
+}
+.divider span {
+  font-size: 13px; color: var(--text-tertiary);
+}
+
+/* OAuth */
+.oauthRow {
+  display: flex; gap: 12px;
+  margin-bottom: 20px;
+}
+
+.oauthBtn {
+  flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border-default);
+}
+
+.oauthYandex {
+  background: #1a1a1a; color: #fff;
+}
+.oauthYandex:hover {
+  background: #2a2a2a; transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.oauthGoogle {
+  background: var(--bg-primary); color: var(--text-primary);
+}
+.oauthGoogle:hover {
+  background: var(--bg-tertiary); transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Terms */
+.terms {
+  font-size: 12px; color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.link {
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.link:hover { text-decoration-style: solid; }
+
+/* Toggle */
+.toggle {
+  font-size: 14px; color: var(--text-secondary);
+  text-align: center;
+}
+
+.toggleBtn {
+  background: none; border: none;
+  color: var(--accent-primary); font-weight: 600;
+  cursor: pointer; font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.toggleBtn:hover { text-decoration-style: solid; }
+
+/* Back link */
+.backLink {
+  font-size: 14px; color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.backLink:hover { color: var(--text-primary); }
+
+/* Footer */
+.footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px; color: var(--text-tertiary);
+}
+
+.footerLinks {
+  display: flex; gap: 16px;
+}
+.footerLinks a {
+  color: var(--text-tertiary); text-decoration: none;
+  transition: color 0.2s;
+}
+.footerLinks a:hover { color: var(--text-secondary); }
+
+/* Mobile */
+@media (max-width: 640px) {
+  .header { padding: 12px 16px; }
+  .main { padding: 24px 16px; }
+  .card { padding: 28px 20px; }
+  .title { font-size: 24px; }
+  .oauthRow { flex-direction: column; }
+  .footer { flex-direction: column; gap: 12px; text-align: center; }
+}
