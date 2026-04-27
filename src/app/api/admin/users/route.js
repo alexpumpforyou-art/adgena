@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 
-// Admin emails — extend as needed
-const ADMIN_EMAILS = ['admin@adgena.ru', 'alex@adgena.ru'];
+// Admin emails from env (comma-separated), e.g. ADMIN_EMAILS=user@mail.com,admin@site.com
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'vt.0pe@yandex.ru')
+  .split(',').map(e => e.trim().toLowerCase());
 
 export async function GET() {
   try {
