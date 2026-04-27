@@ -26,7 +26,7 @@ export async function GET(request) {
     response_type: 'code',
     client_id: clientId,
     redirect_uri: redirectUri,
-    scope: 'login:email login:info',
+    scope: 'login:email',
   });
 
   return NextResponse.redirect(`https://oauth.yandex.ru/authorize?${params.toString()}`);

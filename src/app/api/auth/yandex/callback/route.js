@@ -72,7 +72,7 @@ export async function GET(request) {
     if (!user) {
       const id = crypto.randomUUID();
       const passwordHash = bcryptjs.hashSync(crypto.randomBytes(32).toString('hex'), 10);
-      const displayName = yandexUser.display_name || yandexUser.real_name || '';
+      const displayName = yandexUser.display_name || yandexUser.real_name || email.split('@')[0];
 
       d.prepare(`
         INSERT INTO users (id, email, password_hash, name)
