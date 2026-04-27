@@ -11,11 +11,18 @@ function getBaseUrl(request) {
 
 export async function GET(request) {
   const base = getBaseUrl(request);
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
-  const error = searchParams.get('error');
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const error = url.searchParams.get('error');
+
+  // Debug logging — check Railway logs
+  console.log('[Yandex Callback] Full URL:', request.url);
+  console.log('[Yandex Callback] code:', code ? 'present' : 'MISSING');
+  console.log('[Yandex Callback] error:', error || 'none');
+  console.log('[Yandex Callback] all params:', Object.fromEntries(url.searchParams));
 
   if (error || !code) {
+    console.error('[Yandex Callback] DENIED — error:', error, 'code:', !!code);
     return NextResponse.redirect(`${base}/auth?error=yandex_denied`);
   }
 
