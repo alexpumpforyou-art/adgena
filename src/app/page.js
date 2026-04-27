@@ -11,7 +11,7 @@ import styles from './page.module.css';
 function Logo({ className }) {
   return (
     <span className={className}>
-      <img src="/logo-icon.png" alt="Adgena" style={{width: 56, height: 56, objectFit: 'contain'}} />
+      <img src="/logo-icon.webp" alt="Adgena" style={{width: 56, height: 56, objectFit: 'contain'}} />
       <span>Adgena</span>
     </span>
   );
@@ -77,9 +77,9 @@ function Header() {
 // Floating before/after cards (appear during video scroll)
 // ========================================
 const FLOAT_CARDS = [
-  { at: 0.20, side: 'left', label: 'Одежда', beforeImg: '/cards/before1.png', afterImg: '/cards/after1.png' },
-  { at: 0.42, side: 'right', label: 'Косметика', beforeImg: '/cards/before2.png', afterImg: '/cards/after2.png' },
-  { at: 0.64, side: 'left', label: 'Гаджеты', beforeImg: '/cards/before3.png', afterImg: '/cards/after3.png' },
+  { at: 0.20, side: 'left', label: 'Одежда', beforeImg: '/cards/before1.webp', afterImg: '/cards/after1.webp' },
+  { at: 0.42, side: 'right', label: 'Косметика', beforeImg: '/cards/before2.webp', afterImg: '/cards/after2.webp' },
+  { at: 0.64, side: 'left', label: 'Гаджеты', beforeImg: '/cards/before3.webp', afterImg: '/cards/after3.webp' },
 ];
 
 // ========================================

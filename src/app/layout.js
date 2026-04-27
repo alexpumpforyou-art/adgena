@@ -15,8 +15,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ru">
       <head>
-        <link rel="icon" href="/favicon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/logo-icon.png" />
+        <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
+        <link rel="apple-touch-icon" href="/logo-icon.webp" />
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet" />
       </head>
       <body>
