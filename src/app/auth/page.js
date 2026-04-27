@@ -1,18 +1,39 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from './auth.module.css';
 
-export default function AuthPage() {
+const OAUTH_ERRORS = {
+  google_not_configured: 'Google авторизация ещё не настроена. Используйте email.',
+  google_denied: 'Вы отменили вход через Google.',
+  google_token_failed: 'Ошибка получения токена Google.',
+  google_no_email: 'Не удалось получить email из Google.',
+  google_failed: 'Ошибка авторизации через Google.',
+  yandex_not_configured: 'Яндекс авторизация ещё не настроена. Используйте email.',
+  yandex_denied: 'Вы отменили вход через Яндекс.',
+  yandex_token_failed: 'Ошибка получения токена Яндекс.',
+  yandex_no_email: 'Не удалось получить email из Яндекс.',
+  yandex_failed: 'Ошибка авторизации через Яндекс.',
+};
+
+function AuthForm() {
   const router = useRouter();
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const errCode = searchParams.get('error');
+    if (errCode && OAUTH_ERRORS[errCode]) {
+      setError(OAUTH_ERRORS[errCode]);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -194,5 +215,13 @@ export default function AuthPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }} />}>
+      <AuthForm />
+    </Suspense>
   );
 }
