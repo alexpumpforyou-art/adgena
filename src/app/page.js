@@ -183,7 +183,12 @@ function Hero() {
         const opacity = visible ? Math.max(0, 1 - dist / RANGE) : 0;
         const ty = visible ? (1 - opacity) * 24 : 32;
         el.style.opacity = opacity;
-        el.style.transform = `translateY(${ty}px)`;
+        // On mobile, cards are positioned with top:50%, so include -50% centering
+        if (stateRef.current.isMobile) {
+          el.style.transform = `translateY(calc(-50% + ${ty}px))`;
+        } else {
+          el.style.transform = `translateY(${ty}px)`;
+        }
         el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
       });
     }
@@ -322,8 +327,8 @@ function Showcase() {
       const vw = window.innerWidth;
       const isMobile = vw < 768;
       const scrollDistance = Math.max(0, track.scrollWidth - vw);
-      // Less padding on mobile to keep scroll tight
-      const pad = isMobile ? 60 : 200;
+      // Minimal extra padding — just enough for smooth exit
+      const pad = isMobile ? 0 : 100;
       const totalHeight = window.innerHeight + scrollDistance + pad;
       section.style.height = `${Math.ceil(totalHeight)}px`;
       section.dataset.scrollDistance = String(scrollDistance);
@@ -336,11 +341,8 @@ function Showcase() {
 
       // How far into the section we've scrolled (after it reaches top)
       const raw = Math.min(Math.max(-rect.top, 0), scrollDistance);
-      const progress = raw / scrollDistance;
-
-      // Ease out for smoother feel
-      const eased = 1 - Math.pow(1 - progress, 3);
-      track.style.transform = `translate3d(${-eased * scrollDistance}px, 0, 0)`;
+      // Linear 1:1 mapping — no easing = no dead scroll zone
+      track.style.transform = `translate3d(${-raw}px, 0, 0)`;
     }
 
     measure();

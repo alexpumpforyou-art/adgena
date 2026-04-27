@@ -451,9 +451,10 @@
   .logo span:last-child { font-size: 18px; }
   .nav { display: none; }
   .btnStart { padding: 8px 18px; font-size: 12px; }
-  /* Floating cards on mobile — compact, centered at bottom */
+  /* Floating cards on mobile — centered vertically */
   .floatCard {
-    top: auto; bottom: 10%;
+    top: 50%; bottom: auto;
+    transform: translateY(-50%) !important;
     left: 16px !important; right: 16px !important;
     padding: 14px 16px; border-radius: 14px;
   }
