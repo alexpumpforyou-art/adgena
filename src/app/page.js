@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Script from 'next/script';
 import styles from './page.module.css';
 
 // ========================================
@@ -189,19 +188,46 @@ function Hero() {
       });
     }
 
-    // Load frames
+    // Progressive frame loading: first batch immediately, rest on scroll
+    const FIRST_BATCH = 14;
     let loaded = 0;
-    const firstImg = new Image();
-    firstImg.src = '/frames/0001.webp';
-    firstImg.onload = () => { loaded++; resizeCanvas(); };
-    framesRef.current[0] = firstImg;
+    let restLoaded = false;
 
-    for (let i = 2; i <= FRAME_COUNT; i++) {
+    // Load first batch for instant hero
+    for (let i = 1; i <= FIRST_BATCH; i++) {
       const img = new Image();
       img.src = `/frames/${String(i).padStart(4, '0')}.webp`;
-      img.onload = () => { loaded++; };
+      if (i === 1) img.onload = () => { loaded++; resizeCanvas(); };
+      else img.onload = () => { loaded++; };
       framesRef.current[i - 1] = img;
     }
+
+    // Load remaining frames only when user starts scrolling
+    function loadRemainingFrames() {
+      if (restLoaded) return;
+      restLoaded = true;
+      // On mobile, skip every other frame (60 instead of 120) for speed
+      const step = stateRef.current.isMobile ? 2 : 1;
+      for (let i = FIRST_BATCH + 1; i <= FRAME_COUNT; i += step) {
+        const img = new Image();
+        img.src = `/frames/${String(i).padStart(4, '0')}.webp`;
+        img.onload = () => { loaded++; };
+        framesRef.current[i - 1] = img;
+        // Fill skipped frames with nearest loaded frame on mobile
+        if (step === 2 && i + 1 <= FRAME_COUNT) {
+          framesRef.current[i] = img;
+        }
+      }
+    }
+
+    // Trigger lazy load when hero is 5% scrolled
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting) {
+        loadRemainingFrames();
+        observer.disconnect();
+      }
+    }, { threshold: 0.95 });
+    observer.observe(section);
 
     function onResize() {
       updateMobile();
@@ -501,10 +527,6 @@ function Footer() {
 export default function HomePage() {
   return (
     <>
-      <Script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js" strategy="beforeInteractive" />
-      <Script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js" strategy="beforeInteractive" />
-      <Script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js" strategy="beforeInteractive" />
-
       <Header />
       <main>
         <Hero />
