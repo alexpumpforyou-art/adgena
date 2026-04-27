@@ -28,9 +28,7 @@
 
 .logo {
   font-size: 18px; font-weight: 800;
-  background: linear-gradient(135deg, var(--brand-primary), #a855f7);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary, #FF6A00);
 }
 
 .navBtn {
