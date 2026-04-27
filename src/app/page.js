@@ -6,18 +6,25 @@ import Script from 'next/script';
 import styles from './page.module.css';
 
 // ========================================
-// LOGO SVG (Brand Kit — A-arrow mark)
+// LOGO SVG (Brand Kit — geometric A + arrow)
+// Matches brand kit: bold A-shape with
+// integrated upward-right arrow, inner cutout
 // ========================================
 function Logo({ className }) {
   return (
     <span className={className}>
-      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Outer A-shape with arrow */}
-        <path d="M18.5 2L4 38h8.5l3-7h17L36 38h-8.5L18.5 2Z" fill="#FF6A00"/>
-        {/* Inner arrow cutout */}
-        <path d="M18.5 16l-4 10h14.5L18.5 16Z" fill="#0B0D14"/>
-        {/* Arrow tip accent */}
-        <path d="M26 10l6-6v10l-6-4Z" fill="#FF6A00"/>
+      <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Left leg of A */}
+        <path d="M24 6L8 42h9l3.5-8h7L24 6Z" fill="#FF6A00"/>
+        {/* Right leg of A */}
+        <path d="M27.5 34l3.5 8h9L24 6l3.5 28Z" fill="#FF6A00"/>
+        {/* Crossbar fills */}
+        <path d="M18.5 30l2-5h7l2 5h-11Z" fill="#FF6A00"/>
+        {/* Arrow extending from top-right */}
+        <path d="M32 4h10v10l-5-3-5-7Z" fill="#FF6A00"/>
+        <path d="M32 4l5 7-9 11 4-18Z" fill="#FF6A00"/>
+        {/* Inner A cutout */}
+        <path d="M21.5 27l2.5-7 2.5 7h-5Z" fill="#0B0D14"/>
       </svg>
       <span>Adgena</span>
     </span>
@@ -34,17 +41,13 @@ function useTypewriter(words, typingSpeed = 80, deletingSpeed = 40, pauseTime = 
 
   useEffect(() => {
     const currentWord = words[wordIndex];
-
     const timeout = setTimeout(() => {
       if (!isDeleting) {
-        // Typing
         setDisplay(currentWord.substring(0, display.length + 1));
         if (display.length + 1 === currentWord.length) {
-          // Pause at full word, then start deleting
           setTimeout(() => setIsDeleting(true), pauseTime);
         }
       } else {
-        // Deleting
         setDisplay(currentWord.substring(0, display.length - 1));
         if (display.length - 1 === 0) {
           setIsDeleting(false);
@@ -52,7 +55,6 @@ function useTypewriter(words, typingSpeed = 80, deletingSpeed = 40, pauseTime = 
         }
       }
     }, isDeleting ? deletingSpeed : (display.length === 0 ? 300 : typingSpeed));
-
     return () => clearTimeout(timeout);
   }, [display, isDeleting, wordIndex, words, typingSpeed, deletingSpeed, pauseTime]);
 
@@ -86,12 +88,23 @@ function Header() {
 }
 
 // ========================================
-// HERO — Video Scroll (Canvas + Frames)
+// Floating before/after cards (appear during video scroll)
+// ========================================
+const FLOAT_CARDS = [
+  { at: 0.25, side: 'left', label: 'Одежда', before: 'Фото с телефона', after: 'Lifestyle-фото' },
+  { at: 0.45, side: 'right', label: 'Косметика', before: 'Снимок продукта', after: 'Премиум карточка' },
+  { at: 0.65, side: 'left', label: 'Гаджеты', before: 'Фото из каталога', after: 'Рекламный баннер' },
+];
+
+// ========================================
+// HERO — Video Scroll (Canvas + 120 Frames)
 // ========================================
 function Hero() {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const heroTextRef = useRef(null);
+  const blurRef = useRef(null);
+  const cardsRef = useRef([]);
   const framesRef = useRef([]);
   const currentFrameRef = useRef(0);
 
@@ -102,7 +115,6 @@ function Hero() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Canvas sizing
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = window.innerWidth * dpr;
@@ -127,28 +139,25 @@ function Hero() {
       ctx.drawImage(img, dx, dy, dw, dh);
     }
 
-    // Load frames — try /frames/frame_XXXX.webp
-    const FRAME_COUNT = 150; // adjust based on actual frames
+    // Load frames: /frames/001.webp — /frames/120.webp
+    const FRAME_COUNT = 120;
     let loaded = 0;
     for (let i = 1; i <= FRAME_COUNT; i++) {
       const img = new Image();
-      img.src = `/frames/frame_${String(i).padStart(4, '0')}.webp`;
+      img.src = `/frames/${String(i).padStart(3, '0')}.webp`;
       img.onload = () => {
         loaded++;
         if (loaded === 1) { resize(); drawFrame(0); }
       };
-      img.onerror = () => { /* frame not found, skip */ };
+      img.onerror = () => {};
       framesRef.current[i - 1] = img;
     }
 
-    // If no frames exist, draw a placeholder
+    // Placeholder when no frames
     setTimeout(() => {
       if (loaded === 0) {
         const cw = canvas.width / (window.devicePixelRatio || 1);
         const ch = canvas.height / (window.devicePixelRatio || 1);
-        ctx.fillStyle = '#0B0D14';
-        ctx.fillRect(0, 0, cw, ch);
-        // Show subtle gradient as placeholder
         const grad = ctx.createRadialGradient(cw/2, ch/2, 0, cw/2, ch/2, cw * 0.5);
         grad.addColorStop(0, '#1A1F2B');
         grad.addColorStop(1, '#0B0D14');
@@ -160,7 +169,7 @@ function Hero() {
     window.addEventListener('resize', resize);
     resize();
 
-    // GSAP + ScrollTrigger setup
+    // GSAP
     const waitForGsap = setInterval(() => {
       if (typeof window.gsap === 'undefined' || typeof window.ScrollTrigger === 'undefined') return;
       clearInterval(waitForGsap);
@@ -169,7 +178,6 @@ function Hero() {
       const ScrollTrigger = window.ScrollTrigger;
       gsap.registerPlugin(ScrollTrigger);
 
-      // Lenis
       if (typeof window.Lenis !== 'undefined') {
         const lenis = new window.Lenis({ duration: 1.2, smoothWheel: true });
         lenis.on('scroll', ScrollTrigger.update);
@@ -180,31 +188,53 @@ function Hero() {
       const FRAME_SPEED = 2.0;
       const scrollContainer = wrapRef.current;
 
-      // Frame binding
       ScrollTrigger.create({
         trigger: scrollContainer,
         start: 'top top',
         end: 'bottom bottom',
         scrub: true,
         onUpdate: (self) => {
-          const accelerated = Math.min(self.progress * FRAME_SPEED, 1);
+          const p = self.progress;
+          const accelerated = Math.min(p * FRAME_SPEED, 1);
           const index = Math.min(Math.floor(accelerated * FRAME_COUNT), FRAME_COUNT - 1);
           if (index !== currentFrameRef.current) {
             currentFrameRef.current = index;
             requestAnimationFrame(() => drawFrame(index));
           }
+
+          // Blur transitions: smooth start and end
+          if (blurRef.current) {
+            let blur = 0;
+            if (p < 0.06) blur = (1 - p / 0.06) * 16;
+            else if (p > 0.92) blur = ((p - 0.92) / 0.08) * 16;
+            blurRef.current.style.backdropFilter = `blur(${blur}px)`;
+            blurRef.current.style.webkitBackdropFilter = `blur(${blur}px)`;
+          }
+
+          // Floating before/after cards
+          cardsRef.current.forEach((el, i) => {
+            if (!el) return;
+            const card = FLOAT_CARDS[i];
+            const dist = Math.abs(p - card.at);
+            const visible = dist < 0.07;
+            const opacity = visible ? Math.max(0, 1 - dist / 0.07) : 0;
+            const ty = visible ? (1 - opacity) * 30 : 40;
+            el.style.opacity = opacity;
+            el.style.transform = `translateY(${ty}px)`;
+            el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
+          });
         }
       });
 
-      // Hero text fade out
+      // Hero text fade
       if (heroTextRef.current) {
         ScrollTrigger.create({
           trigger: scrollContainer,
           start: 'top top',
-          end: '20% top',
+          end: '12% top',
           scrub: true,
           onUpdate: (self) => {
-            heroTextRef.current.style.opacity = Math.max(0, 1 - self.progress * 2.5);
+            heroTextRef.current.style.opacity = Math.max(0, 1 - self.progress * 3);
             heroTextRef.current.style.transform = `translateY(${self.progress * -60}px)`;
           }
         });
@@ -223,6 +253,7 @@ function Hero() {
       <div className={styles.canvasWrap}>
         <canvas ref={canvasRef} className={styles.canvas} />
         <div className={styles.canvasOverlay} />
+        <div className={styles.blurLayer} ref={blurRef} />
       </div>
 
       {/* Hero text */}
@@ -241,6 +272,29 @@ function Hero() {
           <a href="#showcase" className={styles.btnGhost}>Смотреть примеры</a>
         </div>
       </div>
+
+      {/* Floating before/after cards */}
+      {FLOAT_CARDS.map((card, i) => (
+        <div
+          key={i}
+          ref={el => { cardsRef.current[i] = el; }}
+          className={`${styles.floatCard} ${card.side === 'right' ? styles.floatRight : styles.floatLeft}`}
+          style={{ opacity: 0 }}
+        >
+          <div className={styles.floatHeader}>{card.label}</div>
+          <div className={styles.floatPair}>
+            <div className={styles.floatSide}>
+              <span className={styles.floatTag}>Загрузил</span>
+              <div className={styles.placeholder} style={{ aspectRatio: '4/5', width: 100 }} />
+            </div>
+            <span className={styles.floatArrow}>&rarr;</span>
+            <div className={styles.floatSide}>
+              <span className={styles.floatTag}>Получил</span>
+              <div className={styles.placeholder} style={{ aspectRatio: '4/5', width: 100 }} />
+            </div>
+          </div>
+        </div>
+      ))}
 
       {/* Scroll indicator */}
       <div className={styles.scrollHint}>
@@ -473,7 +527,6 @@ function Footer() {
 export default function HomePage() {
   return (
     <>
-      {/* CDN libs */}
       <Script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js" strategy="beforeInteractive" />
       <Script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js" strategy="beforeInteractive" />
       <Script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js" strategy="beforeInteractive" />

@@ -3,8 +3,8 @@
    Brand Kit: Dark Navy + Orange Accent
    ======================================== */
 
-/* Satoshi from Fontshare */
-@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700,800,900&display=swap');
+/* Manrope + Unbounded from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Unbounded:wght@400;700;900&display=swap');
 
 /* ========================================
    DARK THEME (default)
@@ -71,8 +71,8 @@
   --space-4xl: 96px;
 
   /* Typography — Satoshi */
-  --font-sans: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Satoshi', sans-serif;
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Unbounded', 'Manrope', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --text-xs: 0.75rem;
