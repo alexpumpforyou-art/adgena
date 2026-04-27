@@ -11,7 +11,7 @@ import styles from './page.module.css';
 function Logo({ className }) {
   return (
     <span className={className}>
-      <img src="/logo-icon.png" alt="Adgena" style={{width: 44, height: 44, objectFit: 'contain'}} />
+      <img src="/logo-icon.png" alt="Adgena" style={{width: 56, height: 56, objectFit: 'contain'}} />
       <span>Adgena</span>
     </span>
   );
@@ -117,8 +117,8 @@ function Hero() {
       const cw = canvas.width / (window.devicePixelRatio || 1);
       const ch = canvas.height / (window.devicePixelRatio || 1);
       const iw = img.naturalWidth, ih = img.naturalHeight;
-      // Full cover with slight overscan to eliminate edge strips
-      const scale = Math.max(cw / iw, ch / ih) * 1.02;
+      // Full cover with generous overscan to guarantee edge-to-edge
+      const scale = Math.max(cw / iw, ch / ih) * 1.08;
       const dw = iw * scale, dh = ih * scale;
       const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
       ctx.fillStyle = '#0B0D14';

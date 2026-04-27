@@ -10,7 +10,7 @@
    ======================================== */
 .header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  padding: 0 32px; height: 64px;
+  padding: 0 32px; height: 72px;
   display: flex; align-items: center; transition: all 0.3s;
 }
 .headerScrolled {
@@ -22,11 +22,11 @@
   display: flex; align-items: center; justify-content: space-between;
 }
 .logo {
-  display: inline-flex; align-items: center; gap: 10px;
+  display: inline-flex; align-items: center; gap: 14px;
   text-decoration: none; color: var(--text-primary);
 }
 .logo span:last-child {
-  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  font-family: var(--font-display); font-size: 24px; font-weight: 700;
   letter-spacing: -0.5px;
 }
 .footerLogo { composes: logo; }
@@ -87,20 +87,22 @@
 .canvasWrap {
   position: fixed; top: 0; left: 0;
   width: 100vw; height: 100vh; z-index: 0;
-  pointer-events: none;
+  pointer-events: none; overflow: hidden;
 }
 .canvas { display: block; }
 .canvasOverlay {
   position: absolute; inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(11, 13, 20, 0.4) 0%,
-    rgba(11, 13, 20, 0.1) 30%,
-    rgba(11, 13, 20, 0.1) 70%,
-    rgba(11, 13, 20, 0.6) 85%,
+    rgba(11, 13, 20, 0.35) 0%,
+    rgba(11, 13, 20, 0.05) 25%,
+    rgba(11, 13, 20, 0.05) 55%,
+    rgba(11, 13, 20, 0.4) 70%,
+    rgba(11, 13, 20, 0.85) 85%,
+    rgba(11, 13, 20, 1.0) 92%,
     rgba(11, 13, 20, 1.0) 100%
   );
-  pointer-events: none;
+  pointer-events: none; z-index: 2;
 }
 
 /* Blur layer — driven by JS for smooth start/end */
@@ -114,43 +116,43 @@
 
 /* Floating before/after cards */
 .floatCard {
-  position: fixed; top: 50%; z-index: 3;
+  position: fixed; top: 45%; z-index: 10;
   transform: translateY(40px);
-  padding: 20px 22px; border-radius: 16px;
-  background: rgba(17, 20, 32, 0.85);
-  backdrop-filter: blur(12px);
+  padding: 24px 26px; border-radius: 18px;
+  background: rgba(17, 20, 32, 0.88);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--border-default);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
   transition: opacity 0.15s, transform 0.25s;
   pointer-events: none;
 }
-.floatLeft { left: 48px; }
-.floatRight { right: 48px; }
+.floatLeft { left: 56px; }
+.floatRight { right: 56px; }
 
 .floatHeader {
-  font-family: var(--font-display); font-size: 16px; font-weight: 700;
-  margin-bottom: 12px; color: var(--text-primary);
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  margin-bottom: 14px; color: var(--text-primary);
 }
 .floatPair {
-  display: flex; gap: 10px; align-items: center;
+  display: flex; gap: 16px; align-items: center;
 }
 .floatSide {
-  display: flex; flex-direction: column; gap: 4px;
+  display: flex; flex-direction: column; gap: 6px;
 }
 .floatTag {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1px; color: var(--text-tertiary);
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--text-tertiary);
 }
 .floatCaption {
-  font-size: 10px; color: var(--text-secondary);
+  font-size: 11px; color: var(--text-secondary);
 }
 .floatArrow {
-  color: var(--accent-primary); font-size: 18px; font-weight: 700;
+  color: var(--accent-primary); font-size: 24px; font-weight: 700;
   flex-shrink: 0;
 }
 .floatImg {
-  width: 180px; aspect-ratio: 4/5; object-fit: cover;
-  border-radius: 12px; border: 1px solid var(--border-subtle);
+  width: 220px; aspect-ratio: 4/5; object-fit: cover;
+  border-radius: 14px; border: 1px solid var(--border-subtle);
 }
 
 .heroContent {
@@ -233,6 +235,7 @@
   position: relative; z-index: 2;
   background: var(--bg-primary);
   overflow: hidden;
+  margin-top: -1px; /* eliminate potential sub-pixel gap */
 }
 
 .showcaseTrack {
@@ -399,33 +402,60 @@
 /* ========================================
    RESPONSIVE
    ======================================== */
+@media (max-width: 1280px) {
+  .floatImg { width: 180px; }
+  .floatCard { padding: 20px 22px; }
+}
+
 @media (max-width: 1024px) {
   .featGrid { grid-template-columns: repeat(2, 1fr); }
   .stepsRow { grid-template-columns: repeat(2, 1fr); }
   .priceGrid { grid-template-columns: repeat(2, 1fr); }
   .showcaseCard { width: 320px; }
   .showcaseTitleCard { width: 280px; }
-  .floatImg { width: 120px; }
-  .floatCard { padding: 14px 16px; }
-  .floatHeader { font-size: 13px; }
+  .floatImg { width: 140px; }
+  .floatCard { padding: 16px 18px; top: 50%; }
+  .floatHeader { font-size: 14px; }
+  .floatLeft { left: 24px; }
+  .floatRight { right: 24px; }
+  .floatPair { gap: 10px; }
+  .floatTag { font-size: 9px; }
+  .floatArrow { font-size: 18px; }
+  .logo span:last-child { font-size: 20px; }
+  .showcaseTitle { font-size: 32px; }
 }
 
 @media (max-width: 640px) {
   .hero { height: 300vh; }
+  .header { padding: 0 16px; height: 56px; }
+  .logo span:last-child { font-size: 18px; }
   .nav { display: none; }
+  .btnStart { padding: 8px 18px; font-size: 12px; }
   .floatCard { display: none; }
   .heroTitle { font-size: clamp(28px, 8vw, 48px); }
-  .heroDesc { font-size: 14px; }
-  .heroCta { flex-direction: column; align-items: center; }
-  .btnPrimary, .btnGhost { width: 100%; max-width: 280px; justify-content: center; }
+  .heroLabel { font-size: 11px; }
+  .heroDesc { font-size: 14px; padding: 0 16px; }
+  .heroLight { font-size: clamp(22px, 6vw, 36px); }
+  .heroCta { flex-direction: column; align-items: center; gap: 12px; }
+  .btnPrimary, .btnGhost { width: 100%; max-width: 280px; justify-content: center; text-align: center; }
+  .scrollHint { bottom: 16px; }
+  .sectionHead { padding: 0 8px; }
   .sectionTitle { font-size: clamp(22px, 6vw, 32px); }
-  .featGrid { grid-template-columns: 1fr; }
-  .stepsRow { grid-template-columns: 1fr; }
-  .priceGrid { grid-template-columns: 1fr; }
-  .showcaseCard { width: 280px; }
-  .showcaseTitleCard { width: 240px; }
+  .sectionLabel { font-size: 10px; }
+  .featGrid { grid-template-columns: 1fr; gap: 12px; }
+  .featCard { padding: 20px; }
+  .stepsRow { grid-template-columns: 1fr; gap: 12px; }
+  .stepCard { padding: 20px; }
+  .priceGrid { grid-template-columns: 1fr; gap: 16px; }
+  .priceCard { padding: 24px; }
+  .showcaseTrack { padding: 0 20px; gap: 16px; }
+  .showcaseCard { width: 260px; padding: 16px; }
+  .showcaseTitleCard { width: 220px; }
+  .showcaseTitle { font-size: 28px; }
+  .showcaseDesc { font-size: 13px; }
+  .cardPair { gap: 8px; }
+  .container { padding: 0 16px; }
   .footerGrid { flex-direction: column; gap: 32px; }
   .footerLinks { flex-direction: column; gap: 24px; }
-  .header { padding: 0 16px; }
-  .features, .howItWorks, .pricing { padding: 64px 0; }
+  .features, .howItWorks, .pricing { padding: 56px 0; }
 }
