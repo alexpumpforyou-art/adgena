@@ -64,6 +64,7 @@ export default function DashboardPage() {
   const [textLoading, setTextLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
   const fileInputRef = useRef(null);
 
   const concepts = CONCEPTS[tab] || [];
@@ -422,16 +423,13 @@ export default function DashboardPage() {
             <div className={styles.stepContent}>
               <div className={styles.resultLayout}>
                 <div className={styles.resultPreview}>
-                  {(generatedResult?.imageDataUrl || generatedResult?.imageUrl) ? (
+                  {(generatedResult?.imageDataUrl) ? (
                     <img
-                      src={generatedResult.imageDataUrl || generatedResult.imageUrl}
+                      src={generatedResult.imageDataUrl}
                       alt="Generated product card"
                       className={styles.resultImg}
-                      onError={(e) => {
-                        console.error('Image failed to load:', generatedResult.imageUrl);
-                        e.target.style.display = 'none';
-                        e.target.parentElement.innerHTML = '<div style="padding:40px;text-align:center;color:#ff6b6b"><p>⚠️ Изображение не загрузилось</p><p style="font-size:12px;margin-top:8px;color:#888">URL: ' + generatedResult.imageUrl + '</p></div>';
-                      }}
+                      onClick={() => setFullscreen(true)}
+                      style={{cursor: 'zoom-in'}}
                     />
                   ) : generatedResult?.error ? (
                     <div style={{padding: '40px', textAlign: 'center'}}>
@@ -452,27 +450,31 @@ export default function DashboardPage() {
                   <h3>🎉 Карточка готова!</h3>
                   <p className={styles.resultInfo}>Ваша карточка сгенерирована с использованием AI</p>
                   {generatedResult?.model && (
-                    <p style={{fontSize: '12px', color: '#666', marginBottom: '16px'}}>
+                    <p style={{fontSize: '12px', color: '#666', marginBottom: '8px'}}>
                       Модель: {generatedResult.model}
                     </p>
                   )}
+                  {generatedResult?.dimensions && (
+                    <p style={{fontSize: '12px', color: '#666', marginBottom: '16px'}}>
+                      Размер: {generatedResult.dimensions.w}×{generatedResult.dimensions.h}px
+                    </p>
+                  )}
                   <div className={styles.resultBtns}>
-                    {generatedResult?.imageUrl && (
+                    {generatedResult?.imageDataUrl && (
                       <>
                         <a
-                          href={generatedResult.imageUrl}
-                          download={`adgena-card-${generatedResult.generationId || 'result'}.png`}
+                          href={generatedResult.imageDataUrl}
+                          download={`adgena-${generatedResult.generationId || 'card'}.jpg`}
                           className="btn btn-primary btn-lg"
                         >
-                          📥 Скачать PNG
+                          📥 Скачать
                         </a>
-                        <a
-                          href={generatedResult.imageUrl}
-                          download={`adgena-card-${generatedResult.generationId || 'result'}.jpg`}
+                        <button
                           className="btn btn-secondary"
+                          onClick={() => setFullscreen(true)}
                         >
-                          📥 Скачать JPG
-                        </a>
+                          🔍 На весь экран
+                        </button>
                       </>
                     )}
                     <button className="btn btn-ghost" onClick={handleReset}>🔄 Создать новую</button>
@@ -483,6 +485,34 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* Fullscreen Lightbox */}
+      {fullscreen && generatedResult?.imageDataUrl && (
+        <div
+          className={styles.lightbox}
+          onClick={() => setFullscreen(false)}
+        >
+          <button
+            className={styles.lightboxClose}
+            onClick={() => setFullscreen(false)}
+          >✕</button>
+          <img
+            src={generatedResult.imageDataUrl}
+            alt="Fullscreen preview"
+            className={styles.lightboxImg}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className={styles.lightboxActions} onClick={(e) => e.stopPropagation()}>
+            <a
+              href={generatedResult.imageDataUrl}
+              download={`adgena-${generatedResult.generationId || 'card'}.jpg`}
+              className="btn btn-primary"
+            >
+              📥 Скачать
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,8 +2,21 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { canGenerate, incrementGenerations, createGeneration, updateGeneration } from '@/lib/db';
 import { generateProductCard } from '@/lib/apiyi';
-import path from 'path';
-import fs from 'fs';
+import sharp from 'sharp';
+
+// Size definitions with aspect ratios
+const SIZE_MAP = {
+  wb:         { w: 900,  h: 1200, aspect: '3:4' },
+  ozon:       { w: 900,  h: 1200, aspect: '3:4' },
+  amazon:     { w: 2000, h: 2000, aspect: '1:1' },
+  ebay:       { w: 1600, h: 1600, aspect: '1:1' },
+  etsy:       { w: 2000, h: 2000, aspect: '1:1' },
+  shopify:    { w: 2048, h: 2048, aspect: '1:1' },
+  'fb-feed':  { w: 1080, h: 1080, aspect: '1:1' },
+  'fb-story': { w: 1080, h: 1920, aspect: '9:16' },
+  'google-gdn': { w: 1200, h: 628, aspect: '16:9' },
+  'vk-post':  { w: 1080, h: 607,  aspect: '16:9' },
+};
 
 export async function POST(request) {
   try {
@@ -13,7 +26,7 @@ export async function POST(request) {
     const sizeId = formData.get('sizeId');
     const productName = formData.get('productName');
     const productDesc = formData.get('productDesc');
-    const type = formData.get('type') || 'marketplace';
+    const type = formData.get('type') || 'photo';
     const lang = formData.get('lang') || 'ru';
     const textJson = formData.get('text');
 
@@ -62,6 +75,10 @@ export async function POST(request) {
     const headline = parsedText.headline || parsedText.title || productName;
     const cta = parsedText.cta || 'Купить сейчас';
 
+    // Resolve target size & aspect ratio
+    const sizeConfig = SIZE_MAP[sizeId] || SIZE_MAP['wb'];
+    const aspectRatio = sizeConfig.aspect;
+
     // Create generation record
     let generationId;
     if (user) {
@@ -79,9 +96,9 @@ export async function POST(request) {
       generationId = `gen_${Date.now()}`;
     }
 
-    console.log(`[Generate] Starting AI generation: ${generationId}`);
+    console.log(`[Generate] Starting: ${generationId} | template: ${templateId} | size: ${sizeId} (${sizeConfig.w}x${sizeConfig.h}, ${aspectRatio})`);
 
-    // === CORE: Generate via Nano Banana Pro ===
+    // === CORE: Generate via AI ===
     const result = await generateProductCard({
       imageBase64,
       mimeType,
@@ -92,6 +109,7 @@ export async function POST(request) {
       headline,
       cta,
       lang,
+      aspectRatio,
     });
 
     if (!result.success || !result.imageData) {
@@ -99,7 +117,6 @@ export async function POST(request) {
         model: result.model,
         contentType: typeof result.rawContent,
         contentLength: typeof result.rawContent === 'string' ? result.rawContent.length : 'N/A',
-        contentPreview: typeof result.rawContent === 'string' ? result.rawContent.substring(0, 200) : JSON.stringify(result.rawContent)?.substring(0, 200),
       });
 
       if (user) updateGeneration(generationId, { status: 'failed' });
@@ -107,64 +124,61 @@ export async function POST(request) {
       return NextResponse.json({
         success: false,
         error: 'AI не вернул изображение. Попробуйте ещё раз.',
-        debug: {
-          model: result.model,
-          contentType: typeof result.rawContent,
-          hasContent: !!result.rawContent,
-        },
       }, { status: 500 });
     }
 
-    // Save the generated image to disk (best-effort, may not persist on Railway)
-    let outputUrl = null;
-    let imageDataUrl = result.imageData; // base64 data URL for direct display
-
-    try {
-      const outputDir = path.join(process.cwd(), 'public', 'generated');
-      if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
-
-      if (result.imageData.startsWith('data:image')) {
-        const base64Match = result.imageData.match(/^data:image\/(\w+);base64,(.+)$/);
-        if (base64Match) {
-          const ext = base64Match[1] === 'jpeg' ? 'jpg' : base64Match[1];
-          const filename = `${generationId}.${ext}`;
-          const filepath = path.join(outputDir, filename);
-          fs.writeFileSync(filepath, Buffer.from(base64Match[2], 'base64'));
-          outputUrl = `/generated/${filename}`;
-        }
-      } else if (result.imageData.startsWith('http')) {
-        try {
-          const imgRes = await fetch(result.imageData);
-          const imgBuf = Buffer.from(await imgRes.arrayBuffer());
-          const filename = `${generationId}.png`;
-          const filepath = path.join(outputDir, filename);
-          fs.writeFileSync(filepath, imgBuf);
-          outputUrl = `/generated/${filename}`;
-          imageDataUrl = `data:image/png;base64,${imgBuf.toString('base64')}`;
-        } catch (dlErr) {
-          console.error('[Generate] Failed to download image:', dlErr.message);
-          outputUrl = result.imageData;
-        }
+    // === POST-PROCESS: Extract buffer, resize with sharp ===
+    let rawBuffer;
+    if (result.imageData.startsWith('data:image')) {
+      const base64Match = result.imageData.match(/^data:image\/\w+;base64,(.+)$/);
+      rawBuffer = base64Match ? Buffer.from(base64Match[1], 'base64') : null;
+    } else if (result.imageData.startsWith('http')) {
+      try {
+        const imgRes = await fetch(result.imageData);
+        rawBuffer = Buffer.from(await imgRes.arrayBuffer());
+      } catch (dlErr) {
+        console.error('[Generate] Download error:', dlErr.message);
       }
-    } catch (fsErr) {
-      console.error('[Generate] File save error (non-fatal):', fsErr.message);
     }
+
+    let finalBuffer = rawBuffer;
+    if (rawBuffer) {
+      try {
+        // Resize to target platform dimensions
+        finalBuffer = await sharp(rawBuffer)
+          .resize(sizeConfig.w, sizeConfig.h, { fit: 'cover', position: 'center' })
+          .jpeg({ quality: 92 })
+          .toBuffer();
+        console.log(`[Generate] Resized: ${sizeConfig.w}x${sizeConfig.h} (${(finalBuffer.length / 1024).toFixed(0)}KB)`);
+      } catch (sharpErr) {
+        console.error('[Generate] Sharp resize error (using original):', sharpErr.message);
+        finalBuffer = rawBuffer;
+      }
+    }
+
+    // Build data URL for client
+    const imageDataUrl = finalBuffer
+      ? `data:image/jpeg;base64,${finalBuffer.toString('base64')}`
+      : result.imageData;
 
     // Update generation record
     if (user) {
-      updateGeneration(generationId, { status: 'completed', imageOutputPath: outputUrl });
+      updateGeneration(generationId, {
+        status: 'completed',
+        imageOutputPath: generationId,
+      });
       incrementGenerations(user.id);
     }
 
-    console.log(`[Generate] ✅ Done: ${generationId} → ${outputUrl || 'data URL only'}`);
+    console.log(`[Generate] ✅ Done: ${generationId} (${(finalBuffer?.length / 1024).toFixed(0) || '?'}KB)`);
 
     return NextResponse.json({
       success: true,
-      imageUrl: outputUrl || imageDataUrl,
       imageDataUrl,
       generationId,
       template: templateId,
       size: sizeId,
+      dimensions: { w: sizeConfig.w, h: sizeConfig.h },
       model: result.model,
     });
   } catch (error) {

@@ -29,6 +29,7 @@ export async function generateProductCard({
   headline = '',
   cta = '',
   lang = 'ru',
+  aspectRatio = '3:4',
 }) {
   let prompt;
 
@@ -42,7 +43,10 @@ export async function generateProductCard({
     prompt = typeof promptFn === 'function' ? promptFn(productName, bullets, lang) : promptFn;
   }
 
-  console.log(`[APIYI] Generating ${type} card | template: ${templateId} | lang: ${lang}`);
+  // Inject aspect ratio instruction
+  prompt += `\n\nIMPORTANT: Generate the image in ${aspectRatio} aspect ratio.`;
+
+  console.log(`[APIYI] Generating ${type} | template: ${templateId} | ratio: ${aspectRatio} | lang: ${lang}`);
   console.log(`[APIYI] Product: ${productName}`);
 
   const response = await client.chat.completions.create({
