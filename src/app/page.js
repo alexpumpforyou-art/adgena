@@ -91,9 +91,9 @@ function Header() {
 // Floating before/after cards (appear during video scroll)
 // ========================================
 const FLOAT_CARDS = [
-  { at: 0.25, side: 'left', label: 'Одежда', before: 'Фото с телефона', after: 'Lifestyle-фото' },
-  { at: 0.45, side: 'right', label: 'Косметика', before: 'Снимок продукта', after: 'Премиум карточка' },
-  { at: 0.65, side: 'left', label: 'Гаджеты', before: 'Фото из каталога', after: 'Рекламный баннер' },
+  { at: 0.20, side: 'left', label: 'Одежда', beforeImg: '/cards/before1.png', afterImg: '/cards/after1.png' },
+  { at: 0.42, side: 'right', label: 'Косметика', beforeImg: '/cards/before2.png', afterImg: '/cards/after2.png' },
+  { at: 0.64, side: 'left', label: 'Гаджеты', beforeImg: '/cards/before3.png', afterImg: '/cards/after3.png' },
 ];
 
 // ========================================
@@ -131,7 +131,8 @@ function Hero() {
       const cw = canvas.width / (window.devicePixelRatio || 1);
       const ch = canvas.height / (window.devicePixelRatio || 1);
       const iw = img.naturalWidth, ih = img.naturalHeight;
-      const scale = Math.max(cw / iw, ch / ih) * 0.88;
+      // Full cover — no borders
+      const scale = Math.max(cw / iw, ch / ih);
       const dw = iw * scale, dh = ih * scale;
       const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
       ctx.fillStyle = '#0B0D14';
@@ -139,16 +140,21 @@ function Hero() {
       ctx.drawImage(img, dx, dy, dw, dh);
     }
 
-    // Load frames: /frames/001.webp — /frames/120.webp
+    // Load frames: /frames/0001.webp — /frames/0120.webp
     const FRAME_COUNT = 120;
     let loaded = 0;
-    for (let i = 1; i <= FRAME_COUNT; i++) {
+
+    // Load first frame with priority for instant display
+    const firstImg = new Image();
+    firstImg.src = '/frames/0001.webp';
+    firstImg.onload = () => { loaded++; resize(); drawFrame(0); };
+    firstImg.onerror = () => {};
+    framesRef.current[0] = firstImg;
+
+    for (let i = 2; i <= FRAME_COUNT; i++) {
       const img = new Image();
       img.src = `/frames/${String(i).padStart(4, '0')}.webp`;
-      img.onload = () => {
-        loaded++;
-        if (loaded === 1) { resize(); drawFrame(0); }
-      };
+      img.onload = () => { loaded++; };
       img.onerror = () => {};
       framesRef.current[i - 1] = img;
     }
@@ -211,14 +217,15 @@ function Hero() {
             blurRef.current.style.webkitBackdropFilter = `blur(${blur}px)`;
           }
 
-          // Floating before/after cards
+          // Floating before/after cards — wider range = visible longer
           cardsRef.current.forEach((el, i) => {
             if (!el) return;
             const card = FLOAT_CARDS[i];
             const dist = Math.abs(p - card.at);
-            const visible = dist < 0.07;
-            const opacity = visible ? Math.max(0, 1 - dist / 0.07) : 0;
-            const ty = visible ? (1 - opacity) * 30 : 40;
+            const RANGE = 0.12;
+            const visible = dist < RANGE;
+            const opacity = visible ? Math.max(0, 1 - dist / RANGE) : 0;
+            const ty = visible ? (1 - opacity) * 24 : 32;
             el.style.opacity = opacity;
             el.style.transform = `translateY(${ty}px)`;
             el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
@@ -285,12 +292,12 @@ function Hero() {
           <div className={styles.floatPair}>
             <div className={styles.floatSide}>
               <span className={styles.floatTag}>Загрузил</span>
-              <div className={styles.placeholder} style={{ aspectRatio: '4/5', width: 100 }} />
+              <img src={card.beforeImg} alt="" className={styles.floatImg} />
             </div>
             <span className={styles.floatArrow}>&rarr;</span>
             <div className={styles.floatSide}>
               <span className={styles.floatTag}>Получил</span>
-              <div className={styles.placeholder} style={{ aspectRatio: '4/5', width: 100 }} />
+              <img src={card.afterImg} alt="" className={styles.floatImg} />
             </div>
           </div>
         </div>
