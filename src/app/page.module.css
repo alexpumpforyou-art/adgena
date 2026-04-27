@@ -105,13 +105,26 @@
   pointer-events: none; z-index: 2;
 }
 
-/* Blur layer — driven by JS for smooth start/end */
+/* Blur layer — driven by JS for intro only */
 .blurLayer {
   position: absolute; inset: 0;
   pointer-events: none; z-index: 1;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: backdrop-filter 0.1s;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Solid bottom strip — kills canvas-to-showcase seam permanently.
+   z-index 3 = above both blur and overlay, unaffected by backdrop-filter */
+.bottomFade {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 20vh; z-index: 3; pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(11, 13, 20, 0) 0%,
+    rgba(11, 13, 20, 0.7) 40%,
+    rgba(11, 13, 20, 1) 70%,
+    rgba(11, 13, 20, 1) 100%
+  );
 }
 
 /* Floating before/after cards */
@@ -428,10 +441,22 @@
 @media (max-width: 640px) {
   .hero { height: 300vh; }
   .header { padding: 0 16px; height: 56px; }
+  .logo img { width: 36px !important; height: 36px !important; }
   .logo span:last-child { font-size: 18px; }
   .nav { display: none; }
   .btnStart { padding: 8px 18px; font-size: 12px; }
-  .floatCard { display: none; }
+  /* Floating cards on mobile — compact, centered at bottom */
+  .floatCard {
+    position: fixed; top: auto; bottom: 24px;
+    left: 16px !important; right: 16px !important;
+    padding: 14px 16px; border-radius: 14px;
+  }
+  .floatLeft, .floatRight { left: 16px; right: 16px; }
+  .floatImg { width: 100px; border-radius: 8px; }
+  .floatHeader { font-size: 14px; margin-bottom: 8px; }
+  .floatPair { gap: 10px; justify-content: center; }
+  .floatTag { font-size: 8px; }
+  .floatArrow { font-size: 16px; }
   .heroTitle { font-size: clamp(28px, 8vw, 48px); }
   .heroLabel { font-size: 11px; }
   .heroDesc { font-size: 14px; padding: 0 16px; }

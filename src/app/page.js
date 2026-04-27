@@ -194,13 +194,13 @@ function Hero() {
             requestAnimationFrame(() => drawFrame(index));
           }
 
-          // Blur transitions: smooth start and end
+          // Blur: only at start (intro fade-in). No end blur — it was
+          // destroying the gradient that masks the canvas-to-showcase seam
           if (blurRef.current) {
             let blur = 0;
             if (p < 0.06) blur = (1 - p / 0.06) * 16;
-            else if (p > 0.92) blur = ((p - 0.92) / 0.08) * 16;
-            blurRef.current.style.backdropFilter = `blur(${blur}px)`;
-            blurRef.current.style.webkitBackdropFilter = `blur(${blur}px)`;
+            blurRef.current.style.backdropFilter = blur > 0 ? `blur(${blur}px)` : 'none';
+            blurRef.current.style.webkitBackdropFilter = blur > 0 ? `blur(${blur}px)` : 'none';
           }
 
           // Floating before/after cards — wider range = visible longer
@@ -247,6 +247,8 @@ function Hero() {
         <canvas ref={canvasRef} className={styles.canvas} />
         <div className={styles.canvasOverlay} />
         <div className={styles.blurLayer} ref={blurRef} />
+        {/* Solid strip at bottom — final defense against seam */}
+        <div className={styles.bottomFade} />
       </div>
 
       {/* Hero text */}
