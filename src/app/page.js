@@ -84,217 +84,196 @@ const FLOAT_CARDS = [
 
 // ========================================
 // HERO — Video Scroll (Canvas + 120 Frames)
+// Reference architecture: sticky canvas, native scroll
 // ========================================
 function Hero() {
   const canvasRef = useRef(null);
-  const wrapRef = useRef(null);
+  const sectionRef = useRef(null);
+  const stickyRef = useRef(null);
   const heroTextRef = useRef(null);
-  const blurRef = useRef(null);
   const cardsRef = useRef([]);
   const framesRef = useRef([]);
-  const currentFrameRef = useRef(0);
+  const stateRef = useRef({ currentFrame: 0, rafPending: false, isMobile: false });
 
   const typedWord = useTypewriter(['карточки товаров', 'lifestyle-фото', 'рекламные баннеры'], 70, 35, 1400);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const section = sectionRef.current;
+    if (!canvas || !section) return;
+    const ctx = canvas.getContext('2d', { alpha: false });
 
-    const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = window.innerWidth + 'px';
-      canvas.style.height = window.innerHeight + 'px';
+    const FRAME_COUNT = 120;
+    const SCALE_DESKTOP = 1.03;
+    const SCALE_MOBILE = 1.14;
+
+    function updateMobile() {
+      stateRef.current.isMobile = window.innerWidth < 768;
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
-      drawFrame(currentFrameRef.current);
-    };
+      drawFrame(stateRef.current.currentFrame);
+    }
 
     function drawFrame(index) {
       const img = framesRef.current[index];
-      if (!img || !img.complete) return;
-      const cw = canvas.width / (window.devicePixelRatio || 1);
-      const ch = canvas.height / (window.devicePixelRatio || 1);
-      const iw = img.naturalWidth, ih = img.naturalHeight;
-      // Full cover with generous overscan to guarantee edge-to-edge
-      const scale = Math.max(cw / iw, ch / ih) * 1.08;
-      const dw = iw * scale, dh = ih * scale;
-      const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
+      const rect = canvas.getBoundingClientRect();
+      const cw = rect.width;
+      const ch = rect.height;
+
       ctx.fillStyle = '#0B0D14';
       ctx.fillRect(0, 0, cw, ch);
+
+      if (!img || !img.complete) return;
+
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      const scaleFactor = stateRef.current.isMobile ? SCALE_MOBILE : SCALE_DESKTOP;
+      const ratio = Math.max(cw / iw, ch / ih) * scaleFactor;
+      const dw = iw * ratio;
+      const dh = ih * ratio;
+      const dx = (cw - dw) / 2;
+      const dy = (ch - dh) / 2;
       ctx.drawImage(img, dx, dy, dw, dh);
     }
 
-    // Load frames: /frames/0001.webp — /frames/0120.webp
-    const FRAME_COUNT = 120;
-    let loaded = 0;
+    function requestDraw(index) {
+      stateRef.current.currentFrame = index;
+      if (stateRef.current.rafPending) return;
+      stateRef.current.rafPending = true;
+      requestAnimationFrame(() => {
+        drawFrame(stateRef.current.currentFrame);
+        stateRef.current.rafPending = false;
+      });
+    }
 
-    // Load first frame with priority for instant display
+    function getSectionProgress() {
+      const rect = section.getBoundingClientRect();
+      const total = Math.max(1, section.offsetHeight - window.innerHeight);
+      const scrolled = Math.min(Math.max(-rect.top, 0), total);
+      return scrolled / total;
+    }
+
+    function onScroll() {
+      const p = getSectionProgress();
+
+      // Frame index — direct mapping, no acceleration
+      const frameIndex = Math.min(Math.floor(p * FRAME_COUNT), FRAME_COUNT - 1);
+      requestDraw(frameIndex);
+
+      // Hero text fade out
+      if (heroTextRef.current) {
+        const textFade = Math.max(0, 1 - p * 5);
+        heroTextRef.current.style.opacity = textFade;
+        heroTextRef.current.style.transform = `translateY(${p * -80}px)`;
+      }
+
+      // Floating before/after cards
+      cardsRef.current.forEach((el, i) => {
+        if (!el) return;
+        const card = FLOAT_CARDS[i];
+        const dist = Math.abs(p - card.at);
+        const RANGE = 0.12;
+        const visible = dist < RANGE;
+        const opacity = visible ? Math.max(0, 1 - dist / RANGE) : 0;
+        const ty = visible ? (1 - opacity) * 24 : 32;
+        el.style.opacity = opacity;
+        el.style.transform = `translateY(${ty}px)`;
+        el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
+      });
+    }
+
+    // Load frames
+    let loaded = 0;
     const firstImg = new Image();
     firstImg.src = '/frames/0001.webp';
-    firstImg.onload = () => { loaded++; resize(); drawFrame(0); };
-    firstImg.onerror = () => {};
+    firstImg.onload = () => { loaded++; resizeCanvas(); };
     framesRef.current[0] = firstImg;
 
     for (let i = 2; i <= FRAME_COUNT; i++) {
       const img = new Image();
       img.src = `/frames/${String(i).padStart(4, '0')}.webp`;
       img.onload = () => { loaded++; };
-      img.onerror = () => {};
       framesRef.current[i - 1] = img;
     }
 
-    // Placeholder when no frames
-    setTimeout(() => {
-      if (loaded === 0) {
-        const cw = canvas.width / (window.devicePixelRatio || 1);
-        const ch = canvas.height / (window.devicePixelRatio || 1);
-        const grad = ctx.createRadialGradient(cw/2, ch/2, 0, cw/2, ch/2, cw * 0.5);
-        grad.addColorStop(0, '#1A1F2B');
-        grad.addColorStop(1, '#0B0D14');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, cw, ch);
-      }
-    }, 500);
+    function onResize() {
+      updateMobile();
+      resizeCanvas();
+      onScroll();
+    }
 
-    window.addEventListener('resize', resize);
-    resize();
+    updateMobile();
+    resizeCanvas();
 
-    // GSAP
-    const waitForGsap = setInterval(() => {
-      if (typeof window.gsap === 'undefined' || typeof window.ScrollTrigger === 'undefined') return;
-      clearInterval(waitForGsap);
-
-      const gsap = window.gsap;
-      const ScrollTrigger = window.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
-
-      if (typeof window.Lenis !== 'undefined') {
-        const lenis = new window.Lenis({ duration: 1.2, smoothWheel: true });
-        lenis.on('scroll', ScrollTrigger.update);
-        gsap.ticker.add((time) => lenis.raf(time * 1000));
-        gsap.ticker.lagSmoothing(0);
-      }
-
-      const FRAME_SPEED = 2.0;
-      const scrollContainer = wrapRef.current;
-
-      ScrollTrigger.create({
-        trigger: scrollContainer,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: true,
-        onUpdate: (self) => {
-          const p = self.progress;
-          const accelerated = Math.min(p * FRAME_SPEED, 1);
-          const index = Math.min(Math.floor(accelerated * FRAME_COUNT), FRAME_COUNT - 1);
-          if (index !== currentFrameRef.current) {
-            currentFrameRef.current = index;
-            requestAnimationFrame(() => drawFrame(index));
-          }
-
-          // Blur: only at start (intro fade-in). No end blur — it was
-          // destroying the gradient that masks the canvas-to-showcase seam
-          if (blurRef.current) {
-            let blur = 0;
-            if (p < 0.06) blur = (1 - p / 0.06) * 16;
-            blurRef.current.style.backdropFilter = blur > 0 ? `blur(${blur}px)` : 'none';
-            blurRef.current.style.webkitBackdropFilter = blur > 0 ? `blur(${blur}px)` : 'none';
-          }
-
-          // Floating before/after cards — wider range = visible longer
-          cardsRef.current.forEach((el, i) => {
-            if (!el) return;
-            const card = FLOAT_CARDS[i];
-            const dist = Math.abs(p - card.at);
-            const RANGE = 0.12;
-            const visible = dist < RANGE;
-            const opacity = visible ? Math.max(0, 1 - dist / RANGE) : 0;
-            const ty = visible ? (1 - opacity) * 24 : 32;
-            el.style.opacity = opacity;
-            el.style.transform = `translateY(${ty}px)`;
-            el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
-          });
-        }
-      });
-
-      // Hero text fade
-      if (heroTextRef.current) {
-        ScrollTrigger.create({
-          trigger: scrollContainer,
-          start: 'top top',
-          end: '12% top',
-          scrub: true,
-          onUpdate: (self) => {
-            heroTextRef.current.style.opacity = Math.max(0, 1 - self.progress * 3);
-            heroTextRef.current.style.transform = `translateY(${self.progress * -60}px)`;
-          }
-        });
-      }
-    }, 100);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
 
     return () => {
-      window.removeEventListener('resize', resize);
-      clearInterval(waitForGsap);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
     };
   }, []);
 
   return (
-    <section className={styles.hero} ref={wrapRef}>
-      {/* Canvas */}
-      <div className={styles.canvasWrap}>
+    <section className={styles.hero} ref={sectionRef}>
+      <div className={styles.heroSticky} ref={stickyRef}>
+        {/* Canvas */}
         <canvas ref={canvasRef} className={styles.canvas} />
         <div className={styles.canvasOverlay} />
-        <div className={styles.blurLayer} ref={blurRef} />
-        {/* Solid strip at bottom — final defense against seam */}
         <div className={styles.bottomFade} />
-      </div>
 
-      {/* Hero text */}
-      <div className={styles.heroContent} ref={heroTextRef}>
-        <p className={styles.heroLabel}>AI-генератор для маркетплейсов</p>
-        <h1 className={styles.heroTitle}>
-          Создавайте<br />
-          <span className={styles.heroAccent}>{typedWord}<span className={styles.cursor}>|</span></span><br />
-          <span className={styles.heroLight}>за секунды</span>
-        </h1>
-        <p className={styles.heroDesc}>
-          Загрузите фото товара — получите профессиональные креативы.
-        </p>
-        <div className={styles.heroCta}>
-          <Link href="/dashboard" className={styles.btnPrimary}>Начать генерацию</Link>
-          <a href="#showcase" className={styles.btnGhost}>Смотреть примеры</a>
-        </div>
-      </div>
-
-      {/* Floating before/after cards */}
-      {FLOAT_CARDS.map((card, i) => (
-        <div
-          key={i}
-          ref={el => { cardsRef.current[i] = el; }}
-          className={`${styles.floatCard} ${card.side === 'right' ? styles.floatRight : styles.floatLeft}`}
-          style={{ opacity: 0 }}
-        >
-          <div className={styles.floatHeader}>{card.label}</div>
-          <div className={styles.floatPair}>
-            <div className={styles.floatSide}>
-              <span className={styles.floatTag}>Загрузил</span>
-              <img src={card.beforeImg} alt="" className={styles.floatImg} />
-            </div>
-            <span className={styles.floatArrow}>&rarr;</span>
-            <div className={styles.floatSide}>
-              <span className={styles.floatTag}>Получил</span>
-              <img src={card.afterImg} alt="" className={styles.floatImg} />
-            </div>
+        {/* Hero text */}
+        <div className={styles.heroContent} ref={heroTextRef}>
+          <p className={styles.heroLabel}>AI-генератор для маркетплейсов</p>
+          <h1 className={styles.heroTitle}>
+            Создавайте<br />
+            <span className={styles.heroAccent}>{typedWord}<span className={styles.cursor}>|</span></span><br />
+            <span className={styles.heroLight}>за секунды</span>
+          </h1>
+          <p className={styles.heroDesc}>
+            Загрузите фото товара — получите профессиональные креативы.
+          </p>
+          <div className={styles.heroCta}>
+            <Link href="/dashboard" className={styles.btnPrimary}>Начать генерацию</Link>
+            <a href="#showcase" className={styles.btnGhost}>Смотреть примеры</a>
           </div>
         </div>
-      ))}
 
-      {/* Scroll indicator */}
-      <div className={styles.scrollHint}>
-        <span>Скрольте</span>
-        <div className={styles.scrollLine} />
+        {/* Floating before/after cards */}
+        {FLOAT_CARDS.map((card, i) => (
+          <div
+            key={i}
+            ref={el => { cardsRef.current[i] = el; }}
+            className={`${styles.floatCard} ${card.side === 'right' ? styles.floatRight : styles.floatLeft}`}
+            style={{ opacity: 0 }}
+          >
+            <div className={styles.floatHeader}>{card.label}</div>
+            <div className={styles.floatPair}>
+              <div className={styles.floatSide}>
+                <span className={styles.floatTag}>Загрузил</span>
+                <img src={card.beforeImg} alt="" className={styles.floatImg} />
+              </div>
+              <span className={styles.floatArrow}>&rarr;</span>
+              <div className={styles.floatSide}>
+                <span className={styles.floatTag}>Получил</span>
+                <img src={card.afterImg} alt="" className={styles.floatImg} />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Scroll indicator */}
+        <div className={styles.scrollHint}>
+          <span>Скрольте</span>
+          <div className={styles.scrollLine} />
+        </div>
       </div>
     </section>
   );

@@ -80,16 +80,24 @@
    HERO — Canvas Video Scroll
    ======================================== */
 .hero {
-  height: 400vh; /* scroll distance for video */
+  height: 500vh; /* scroll distance for video */
   position: relative;
 }
 
-.canvasWrap {
-  position: fixed; top: 0; left: 0;
-  width: 100vw; height: 100vh; z-index: 0;
-  pointer-events: none; overflow: hidden;
+/* Sticky container — everything inside sticks to viewport during scroll.
+   Unlike 'fixed', sticky naturally clips at section boundary = no seam */
+.heroSticky {
+  position: sticky; top: 0;
+  width: 100%; height: 100vh;
+  overflow: hidden;
 }
-.canvas { display: block; }
+
+.canvas {
+  display: block;
+  width: 100%; height: 100%;
+  position: absolute; top: 0; left: 0;
+}
+
 .canvasOverlay {
   position: absolute; inset: 0;
   background: linear-gradient(
@@ -97,39 +105,28 @@
     rgba(11, 13, 20, 0.35) 0%,
     rgba(11, 13, 20, 0.05) 25%,
     rgba(11, 13, 20, 0.05) 55%,
-    rgba(11, 13, 20, 0.4) 70%,
-    rgba(11, 13, 20, 0.85) 85%,
-    rgba(11, 13, 20, 1.0) 92%,
+    rgba(11, 13, 20, 0.3) 75%,
+    rgba(11, 13, 20, 0.7) 90%,
     rgba(11, 13, 20, 1.0) 100%
   );
-  pointer-events: none; z-index: 2;
-}
-
-/* Blur layer — driven by JS for intro only */
-.blurLayer {
-  position: absolute; inset: 0;
   pointer-events: none; z-index: 1;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
-/* Solid bottom strip — kills canvas-to-showcase seam permanently.
-   z-index 3 = above both blur and overlay, unaffected by backdrop-filter */
+/* Solid bottom strip — seamless transition to next section */
 .bottomFade {
   position: absolute; bottom: 0; left: 0; right: 0;
-  height: 20vh; z-index: 3; pointer-events: none;
+  height: 15vh; z-index: 2; pointer-events: none;
   background: linear-gradient(
     to bottom,
     rgba(11, 13, 20, 0) 0%,
-    rgba(11, 13, 20, 0.7) 40%,
-    rgba(11, 13, 20, 1) 70%,
+    rgba(11, 13, 20, 0.8) 50%,
     rgba(11, 13, 20, 1) 100%
   );
 }
 
 /* Floating before/after cards */
 .floatCard {
-  position: fixed; top: 45%; z-index: 10;
+  position: absolute; top: 45%; z-index: 10;
   transform: translateY(40px);
   padding: 24px 26px; border-radius: 18px;
   background: rgba(17, 20, 32, 0.88);
@@ -169,8 +166,8 @@
 }
 
 .heroContent {
-  position: fixed; top: 0; left: 0;
-  width: 100vw; height: 100vh; z-index: 1;
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%; z-index: 3;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; gap: 20px; padding: 0 24px;
   pointer-events: none;
@@ -447,7 +444,7 @@
   .btnStart { padding: 8px 18px; font-size: 12px; }
   /* Floating cards on mobile — compact, centered at bottom */
   .floatCard {
-    position: fixed; top: auto; bottom: 24px;
+    top: auto; bottom: 10%;
     left: 16px !important; right: 16px !important;
     padding: 14px 16px; border-radius: 14px;
   }
