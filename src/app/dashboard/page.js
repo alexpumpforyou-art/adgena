@@ -117,6 +117,8 @@ export default function DashboardPage() {
   const [improveText, setImproveText] = useState('');
   const [versions, setVersions] = useState([]);
   const [activeVersion, setActiveVersion] = useState(0);
+  // AI helper
+  const [aiSuggesting, setAiSuggesting] = useState(false);
   // User & History
   const [user, setUser] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -254,6 +256,23 @@ export default function DashboardPage() {
     setVersions([]);
     setActiveVersion(0);
     setShowResult(false);
+  };
+
+  const handleAiSuggest = async () => {
+    if (!productName.trim()) return;
+    setAiSuggesting(true);
+    try {
+      const res = await fetch('/api/generate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `Ты — копирайтер для маркетплейсов. Для товара "${productName}" (категория: ${CATEGORIES.find(c => c.id === category)?.name || category}) напиши 3-5 ключевых преимуществ и продающих особенностей, разделяя запятыми. Кратко, по-русски, без номеров. Только преимущества, ничего больше.`
+        }),
+      });
+      const data = await res.json();
+      if (data.text) setCardText(data.text);
+    } catch { /* ignore */ }
+    setAiSuggesting(false);
   };
 
   // --- Render ---
@@ -401,7 +420,17 @@ export default function DashboardPage() {
           {/* CARD: text + style */}
           {tab === 'card' && (
             <>
-              <label className={styles.label} style={{marginTop: 16}}>О чём рассказать?</label>
+              <div className={styles.labelRow} style={{marginTop: 16}}>
+                <label className={styles.label}>О чём рассказать?</label>
+                <button
+                  type="button"
+                  className={styles.aiBtn}
+                  disabled={aiSuggesting || !productName.trim()}
+                  onClick={handleAiSuggest}
+                >
+                  {aiSuggesting ? '⏳' : '✨'} AI
+                </button>
+              </div>
               <textarea
                 className={styles.textarea}
                 rows={3}
