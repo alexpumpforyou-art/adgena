@@ -1,0 +1,211 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import styles from './profile.module.css';
+
+export default function ProfilePage() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showTicketForm, setShowTicketForm] = useState(false);
+  const [ticketSubject, setTicketSubject] = useState('');
+  const [ticketMessage, setTicketMessage] = useState('');
+  const [ticketSending, setTicketSending] = useState(false);
+  const [ticketSuccess, setTicketSuccess] = useState('');
+
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(data => {
+      if (!data.user) { router.push('/auth'); return; }
+      setUser(data.user);
+      setLoading(false);
+    });
+    fetch('/api/tickets').then(r => r.json()).then(data => {
+      if (data.tickets) setTickets(data.tickets);
+    });
+  }, [router]);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/');
+  };
+
+  const handleCreateTicket = async (e) => {
+    e.preventDefault();
+    if (!ticketSubject.trim() || !ticketMessage.trim()) return;
+    setTicketSending(true);
+    try {
+      const res = await fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: ticketSubject, message: ticketMessage }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTicketSuccess('Тикет создан! Мы ответим в ближайшее время.');
+        setTicketSubject('');
+        setTicketMessage('');
+        setShowTicketForm(false);
+        // Refresh tickets
+        const r2 = await fetch('/api/tickets');
+        const d2 = await r2.json();
+        if (d2.tickets) setTickets(d2.tickets);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setTicketSending(false);
+    }
+  };
+
+  if (loading) return <div className={styles.loading}>Загрузка...</div>;
+  if (!user) return null;
+
+  const initials = (user.name || user.email || '?').charAt(0).toUpperCase();
+  const planNames = { free: 'Бесплатный', starter: 'Стартер', pro: 'Про', business: 'Бизнес' };
+  const usedPercent = user.generations_limit > 0
+    ? Math.round((user.generations_used / user.generations_limit) * 100)
+    : 0;
+
+  return (
+    <div className={styles.page}>
+      {/* Header */}
+      <header className={styles.header}>
+        <Link href="/dashboard" className={styles.headerLogo}>
+          <img src="/logo-icon.webp" alt="" width={28} height={28} />
+          <span>Adgena</span>
+        </Link>
+        <div className={styles.headerRight}>
+          <Link href="/dashboard" className={styles.headerBtn}>← Генератор</Link>
+        </div>
+      </header>
+
+      <main className={styles.main}>
+        {/* Avatar + Name */}
+        <div className={styles.profileHead}>
+          <div className={styles.avatar}>{initials}</div>
+          <h1 className={styles.userName}>{user.name || 'Пользователь'}</h1>
+          <p className={styles.userEmail}>{user.email}</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <span className={styles.statValue}>{user.generations_used}</span>
+            <span className={styles.statLabel}>Генераций</span>
+          </div>
+          <div className={`${styles.statCard} ${styles.statCardAccent}`}>
+            <span className={styles.statValue}>{user.generations_limit - user.generations_used}</span>
+            <span className={styles.statLabel}>Осталось</span>
+          </div>
+        </div>
+
+        {/* Plan Bar */}
+        <div className={styles.planSection}>
+          <div className={styles.planHeader}>
+            <span className={styles.planName}>Тариф: {planNames[user.plan] || user.plan}</span>
+            <span className={styles.planUsage}>{user.generations_used}/{user.generations_limit}</span>
+          </div>
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} style={{ width: `${Math.min(usedPercent, 100)}%` }} />
+          </div>
+        </div>
+
+        {/* Info Cards */}
+        <div className={styles.infoGrid}>
+          <div className={styles.infoCard}>
+            <h3>Данные аккаунта</h3>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>ID</span>
+              <span className={styles.infoValue}>{user.id?.slice(0, 8)}...</span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Зарегистрирован</span>
+              <span className={styles.infoValue}>
+                {user.created_at ? new Date(user.created_at).toLocaleDateString('ru') : '—'}
+              </span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>Роль</span>
+              <span className={styles.infoValue}>
+                {user.role === 'admin' ? '👑 Админ' : user.role === 'support' ? '🛡️ Саппорт' : '👤 Пользователь'}
+              </span>
+            </div>
+          </div>
+
+          {/* Feedback */}
+          <div className={styles.infoCard}>
+            <h3>Обратная связь</h3>
+            <p className={styles.infoDesc}>Нашли баг? Есть предложение? Напишите нам!</p>
+            <button
+              className={styles.feedbackBtn}
+              onClick={() => { setShowTicketForm(!showTicketForm); setTicketSuccess(''); }}
+            >
+              ✉️ Создать тикет
+            </button>
+
+            {ticketSuccess && <p className={styles.successMsg}>{ticketSuccess}</p>}
+          </div>
+        </div>
+
+        {/* Ticket Form */}
+        {showTicketForm && (
+          <div className={styles.ticketForm}>
+            <h3>Новый тикет</h3>
+            <form onSubmit={handleCreateTicket}>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Тема обращения"
+                value={ticketSubject}
+                onChange={(e) => setTicketSubject(e.target.value)}
+                required
+              />
+              <textarea
+                className={styles.textarea}
+                placeholder="Опишите проблему или предложение..."
+                value={ticketMessage}
+                onChange={(e) => setTicketMessage(e.target.value)}
+                rows={4}
+                required
+              />
+              <div className={styles.ticketActions}>
+                <button type="button" className={styles.cancelBtn} onClick={() => setShowTicketForm(false)}>Отмена</button>
+                <button type="submit" className={styles.submitBtn} disabled={ticketSending}>
+                  {ticketSending ? 'Отправка...' : 'Отправить'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Tickets List */}
+        {tickets.length > 0 && (
+          <div className={styles.ticketsList}>
+            <h3>Мои тикеты</h3>
+            {tickets.map(t => (
+              <div key={t.id} className={styles.ticketItem}>
+                <div className={styles.ticketInfo}>
+                  <span className={styles.ticketSubject}>{t.subject}</span>
+                  <span className={styles.ticketDate}>
+                    {new Date(t.created_at).toLocaleDateString('ru')}
+                  </span>
+                </div>
+                <span className={`${styles.ticketStatus} ${styles[`status_${t.status}`]}`}>
+                  {t.status === 'open' ? '🟢 Открыт' : t.status === 'answered' ? '🔵 Ответ' : '⚫ Закрыт'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Logout */}
+        <button className={styles.logoutBtn} onClick={handleLogout}>
+          Выйти из аккаунта
+        </button>
+      </main>
+    </div>
+  );
+}

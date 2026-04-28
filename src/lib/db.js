@@ -36,6 +36,7 @@ function initTables() {
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       name TEXT DEFAULT '',
+      role TEXT DEFAULT 'user',
       plan TEXT DEFAULT 'free',
       generations_used INTEGER DEFAULT 0,
       generations_limit INTEGER DEFAULT 5,
@@ -68,10 +69,37 @@ function initTables() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
+    CREATE TABLE IF NOT EXISTS tickets (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      status TEXT DEFAULT 'open',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS ticket_messages (
+      id TEXT PRIMARY KEY,
+      ticket_id TEXT NOT NULL,
+      sender_id TEXT NOT NULL,
+      message TEXT NOT NULL,
+      is_staff INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (ticket_id) REFERENCES tickets(id),
+      FOREIGN KEY (sender_id) REFERENCES users(id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_generations_user ON generations(user_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id);
+    CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket ON ticket_messages(ticket_id);
   `);
+
+  // Migrate: add role column if missing
+  try { d.prepare("SELECT role FROM users LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); }
 }
 
 // ========================================
@@ -106,7 +134,7 @@ export function getUserByEmail(email) {
 
 export function getUserById(id) {
   const d = getDb();
-  return d.prepare('SELECT id, email, name, plan, generations_used, generations_limit, created_at FROM users WHERE id = ?').get(id);
+  return d.prepare('SELECT id, email, name, role, plan, generations_used, generations_limit, created_at FROM users WHERE id = ?').get(id);
 }
 
 export function verifyPassword(plainPassword, hash) {
@@ -202,6 +230,76 @@ export function getGenerationsByUser(userId, limit = 20) {
 export function getGenerationById(id) {
   const d = getDb();
   return d.prepare('SELECT * FROM generations WHERE id = ?').get(id);
+}
+
+// ========================================
+// TICKETS
+// ========================================
+
+export function createTicket(userId, subject, message) {
+  const d = getDb();
+  const ticketId = crypto.randomUUID();
+  const msgId = crypto.randomUUID();
+
+  d.prepare('INSERT INTO tickets (id, user_id, subject) VALUES (?, ?, ?)').run(ticketId, userId, subject);
+  d.prepare('INSERT INTO ticket_messages (id, ticket_id, sender_id, message, is_staff) VALUES (?, ?, ?, ?, 0)').run(msgId, ticketId, userId, message);
+
+  return ticketId;
+}
+
+export function addTicketMessage(ticketId, senderId, message, isStaff = false) {
+  const d = getDb();
+  const id = crypto.randomUUID();
+  d.prepare('INSERT INTO ticket_messages (id, ticket_id, sender_id, message, is_staff) VALUES (?, ?, ?, ?, ?)').run(id, ticketId, senderId, message, isStaff ? 1 : 0);
+  d.prepare("UPDATE tickets SET updated_at = datetime('now') WHERE id = ?").run(ticketId);
+  return id;
+}
+
+export function getTicketsByUser(userId) {
+  const d = getDb();
+  return d.prepare('SELECT * FROM tickets WHERE user_id = ? ORDER BY updated_at DESC').all(userId);
+}
+
+export function getAllTickets(status = null) {
+  const d = getDb();
+  if (status) {
+    return d.prepare('SELECT t.*, u.email, u.name FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.status = ? ORDER BY t.updated_at DESC').all(status);
+  }
+  return d.prepare('SELECT t.*, u.email, u.name FROM tickets t JOIN users u ON t.user_id = u.id ORDER BY t.updated_at DESC').all();
+}
+
+export function getTicketById(ticketId) {
+  const d = getDb();
+  const ticket = d.prepare('SELECT t.*, u.email, u.name FROM tickets t JOIN users u ON t.user_id = u.id WHERE t.id = ?').get(ticketId);
+  if (!ticket) return null;
+  const messages = d.prepare('SELECT tm.*, u.email as sender_email, u.name as sender_name FROM ticket_messages tm JOIN users u ON tm.sender_id = u.id WHERE tm.ticket_id = ? ORDER BY tm.created_at ASC').all(ticketId);
+  return { ...ticket, messages };
+}
+
+export function updateTicketStatus(ticketId, status) {
+  const d = getDb();
+  d.prepare("UPDATE tickets SET status = ?, updated_at = datetime('now') WHERE id = ?").run(status, ticketId);
+}
+
+// ========================================
+// ROLES
+// ========================================
+
+export function updateUserRole(userId, role) {
+  const d = getDb();
+  d.prepare("UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?").run(role, userId);
+}
+
+export function updateUserCredits(userId, newLimit) {
+  const d = getDb();
+  d.prepare("UPDATE users SET generations_limit = ?, updated_at = datetime('now') WHERE id = ?").run(newLimit, userId);
+}
+
+export function isStaff(userId) {
+  const user = getUserById(userId);
+  if (!user) return false;
+  const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+  return user.role === 'admin' || user.role === 'support' || adminEmails.includes(user.email?.toLowerCase());
 }
 
 export default getDb;

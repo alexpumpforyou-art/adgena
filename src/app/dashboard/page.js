@@ -274,8 +274,9 @@ export default function DashboardPage() {
           </button>
           {user && (
             <div className={styles.userMenu}>
-              <span className={styles.userAvatar}>{user.email?.[0]?.toUpperCase() || '?'}</span>
-              <button className={styles.navBtn} onClick={handleLogout}>Выйти</button>
+              <a href="/profile" className={styles.userAvatar} title="Профиль">
+                {(user.name || user.email)?.[0]?.toUpperCase() || '?'}
+              </a>
             </div>
           )}
         </div>

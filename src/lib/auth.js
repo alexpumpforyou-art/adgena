@@ -46,9 +46,11 @@ export async function getCurrentUser() {
       id: user.id,
       email: user.email,
       name: user.name,
+      role: user.role || 'user',
       plan: user.plan,
-      generationsUsed: user.generations_used,
-      generationsLimit: user.generations_limit,
+      generations_used: user.generations_used,
+      generations_limit: user.generations_limit,
+      created_at: user.created_at,
     };
   } catch {
     return null;
