@@ -1,7 +1,9 @@
 /**
  * APIYI Client — AI Image & Text Generation
- * Uses Nano Banana Pro (gemini-3-pro-image-preview) for product card generation
- * OpenAI-compatible SDK
+ * Supports:
+ *   - gpt-image-2 via /images/edits (product image → styled output)
+ *   - gemini-3-pro-image-preview via /chat/completions (fallback)
+ *   - Text generation (GPT 5.4)
  */
 
 import OpenAI from 'openai';
@@ -12,8 +14,99 @@ const client = new OpenAI({
   baseURL: process.env.APIYI_BASE_URL || 'https://api.apiyi.com/v1',
 });
 
+// Size map: aspect ratio → gpt-image-2 size
+const RATIO_TO_SIZE = {
+  '9:16': '1024x1536',
+  '3:4':  '1024x1536',
+  '1:1':  '1024x1024',
+  '4:3':  '1536x1024',
+  '16:9': '1536x1024',
+};
+
 // ========================================
-// GENERATION FUNCTION
+// GPT-IMAGE-2 GENERATION (images API)
+// ========================================
+
+async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRatio }) {
+  const size = RATIO_TO_SIZE[aspectRatio] || '1024x1536';
+  const model = process.env.IMAGE_GEN_MODEL || 'gpt-image-2';
+
+  console.log(`[GPT-IMAGE-2] Model: ${model} | Size: ${size}`);
+
+  // Convert base64 image to a File-like object for the SDK
+  const imageBuffer = Buffer.from(imageBase64, 'base64');
+
+  // Use images.edit with the reference image
+  const response = await client.images.edit({
+    model,
+    prompt,
+    image: new File([imageBuffer], 'product.png', { type: mimeType || 'image/png' }),
+    n: 1,
+    size,
+  });
+
+  const b64 = response.data?.[0]?.b64_json;
+  if (!b64) {
+    console.error('[GPT-IMAGE-2] No b64_json in response');
+    return null;
+  }
+
+  return `data:image/png;base64,${b64}`;
+}
+
+// ========================================
+// GEMINI FALLBACK (chat completions API)
+// ========================================
+
+async function generateWithGemini({ prompt, imageBase64, mimeType }) {
+  const response = await client.chat.completions.create({
+    model: 'gemini-3-pro-image-preview',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+        ],
+      },
+    ],
+  });
+
+  const message = response.choices?.[0]?.message;
+  if (!message) return null;
+
+  let imageData = null;
+
+  // Array content (multimodal)
+  if (Array.isArray(message.content)) {
+    for (const part of message.content) {
+      if (part.type === 'image_url' && part.image_url?.url) { imageData = part.image_url.url; break; }
+      if (part.type === 'image' && part.source?.data) { imageData = `data:image/png;base64,${part.source.data}`; break; }
+      if (part.inline_data?.data) { imageData = `data:${part.inline_data.mime_type || 'image/png'};base64,${part.inline_data.data}`; break; }
+    }
+  }
+
+  // String content
+  if (!imageData && typeof message.content === 'string') {
+    const content = message.content;
+    const mdMatch = content.match(/!\[.*?\]\((data:image\/\w+;base64,[A-Za-z0-9+/=]+)\)/);
+    if (mdMatch) { imageData = mdMatch[1]; }
+    else if (content.startsWith('data:image')) { imageData = content; }
+    else if (content.startsWith('http')) { imageData = content; }
+    else {
+      const dataUrlMatch = content.match(/(data:image\/\w+;base64,[A-Za-z0-9+/=]+)/);
+      if (dataUrlMatch) { imageData = dataUrlMatch[1]; }
+      else if (content.length > 1000 && /^[A-Za-z0-9+/=]+$/.test(content.substring(0, 100))) {
+        imageData = `data:image/png;base64,${content}`;
+      }
+    }
+  }
+
+  return imageData;
+}
+
+// ========================================
+// MAIN GENERATION FUNCTION
 // ========================================
 
 /**
@@ -54,56 +147,27 @@ export async function generateProductCard({
   console.log(`[APIYI] ${type} | concept: ${templateId} | cat: ${category} | ratio: ${aspectRatio} | lang: ${lang}`);
   console.log(`[APIYI] Product: ${productName}`);
 
-  const response = await client.chat.completions.create({
-    model: process.env.IMAGE_GEN_MODEL || 'gemini-3-pro-image-preview',
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-        ],
-      },
-    ],
-  });
-
-  const message = response.choices?.[0]?.message;
-  if (!message) throw new Error('No response from APIYI');
-
-  // Extract image from response
+  const useGptImage = (process.env.IMAGE_GEN_MODEL || '').startsWith('gpt-image');
   let imageData = null;
 
-  // Array content (multimodal)
-  if (Array.isArray(message.content)) {
-    for (const part of message.content) {
-      if (part.type === 'image_url' && part.image_url?.url) { imageData = part.image_url.url; break; }
-      if (part.type === 'image' && part.source?.data) { imageData = `data:image/png;base64,${part.source.data}`; break; }
-      if (part.inline_data?.data) { imageData = `data:${part.inline_data.mime_type || 'image/png'};base64,${part.inline_data.data}`; break; }
+  if (useGptImage) {
+    try {
+      imageData = await generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRatio });
+    } catch (err) {
+      console.error('[GPT-IMAGE-2] Error:', err.message);
+      // Fallback to Gemini
+      console.log('[APIYI] Falling back to Gemini...');
+      imageData = await generateWithGemini({ prompt, imageBase64, mimeType });
     }
-  }
-
-  // String content (Nano Banana format)
-  if (!imageData && typeof message.content === 'string') {
-    const content = message.content;
-    const mdMatch = content.match(/!\[.*?\]\((data:image\/\w+;base64,[A-Za-z0-9+/=]+)\)/);
-    if (mdMatch) { imageData = mdMatch[1]; }
-    else if (content.startsWith('data:image')) { imageData = content; }
-    else if (content.startsWith('http')) { imageData = content; }
-    else {
-      const dataUrlMatch = content.match(/(data:image\/\w+;base64,[A-Za-z0-9+/=]+)/);
-      if (dataUrlMatch) { imageData = dataUrlMatch[1]; }
-      else if (content.length > 1000 && /^[A-Za-z0-9+/=]+$/.test(content.substring(0, 100))) {
-        imageData = `data:image/png;base64,${content}`;
-      }
-    }
+  } else {
+    imageData = await generateWithGemini({ prompt, imageBase64, mimeType });
   }
 
   return {
     success: !!imageData,
     imageData,
-    model: response.model,
-    usage: response.usage,
-    rawContent: message.content,
+    model: useGptImage ? (process.env.IMAGE_GEN_MODEL || 'gpt-image-2') : 'gemini-3-pro-image-preview',
+    rawContent: imageData ? '[image data]' : null,
   };
 }
 
