@@ -5,7 +5,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 // Resend free tier requires onboarding@resend.dev as sender
 // After domain verification, change to noreply@adgena.pro
-const FROM_EMAIL = 'onboarding@resend.dev';
+const FROM_EMAIL = 'Adgena <noreply@adgena.pro>';
 
 export async function sendVerificationCode(email, code) {
   if (!RESEND_API_KEY) {
