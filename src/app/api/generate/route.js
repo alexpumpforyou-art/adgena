@@ -175,20 +175,37 @@ export async function POST(request) {
       ? `data:image/jpeg;base64,${finalBuffer.toString('base64')}`
       : result.imageData;
 
+    // === UPLOAD TO R2 STORAGE ===
+    let r2Url = null;
+    try {
+      const { uploadFile } = await import('@/lib/storage');
+      const uploadBuffer = finalBuffer || rawBuffer;
+      if (uploadBuffer) {
+        const r2Result = await uploadFile(uploadBuffer, 'image/jpeg', 'generations', 'jpg');
+        if (r2Result) {
+          r2Url = r2Result.url;
+          console.log(`[Generate] R2 uploaded: ${r2Url}`);
+        }
+      }
+    } catch (r2Err) {
+      console.error('[Generate] R2 upload error (non-fatal):', r2Err.message);
+    }
+
     // Update generation record
     if (user) {
       updateGeneration(generationId, {
         status: 'completed',
-        imageOutputPath: generationId,
+        imageOutputPath: r2Url || generationId,
       });
       incrementGenerations(user.id);
     }
 
-    console.log(`[Generate] ✅ Done: ${generationId} (${(finalBuffer?.length / 1024).toFixed(0) || '?'}KB)`);
+    console.log(`[Generate] ✅ Done: ${generationId} (${(finalBuffer?.length / 1024).toFixed(0) || '?'}KB)${r2Url ? ' → R2' : ''}`);
 
     return NextResponse.json({
       success: true,
       imageDataUrl,
+      imageUrl: r2Url,
       generationId,
       template: templateId,
       size: sizeId,
