@@ -2,26 +2,22 @@
 // Free: 3,000 emails/month
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Adgena <noreply@adgena.pro>';
+
+// Resend free tier requires onboarding@resend.dev as sender
+// After domain verification, change to noreply@adgena.pro
+const FROM_EMAIL = 'onboarding@resend.dev';
 
 export async function sendVerificationCode(email, code) {
   if (!RESEND_API_KEY) {
-    console.warn('[Email] RESEND_API_KEY not set, skipping email send');
+    console.warn('[Email] RESEND_API_KEY not set');
     return { success: false, error: 'Email service not configured' };
   }
 
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [email],
-        subject: `${code} — код подтверждения Adgena`,
-        html: `
+  const payload = {
+    from: FROM_EMAIL,
+    to: [email],
+    subject: `${code} — код подтверждения Adgena`,
+    html: `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
@@ -48,21 +44,34 @@ export async function sendVerificationCode(email, code) {
   </p>
 </body>
 </html>`,
-      }),
+  };
+
+  try {
+    console.log('[Email] Sending code to:', email, 'from:', FROM_EMAIL);
+    console.log('[Email] API key present:', !!RESEND_API_KEY, 'length:', RESEND_API_KEY?.length);
+
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
+    console.log('[Email] Response status:', res.status, 'body:', JSON.stringify(data));
 
     if (!res.ok) {
-      console.error('[Email] Resend error:', data);
-      return { success: false, error: data.message || 'Failed to send email' };
+      console.error('[Email] Resend error:', res.status, data);
+      return { success: false, error: data.message || `Resend error ${res.status}` };
     }
 
-    console.log('[Email] Verification code sent to:', email);
+    console.log('[Email] Sent successfully, id:', data.id);
     return { success: true, id: data.id };
 
   } catch (err) {
-    console.error('[Email] Send error:', err);
+    console.error('[Email] Network error:', err.message);
     return { success: false, error: err.message };
   }
 }
