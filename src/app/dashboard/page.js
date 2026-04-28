@@ -76,17 +76,17 @@ const PHOTO_CONCEPTS = {
 };
 
 const AD_CONCEPTS = [
-  { id: 'ad-sale',    name: 'Распродажа', desc: 'Баннер для скидок' },
-  { id: 'ad-minimal', name: 'Минимал', desc: 'Apple-стиль' },
-  { id: 'ad-story',   name: 'Stories', desc: 'Вертикальный для сторис' },
+  { id: 'ad-sale',    name: 'Распродажа', desc: 'Баннер для скидок', icon: '🏷️' },
+  { id: 'ad-minimal', name: 'Минимал', desc: 'Apple-стиль', icon: '⬜' },
+  { id: 'ad-story',   name: 'Stories', desc: 'Вертикальный для сторис', icon: '📱' },
 ];
 
 const ASPECT_RATIOS = [
-  { id: '9:16', label: '9:16' },
-  { id: '3:4',  label: '3:4' },
-  { id: '1:1',  label: '1:1' },
-  { id: '4:3',  label: '4:3' },
-  { id: '16:9', label: '16:9' },
+  { id: '9:16', label: '9:16', hint: 'Stories' },
+  { id: '3:4',  label: '3:4',  hint: 'WB / Ozon' },
+  { id: '1:1',  label: '1:1',  hint: 'Ozon / Авито' },
+  { id: '4:3',  label: '4:3',  hint: 'Горизонталь' },
+  { id: '16:9', label: '16:9', hint: 'Баннер / ВК' },
 ];
 
 // ========================================
@@ -311,13 +311,25 @@ export default function DashboardPage() {
           <div className={styles.historyList}>
             {history.length === 0 && <p className={styles.historyEmpty}>Пока нет генераций</p>}
             {history.map(g => (
-              <div key={g.id} className={styles.historyItem}>
+              <div
+                key={g.id}
+                className={`${styles.historyItem} ${g.imageOutput?.startsWith('http') ? styles.historyItemClickable : ''}`}
+                onClick={() => {
+                  if (g.imageOutput?.startsWith('http')) {
+                    setGeneratedResult({ imageDataUrl: g.imageOutput, generationId: g.id });
+                    setShowHistory(false);
+                  }
+                }}
+              >
+                {g.imageOutput?.startsWith('http') && (
+                  <img src={g.imageOutput} alt="" className={styles.historyThumb} />
+                )}
                 <div className={styles.historyItemInfo}>
                   <span className={styles.historyName}>{g.productName || '—'}</span>
                   <span className={styles.historyMeta}>{g.type} • {g.templateId} • {new Date(g.createdAt).toLocaleDateString('ru-RU')}</span>
                 </div>
-                <span className={`${styles.historyStatus} ${g.status === 'done' ? styles.historyStatusDone : ''}`}>
-                  {g.status === 'done' ? '✓' : '…'}
+                <span className={`${styles.historyStatus} ${g.status === 'completed' ? styles.historyStatusDone : ''}`}>
+                  {g.status === 'completed' ? '✓' : '…'}
                 </span>
               </div>
             ))}
@@ -509,6 +521,7 @@ export default function DashboardPage() {
                 >
                   <span className={styles.ratioShape} style={{ width: shapeW, height: shapeH }} />
                   <span className={styles.ratioLabel}>{r.label}</span>
+                  <span className={styles.ratioHint}>{r.hint}</span>
                 </button>
               );
             })}
@@ -577,8 +590,6 @@ export default function DashboardPage() {
                 <img src={versions[activeVersion]?.imageDataUrl || generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
               </div>
               <div className={styles.modalImageActions}>
-                <button className={styles.iconBtn} title="Нравится">+</button>
-                <button className={styles.iconBtn} title="Не нравится">&minus;</button>
                 <a
                   href={versions[activeVersion]?.imageDataUrl || generatedResult.imageDataUrl}
                   download={`adgena-${generatedResult.generationId || 'result'}.jpg`}
@@ -606,7 +617,6 @@ export default function DashboardPage() {
               {/* Quick actions */}
               <div className={styles.modalQuickActions}>
                 <button className={styles.quickBtn} onClick={() => { setTab('card'); setShowResult(false); }}>Создать карточку</button>
-                <button className={styles.quickBtn} disabled title="Скоро">Создать видео</button>
               </div>
 
               {/* Improve */}
