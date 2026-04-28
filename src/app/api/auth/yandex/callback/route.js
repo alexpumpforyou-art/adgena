@@ -70,11 +70,20 @@ export async function GET(request) {
 
     // Get user info (with retry)
     console.log('[Yandex] Getting user info...');
-    const userRes = await fetchWithRetry('https://login.yandex.com/info?format=json', {
+    const userRes = await fetchWithRetry('https://login.yandex.ru/info?format=json', {
       headers: { Authorization: `OAuth ${tokens.access_token}` },
     });
 
-    const yandexUser = await userRes.json();
+    const userText = await userRes.text();
+    console.log('[Yandex] User info status:', userRes.status, 'body preview:', userText.substring(0, 200));
+    
+    let yandexUser;
+    try {
+      yandexUser = JSON.parse(userText);
+    } catch (parseErr) {
+      console.error('[Yandex] Failed to parse user info response');
+      return NextResponse.redirect(`${base}/auth?error=yandex_failed`);
+    }
     const email = yandexUser.default_email || yandexUser.emails?.[0];
     console.log('[Yandex] User email:', email || 'MISSING');
 
