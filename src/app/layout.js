@@ -32,8 +32,6 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
         <link rel="apple-touch-icon" href="/logo-icon.webp" />
-        {/* Preload first video frame for instant hero paint */}
-        <link rel="preload" href="/frames/0001.webp" as="image" type="image/webp" />
       </head>
       <body>
         {children}
