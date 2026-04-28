@@ -102,7 +102,7 @@ function Hero() {
     if (!canvas || !section) return;
     const ctx = canvas.getContext('2d', { alpha: false });
 
-    const FRAME_COUNT = 40;
+    const FRAME_COUNT = 120;
     const SCALE_DESKTOP = 1.03;
     const SCALE_MOBILE = 1.14;
 
@@ -194,7 +194,7 @@ function Hero() {
     }
 
     // Progressive frame loading: first batch immediately, rest on scroll
-    const FIRST_BATCH = 6;
+    const FIRST_BATCH = 14;
     let loaded = 0;
     let restLoaded = false;
 
