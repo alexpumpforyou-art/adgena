@@ -8,7 +8,13 @@ import path from 'path';
 import crypto from 'crypto';
 import bcryptjs from 'bcryptjs';
 
-const DB_PATH = path.join(process.cwd(), 'data', 'adgena.db');
+// In production (Railway), use absolute volume path /app/data
+// Locally, use ./data relative to project root
+const DATA_DIR = process.env.NODE_ENV === 'production'
+  ? '/app/data'
+  : path.join(process.cwd(), 'data');
+
+const DB_PATH = path.join(DATA_DIR, 'adgena.db');
 
 let db = null;
 
