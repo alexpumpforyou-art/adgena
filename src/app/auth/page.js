@@ -27,6 +27,7 @@ function AuthForm() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -107,6 +108,7 @@ function AuthForm() {
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!password || password.length < 6) { setError('Пароль минимум 6 символов'); return; }
+    if (password !== confirmPassword) { setError('Пароли не совпадают'); return; }
     setError('');
     setLoading(true);
 
@@ -319,6 +321,16 @@ function AuthForm() {
                 placeholder="Пароль (мин. 6 символов)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+              <input
+                type="password"
+                className={styles.input}
+                placeholder="Повторите пароль"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
                 autoComplete="new-password"
