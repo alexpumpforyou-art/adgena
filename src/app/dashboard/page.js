@@ -76,17 +76,17 @@ const PHOTO_CONCEPTS = {
 };
 
 const AD_CONCEPTS = [
-  { id: 'ad-sale',    name: 'Распродажа', desc: 'Баннер для скидок', icon: '🏷️' },
-  { id: 'ad-minimal', name: 'Минимал', desc: 'Apple-стиль', icon: '⬜' },
-  { id: 'ad-story',   name: 'Stories', desc: 'Вертикальный для сторис', icon: '📱' },
+  { id: 'ad-sale',    name: 'Продающий баннер', desc: 'Акции, скидки, промо', icon: '🔥' },
+  { id: 'ad-minimal', name: 'Минималистичный', desc: 'Премиум стиль Apple/MUJI', icon: '✨' },
+  { id: 'ad-story',   name: 'Stories / Reels', desc: 'Вертикальный 9:16', icon: '📱' },
 ];
 
 const ASPECT_RATIOS = [
-  { id: '9:16', label: '9:16', hint: 'Stories' },
-  { id: '3:4',  label: '3:4',  hint: 'WB / Ozon' },
-  { id: '1:1',  label: '1:1',  hint: 'Ozon / Авито' },
-  { id: '4:3',  label: '4:3',  hint: 'Горизонталь' },
-  { id: '16:9', label: '16:9', hint: 'Баннер / ВК' },
+  { id: '9:16', label: '9:16', hint: 'Stories / Reels', platform: 'stories' },
+  { id: '3:4',  label: '3:4',  hint: 'WB / Ozon',       platform: 'marketplace' },
+  { id: '1:1',  label: '1:1',  hint: 'ВК / Авито',      platform: 'social' },
+  { id: '4:3',  label: '4:3',  hint: 'Горизонталь',     platform: 'general' },
+  { id: '16:9', label: '16:9', hint: 'Я.Директ / РСЯ',  platform: 'yandex' },
 ];
 
 // ========================================
@@ -113,6 +113,9 @@ export default function DashboardPage() {
   const [creativity, setCreativity] = useState(0.5);
   // Shared
   const [aspectRatio, setAspectRatio] = useState('3:4');
+  // Ads fields
+  const [adHeadline, setAdHeadline] = useState('');
+  const [adCta, setAdCta] = useState('');
   // Result modal
   const [improveText, setImproveText] = useState('');
   const [versions, setVersions] = useState([]);
@@ -191,6 +194,10 @@ export default function DashboardPage() {
         formData.append('cardStyle', cardStyle);
         formData.append('creativity', creativity.toString());
       }
+      if (tab === 'ads') {
+        formData.append('headline', adHeadline);
+        formData.append('cta', adCta);
+      }
 
       const res = await fetch('/api/generate', { method: 'POST', body: formData });
       const data = await res.json();
@@ -262,15 +269,27 @@ export default function DashboardPage() {
     if (!productName.trim()) return;
     setAiSuggesting(true);
     try {
+      const catName = CATEGORIES.find(c => c.id === category)?.name || category;
       const res = await fetch('/api/generate-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: `Ты — копирайтер для маркетплейсов. Для товара "${productName}" (категория: ${CATEGORIES.find(c => c.id === category)?.name || category}) напиши 3-5 ключевых преимуществ и продающих особенностей, разделяя запятыми. Кратко, по-русски, без номеров. Только преимущества, ничего больше.`
+          productName,
+          category: catName,
+          type: tab,
         }),
       });
       const data = await res.json();
-      if (data.text) setCardText(data.text);
+      if (data.success && data.result) {
+        const r = data.result;
+        if (tab === 'ads') {
+          if (r.headline) setAdHeadline(r.headline);
+          if (r.cta) setAdCta(r.cta);
+        } else {
+          const text = r.bullets?.join(', ') || r.description || '';
+          if (text) setCardText(text);
+        }
+      }
     } catch { /* ignore */ }
     setAiSuggesting(false);
   };
@@ -467,7 +486,7 @@ export default function DashboardPage() {
             </>
           )}
 
-          {/* ADS: concept picker */}
+          {/* ADS: concept picker + headline/cta */}
           {tab === 'ads' && (
             <>
               <label className={styles.label} style={{marginTop: 16}}>Тип рекламы</label>
@@ -486,23 +505,48 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-            </>
-          )}
 
-          {/* Wishes (photo + card) */}
-          {(tab === 'photo' || tab === 'card') && (
-            <>
-              <label className={styles.label} style={{marginTop: 16}}>Пожелания</label>
-              <textarea
-                className={styles.textarea}
-                rows={2}
-                maxLength={2000}
-                placeholder="Например: мягкий свет, минимализм, нейтральный фон."
-                value={wishes}
-                onChange={(e) => setWishes(e.target.value)}
+              <div className={styles.labelRow} style={{marginTop: 16}}>
+                <label className={styles.label}>Заголовок и CTA</label>
+                <button
+                  type="button"
+                  className={styles.aiBtn}
+                  disabled={aiSuggesting || !productName.trim()}
+                  onClick={handleAiSuggest}
+                >
+                  {aiSuggesting ? '⏳' : '✨'} AI
+                </button>
+              </div>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Заголовок: СКИДКА 50%, Новинка сезона..."
+                value={adHeadline}
+                onChange={(e) => setAdHeadline(e.target.value)}
+              />
+              <input
+                type="text"
+                className={styles.input}
+                style={{marginTop: 8}}
+                placeholder="Кнопка CTA: Купить, Подробнее, Заказать..."
+                value={adCta}
+                onChange={(e) => setAdCta(e.target.value)}
               />
             </>
           )}
+
+          {/* Wishes (all tabs) */}
+          <>
+            <label className={styles.label} style={{marginTop: 16}}>Пожелания</label>
+            <textarea
+              className={styles.textarea}
+              rows={2}
+              maxLength={2000}
+              placeholder="Например: мягкий свет, минимализм, нейтральный фон."
+              value={wishes}
+              onChange={(e) => setWishes(e.target.value)}
+            />
+          </>
 
           {/* Format — visual shapes */}
           <label className={styles.label} style={{marginTop: 16}}>Формат</label>
@@ -518,6 +562,7 @@ export default function DashboardPage() {
                   key={r.id}
                   className={`${styles.ratioBtn} ${aspectRatio === r.id ? styles.ratioBtnActive : ''}`}
                   onClick={() => setAspectRatio(r.id)}
+                  title={r.hint}
                 >
                   <span className={styles.ratioShape} style={{ width: shapeW, height: shapeH }} />
                   <span className={styles.ratioLabel}>{r.label}</span>

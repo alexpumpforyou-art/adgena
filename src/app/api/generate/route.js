@@ -78,8 +78,8 @@ export async function POST(request) {
 
     // Extract text fields
     const bullets = parsedText.bullets || [];
-    const headline = parsedText.headline || parsedText.title || productName;
-    const cta = parsedText.cta || 'Купить сейчас';
+    const headline = formData.get('headline') || parsedText.headline || parsedText.title || productName;
+    const cta = formData.get('cta') || parsedText.cta || 'Купить сейчас';
 
     // Resolve target size & aspect ratio
     const sizeConfig = SIZE_MAP[sizeId] || SIZE_MAP['wb'];

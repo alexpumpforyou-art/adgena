@@ -25,7 +25,10 @@ export default function AdminPage() {
 
   // Prompts
   const [prompts, setPrompts] = useState(null);
+  const [promptOverrides, setPromptOverrides] = useState({});
   const [openPrompt, setOpenPrompt] = useState(null);
+  const [editingPromptText, setEditingPromptText] = useState('');
+  const [savingPrompt, setSavingPrompt] = useState(false);
 
   const loadData = async () => {
     try {
@@ -58,7 +61,22 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/prompts');
       const data = await res.json();
       if (data.prompts) setPrompts(data.prompts);
+      if (data.overrides) setPromptOverrides(data.overrides);
     } catch { /* ignore */ }
+  };
+
+  const handleSavePrompt = async (key) => {
+    setSavingPrompt(true);
+    try {
+      const res = await fetch('/api/admin/prompts', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: editingPromptText }),
+      });
+      const data = await res.json();
+      if (data.overrides) setPromptOverrides(data.overrides);
+    } catch { /* ignore */ }
+    setSavingPrompt(false);
   };
 
   useEffect(() => { loadData(); }, []);
@@ -300,7 +318,7 @@ export default function AdminPage() {
       {activeTab === 'prompts' && (
         <div className={styles.promptsSection}>
           <h2 className={styles.sectionTitle}>Промпты генерации</h2>
-          <p className={styles.promptsDesc}>Примеры промптов с тестовым товаром «Пример товара»</p>
+          <p className={styles.promptsDesc}>Нажмите на промпт для просмотра и редактирования. Измените текст и сохраните.</p>
 
           {!prompts ? (
             <p className={styles.emptyMsg}>Загрузка...</p>
@@ -311,20 +329,65 @@ export default function AdminPage() {
                   <h3 className={styles.promptGroupTitle}>
                     {type === 'photo' ? '📸 Фото' : type === 'card' ? '🃏 Карточки' : '📢 Реклама'}
                   </h3>
-                  {Object.entries(concepts).map(([id, text]) => (
-                    <div key={id} className={styles.promptItem}>
-                      <button
-                        className={styles.promptToggle}
-                        onClick={() => setOpenPrompt(openPrompt === `${type}-${id}` ? null : `${type}-${id}`)}
-                      >
-                        <span>{id}</span>
-                        <span>{openPrompt === `${type}-${id}` ? '▲' : '▼'}</span>
-                      </button>
-                      {openPrompt === `${type}-${id}` && (
-                        <pre className={styles.promptText}>{text}</pre>
-                      )}
-                    </div>
-                  ))}
+                  {Object.entries(concepts).map(([id, text]) => {
+                    const promptKey = `${type}.${id}`;
+                    const isOpen = openPrompt === promptKey;
+                    const hasOverride = promptOverrides[promptKey];
+                    return (
+                      <div key={id} className={styles.promptItem}>
+                        <button
+                          className={styles.promptToggle}
+                          onClick={() => {
+                            if (isOpen) {
+                              setOpenPrompt(null);
+                            } else {
+                              setOpenPrompt(promptKey);
+                              setEditingPromptText(hasOverride || text);
+                            }
+                          }}
+                        >
+                          <span>{id} {hasOverride ? '✏️' : ''}</span>
+                          <span>{isOpen ? '▲' : '▼'}</span>
+                        </button>
+                        {isOpen && (
+                          <div className={styles.promptEditor}>
+                            <textarea
+                              className={styles.promptTextarea}
+                              rows={12}
+                              value={editingPromptText}
+                              onChange={(e) => setEditingPromptText(e.target.value)}
+                            />
+                            <div className={styles.promptActions}>
+                              {hasOverride && (
+                                <button
+                                  className={styles.promptResetBtn}
+                                  onClick={() => {
+                                    setEditingPromptText(text);
+                                    handleSavePrompt(promptKey).then(() => setEditingPromptText(text));
+                                    const newOverrides = {...promptOverrides};
+                                    delete newOverrides[promptKey];
+                                    setPromptOverrides(newOverrides);
+                                  }}
+                                >
+                                  Сбросить
+                                </button>
+                              )}
+                              <button
+                                className={styles.promptSaveBtn}
+                                disabled={savingPrompt}
+                                onClick={() => handleSavePrompt(promptKey)}
+                              >
+                                {savingPrompt ? 'Сохраняю...' : '💾 Сохранить'}
+                              </button>
+                            </div>
+                            {hasOverride && (
+                              <p className={styles.promptOverrideHint}>✏️ Используется кастомный промпт</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </>
