@@ -327,7 +327,7 @@
    GENERATE BUTTON
    ======================================== */
 .generateBtn {
-  margin-top: auto;
+  margin-top: 24px;
   padding: 14px;
   border-radius: 14px;
   border: none;
@@ -345,6 +345,9 @@
   position: sticky;
   bottom: 0;
   z-index: 2;
+  flex-shrink: 0;
+  /* Background pad so it doesn't overlap content */
+  box-shadow: 0 -12px 20px var(--bg-secondary);
 }
 .generateBtn:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
 .generateBtn:disabled { opacity: 0.4; cursor: not-allowed; }
