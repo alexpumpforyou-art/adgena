@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import styles from './page.module.css';
 
 // ========================================
@@ -362,12 +361,12 @@ function Showcase() {
   }, []);
 
   const cards = [
-    { id: 1, label: 'Одежда', type: 'Фото', before: 'Фото с телефона', after: 'На модели — lifestyle', beforeImg: '/examples/clothes_before.png', afterImg: '/examples/clothes_after.png' },
-    { id: 2, label: 'Косметика', type: 'Фото', before: 'Продукт на столе', after: 'Премиум съёмка', beforeImg: '/examples/cosmetics_before.png', afterImg: '/examples/cosmetics_after.png' },
-    { id: 3, label: 'Гаджеты', type: 'Карточка', before: 'Фото из каталога', after: 'Карточка WB', beforeImg: '/examples/gadgets_before.png', afterImg: '/examples/gadgets_after.png' },
-    { id: 4, label: 'Еда', type: 'Реклама', before: 'Снимок блюда', after: 'Рекламный баннер', beforeImg: '/examples/food_before.png', afterImg: '/examples/food_after.png' },
-    { id: 5, label: 'Аксессуары', type: 'Фото', before: 'Фото на белом', after: 'Flat lay композиция', beforeImg: '/examples/accessories_before.png', afterImg: '/examples/accessories_after.png' },
-    { id: 6, label: 'Дом и сад', type: 'Карточка', before: 'Простое фото', after: 'Инфографика Ozon', beforeImg: '/examples/home_before.png', afterImg: '/examples/home_after.png' },
+    { id: 1, label: 'Одежда', type: 'Фото', before: 'Фото с телефона', after: 'На модели — lifestyle', beforeImg: '/examples/clothes_before.webp', afterImg: '/examples/clothes_after.webp' },
+    { id: 2, label: 'Косметика', type: 'Фото', before: 'Продукт на столе', after: 'Премиум съёмка', beforeImg: '/examples/cosmetics_before.webp', afterImg: '/examples/cosmetics_after.webp' },
+    { id: 3, label: 'Гаджеты', type: 'Карточка', before: 'Фото из каталога', after: 'Карточка WB', beforeImg: '/examples/gadgets_before.webp', afterImg: '/examples/gadgets_after.webp' },
+    { id: 4, label: 'Еда', type: 'Реклама', before: 'Снимок блюда', after: 'Рекламный баннер', beforeImg: '/examples/food_before.webp', afterImg: '/examples/food_after.webp' },
+    { id: 5, label: 'Аксессуары', type: 'Фото', before: 'Фото на белом', after: 'Flat lay композиция', beforeImg: '/examples/accessories_before.webp', afterImg: '/examples/accessories_after.webp' },
+    { id: 6, label: 'Дом и сад', type: 'Карточка', before: 'Простое фото', after: 'Инфографика Ozon', beforeImg: '/examples/home_before.webp', afterImg: '/examples/home_after.webp' },
   ];
 
   return (
@@ -391,7 +390,7 @@ function Showcase() {
               <div className={styles.cardPair}>
                 <div className={styles.cardSide}>
                   <span className={styles.cardTag}>Загрузил</span>
-                  <Image src={card.beforeImg} alt={card.before} className={styles.cardImage} width={300} height={400} quality={85} />
+                  <img src={card.beforeImg} alt={card.before} className={styles.cardImage} loading="lazy" />
                   <span className={styles.cardCaption}>{card.before}</span>
                 </div>
                 <div className={styles.cardArrow}>
@@ -401,7 +400,7 @@ function Showcase() {
                 </div>
                 <div className={styles.cardSide}>
                   <span className={styles.cardTag}>Получил</span>
-                  <Image src={card.afterImg} alt={card.after} className={styles.cardImage} width={300} height={400} quality={85} />
+                  <img src={card.afterImg} alt={card.after} className={styles.cardImage} loading="lazy" />
                   <span className={styles.cardCaption}>{card.after}</span>
                 </div>
               </div>
