@@ -496,9 +496,18 @@ function Pricing() {
           <span className={styles.sectionLabel}>Тарифы</span>
           <h2 className={styles.sectionTitle}>Прозрачные цены</h2>
         </div>
-        <div className={styles.freeBanner}>
-          <span>🎁 <strong>1 бесплатная генерация</strong> для знакомства с сервисом</span>
-          <Link href="/auth" className={styles.freeLink}>Попробовать →</Link>
+        <div className={styles.marqueeWrap}>
+          <div className={styles.marqueeTrack}>
+            {[...Array(8)].map((_, i) => (
+              <span key={i} className={styles.marqueeItem}>
+                <span className={styles.marqueeDot} />
+                1 бесплатная генерация при регистрации
+                <span className={styles.marqueeSep}>—</span>
+                Попробуйте AI-генерацию карточек бесплатно
+                <span className={styles.marqueeSep}>—</span>
+              </span>
+            ))}
+          </div>
         </div>
         <div className={styles.priceGrid}>
           {plans.map(p => (
