@@ -1,13 +1,11 @@
-/**
- * Auth utilities — JWT-based session management
- */
-
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
-import { getUserById, getSessionByToken } from './db';
+import { getUserById, getSessionByToken, setUserRole } from './db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 const COOKIE_NAME = 'adgena_session';
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
+  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 
 /**
  * Create JWT token for a user session
@@ -42,11 +40,18 @@ export async function getCurrentUser() {
     const user = getUserById(decoded.userId);
     if (!user) return null;
 
+    // Auto-set admin role if email is in ADMIN_EMAILS
+    let role = user.role || 'user';
+    if (ADMIN_EMAILS.includes(user.email?.toLowerCase()) && role !== 'admin') {
+      setUserRole(user.id, 'admin');
+      role = 'admin';
+    }
+
     return {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role || 'user',
+      role,
       plan: user.plan,
       generations_used: user.generations_used,
       generations_limit: user.generations_limit,

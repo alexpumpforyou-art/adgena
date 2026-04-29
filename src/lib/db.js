@@ -124,7 +124,7 @@ export function createUser({ email, password, name }) {
 
   try {
     stmt.run(id, email.toLowerCase().trim(), passwordHash, name || '');
-    return { id, email, name: name || '', plan: 'free', generationsUsed: 0, generationsLimit: 5 };
+    return { id, email, name: name || '', plan: 'free', generationsUsed: 0, generationsLimit: 1 };
   } catch (err) {
     if (err.message.includes('UNIQUE constraint failed')) {
       throw new Error('Email уже зарегистрирован');
@@ -169,6 +169,11 @@ export function canGenerate(userId) {
   const user = getUserById(userId);
   if (!user) return false;
   return user.generations_used < user.generations_limit;
+}
+
+export function setUserRole(userId, role) {
+  const d = getDb();
+  d.prepare("UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?").run(role, userId);
 }
 
 // ========================================

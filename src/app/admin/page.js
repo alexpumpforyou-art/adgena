@@ -195,7 +195,7 @@ export default function AdminPage() {
   );
 
   const planColors = {
-    free: '#6b7280', starter: '#3b82f6', pro: '#f59e0b',
+    free: '#6b7280', lite: '#38bdf8', standard: '#3b82f6', pro: '#f59e0b',
     business: '#8b5cf6', unlimited: '#10b981',
   };
 
@@ -284,6 +284,8 @@ export default function AdminPage() {
                     <td className={styles.dateCell}>{new Date(u.created_at).toLocaleDateString('ru-RU')}</td>
                     <td className={styles.actionsCell}>
                       <button className={styles.actionBtn} onClick={() => { setEditingUser(u.id); setEditPlan(u.plan); setEditLimit(u.generations_limit); setEditRole(u.role || 'user'); }} title="Редактировать">✏️</button>
+                      <button className={styles.actionBtn} onClick={() => handleViewHistory(u)} title="История">📄</button>
+                      <button className={styles.actionBtn} onClick={() => handleImpersonate(u.id)} title="Войти как">👤</button>
                       <button className={styles.actionBtn} onClick={() => handleResetGenerations(u.id)} title="Сбросить генерации">🔄</button>
                       <button className={`${styles.actionBtn} ${styles.actionDelete}`} onClick={() => handleDeleteUser(u.id, u.email)} title="Удалить">🗑️</button>
                     </td>
@@ -448,9 +450,10 @@ export default function AdminPage() {
             <label className={styles.modalLabel}>План</label>
             <select className={styles.modalSelect} value={editPlan} onChange={(e) => setEditPlan(e.target.value)}>
               <option value="free">Free</option>
-              <option value="starter">Starter</option>
-              <option value="pro">Pro</option>
-              <option value="business">Business</option>
+              <option value="lite">Лайт</option>
+              <option value="standard">Стандарт</option>
+              <option value="pro">Про</option>
+              <option value="business">Бизнес</option>
               <option value="unlimited">Unlimited</option>
             </select>
 

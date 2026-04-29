@@ -16,7 +16,7 @@ export async function GET() {
     const d = db();
 
     const users = d.prepare(`
-      SELECT id, email, name, plan, generations_used, generations_limit, created_at, updated_at
+      SELECT id, email, name, role, plan, generations_used, generations_limit, created_at, updated_at
       FROM users ORDER BY created_at DESC
     `).all();
 
