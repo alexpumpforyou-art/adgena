@@ -519,7 +519,7 @@ function Pricing() {
                 {`${p.price.toLocaleString()} \u20BD`}
               </div>
               <ul className={styles.priceFeats}>{p.feat.map((f, i) => <li key={i}>{f}</li>)}</ul>
-              <Link href={`/api/robokassa/checkout?plan=${p.id}`} className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}>{p.cta}</Link>
+              <Link href={`/checkout?plan=${p.id}`} className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}>{p.cta}</Link>
             </div>
           ))}
         </div>

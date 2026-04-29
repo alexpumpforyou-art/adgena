@@ -219,7 +219,7 @@ export default function ProfilePage() {
                 {user.plan === p.id ? (
                   <span className={styles.upgradeCurrent}>Текущий</span>
                 ) : (
-                  <a href={`/api/robokassa/checkout?plan=${p.id}`} className={styles.upgradeBtn}>
+                  <a href={`/checkout?plan=${p.id}`} className={styles.upgradeBtn}>
                     {['lite', 'standard', 'pro', 'business'].indexOf(p.id) > ['lite', 'standard', 'pro', 'business'].indexOf(user.plan) ? 'Улучшить' : 'Выбрать'}
                   </a>
                 )}
