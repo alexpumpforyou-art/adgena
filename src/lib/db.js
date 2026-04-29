@@ -106,9 +106,6 @@ function initTables() {
   // Migrate: add role column if missing
   try { d.prepare("SELECT role FROM users LIMIT 1").get(); }
   catch { d.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); }
-
-  // Migrate: fix free-plan users with old default limit (5 → 1)
-  d.prepare("UPDATE users SET generations_limit = 1 WHERE plan = 'free' AND generations_limit = 5").run();
 }
 
 // ========================================

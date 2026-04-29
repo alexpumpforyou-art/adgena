@@ -158,12 +158,12 @@ export async function POST(request) {
     let finalBuffer = rawBuffer;
     if (rawBuffer) {
       try {
-        // Resize to target platform dimensions
+        // Resize and optimize to WebP to drastically reduce file size (fixes slow loading in Russia)
         finalBuffer = await sharp(rawBuffer)
           .resize(sizeConfig.w, sizeConfig.h, { fit: 'cover', position: 'center' })
-          .jpeg({ quality: 92 })
+          .webp({ quality: 80, effort: 4 })
           .toBuffer();
-        console.log(`[Generate] Resized: ${sizeConfig.w}x${sizeConfig.h} (${(finalBuffer.length / 1024).toFixed(0)}KB)`);
+        console.log(`[Generate] Resized & WebP: ${sizeConfig.w}x${sizeConfig.h} (${(finalBuffer.length / 1024).toFixed(0)}KB)`);
       } catch (sharpErr) {
         console.error('[Generate] Sharp resize error (using original):', sharpErr.message);
         finalBuffer = rawBuffer;
@@ -172,7 +172,7 @@ export async function POST(request) {
 
     // Build data URL for client
     const imageDataUrl = finalBuffer
-      ? `data:image/jpeg;base64,${finalBuffer.toString('base64')}`
+      ? `data:image/webp;base64,${finalBuffer.toString('base64')}`
       : result.imageData;
 
     // === UPLOAD TO R2 STORAGE ===
@@ -181,7 +181,8 @@ export async function POST(request) {
       const { uploadFile } = await import('@/lib/storage');
       const uploadBuffer = finalBuffer || rawBuffer;
       if (uploadBuffer) {
-        const r2Result = await uploadFile(uploadBuffer, 'image/jpeg', 'generations', 'jpg');
+        // Upload as WebP
+        const r2Result = await uploadFile(uploadBuffer, 'image/webp', 'generations', 'webp');
         if (r2Result) {
           r2Url = r2Result.url;
           console.log(`[Generate] R2 uploaded: ${r2Url}`);
