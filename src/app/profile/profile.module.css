@@ -237,9 +237,86 @@
   border-color: rgba(239,68,68,0.5);
 }
 
+/* Upgrade Section */
+.upgradeSection {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 16px; padding: 24px;
+}
+.upgradeSection h3 { margin: 0 0 6px; font-size: 16px; font-weight: 800; }
+.upgradeDesc {
+  font-size: 13px; color: var(--text-tertiary);
+  margin: 0 0 16px; line-height: 1.5;
+}
+.upgradeGrid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.upgradeCard {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 16px 10px; border-radius: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  text-align: center; transition: all 0.2s;
+}
+.upgradeCard:hover { border-color: var(--border-hover); box-shadow: var(--shadow-md); }
+.upgradeCardHl {
+  border-color: rgba(255,106,0,0.3);
+  background: linear-gradient(135deg, rgba(255,106,0,0.06) 0%, rgba(255,138,51,0.02) 100%);
+}
+.upgradeCardActive {
+  border-color: var(--accent-primary) !important;
+  background: rgba(255,106,0,0.08);
+}
+.upgradeName { font-size: 13px; font-weight: 700; }
+.upgradePrice {
+  font-size: 18px; font-weight: 900; color: var(--accent-primary);
+  font-family: var(--font-display);
+}
+.upgradePrice small { font-size: 11px; font-weight: 500; color: var(--text-tertiary); }
+.upgradeGens { font-size: 11px; color: var(--text-tertiary); }
+.upgradeBtn {
+  display: inline-block; margin-top: 4px;
+  padding: 6px 14px; border-radius: 8px;
+  background: var(--accent-gradient); color: #fff;
+  font-size: 11px; font-weight: 700; text-decoration: none;
+  transition: all 0.2s;
+}
+.upgradeBtn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(255,106,0,0.3); }
+.upgradeCurrent {
+  display: inline-block; margin-top: 4px;
+  padding: 6px 14px; border-radius: 8px;
+  background: var(--bg-tertiary); color: var(--text-tertiary);
+  font-size: 11px; font-weight: 600;
+}
+
+/* Subscription Info */
+.subscriptionInfo {
+  margin-top: 16px; padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; flex-wrap: wrap;
+}
+.subscriptionInfo p { margin: 0; font-size: 13px; color: var(--text-secondary); }
+.subscriptionInfo strong { color: var(--text-primary); }
+.cancelSubBtn {
+  padding: 6px 14px; border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #ef4444; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  font-family: inherit; white-space: nowrap;
+}
+.cancelSubBtn:hover {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.5);
+}
+
 /* Mobile */
 @media (max-width: 640px) {
   .infoGrid { grid-template-columns: 1fr; }
   .statsGrid { grid-template-columns: 1fr 1fr; }
+  .upgradeGrid { grid-template-columns: repeat(2, 1fr); }
   .main { padding: 24px 16px 60px; }
 }

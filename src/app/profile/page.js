@@ -201,6 +201,54 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* Upgrade Plans */}
+        <div className={styles.upgradeSection}>
+          <h3>Тарифные планы</h3>
+          <p className={styles.upgradeDesc}>Выберите тариф и получите генерации мгновенно. Подписка продлевается автоматически.</p>
+          <div className={styles.upgradeGrid}>
+            {[
+              { id: 'lite', name: 'Лайт', price: 390, gens: 10, desc: 'Для пробы' },
+              { id: 'standard', name: 'Стандарт', price: 990, gens: 30, desc: 'Для серии товаров', hl: true },
+              { id: 'pro', name: 'Про', price: 2490, gens: 80, desc: 'Оптимальный выбор' },
+              { id: 'business', name: 'Бизнес', price: 4990, gens: 200, desc: 'Максимум' },
+            ].map(p => (
+              <div key={p.id} className={`${styles.upgradeCard} ${p.hl ? styles.upgradeCardHl : ''} ${user.plan === p.id ? styles.upgradeCardActive : ''}`}>
+                <span className={styles.upgradeName}>{p.name}</span>
+                <span className={styles.upgradePrice}>{p.price.toLocaleString()} ₽<small>/мес</small></span>
+                <span className={styles.upgradeGens}>{p.gens} генераций</span>
+                {user.plan === p.id ? (
+                  <span className={styles.upgradeCurrent}>Текущий</span>
+                ) : (
+                  <a href={`/api/robokassa/checkout?plan=${p.id}`} className={styles.upgradeBtn}>
+                    {['lite', 'standard', 'pro', 'business'].indexOf(p.id) > ['lite', 'standard', 'pro', 'business'].indexOf(user.plan) ? 'Улучшить' : 'Выбрать'}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Subscription status */}
+          {user.plan !== 'free' && (
+            <div className={styles.subscriptionInfo}>
+              <p>Подписка: <strong>{planNames[user.plan] || user.plan}</strong> — автопродление включено</p>
+              <button
+                className={styles.cancelSubBtn}
+                onClick={async () => {
+                  if (!confirm('Отменить подписку? Тариф останется до конца периода, потом вернётся на бесплатный.')) return;
+                  const res = await fetch('/api/robokassa/cancel', { method: 'POST' });
+                  const data = await res.json();
+                  if (data.success) {
+                    alert('Подписка отменена');
+                    window.location.reload();
+                  }
+                }}
+              >
+                Отменить подписку
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Logout */}
         <button className={styles.logoutBtn} onClick={handleLogout}>
           Выйти из аккаунта

@@ -121,7 +121,8 @@ function AuthForm() {
       const data = await res.json();
 
       if (data.success) {
-        router.push('/dashboard');
+        const redirectUrl = searchParams.get('redirect');
+        window.location.href = redirectUrl || '/dashboard';
       } else {
         setError(data.error || 'Ошибка регистрации');
       }
@@ -147,7 +148,8 @@ function AuthForm() {
       const data = await res.json();
 
       if (data.success) {
-        router.push('/dashboard');
+        const redirectUrl = searchParams.get('redirect');
+        window.location.href = redirectUrl || '/dashboard';
       } else {
         setError(data.error || 'Неверный email или пароль');
       }

@@ -2,14 +2,13 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 const PLANS = {
-  lite:     { limit: 10 },
-  standard: { limit: 30 },
-  pro:      { limit: 80 },
-  business: { limit: 200 },
+  lite:     { price: 390,  limit: 10 },
+  standard: { price: 990,  limit: 30 },
+  pro:      { price: 2490, limit: 80 },
+  business: { price: 4990, limit: 200 },
 };
 
 function verifySignature(outSum, invId, password2, shpParams) {
-  // Shp_ params must be sorted alphabetically
   const shpStr = Object.keys(shpParams)
     .sort()
     .map(k => `${k}=${shpParams[k]}`)
@@ -90,12 +89,27 @@ async function processResult(params) {
 
     const plan = PLANS[planId];
 
-    // Update user plan
+    // Update user plan + reset generations + save subscription reference
     d.prepare(`
       UPDATE users 
-      SET plan = ?, generations_limit = ?, generations_used = 0, updated_at = datetime('now') 
+      SET plan = ?, generations_limit = ?, generations_used = 0, 
+          subscription_plan = ?, subscription_inv_id = ?,
+          updated_at = datetime('now') 
       WHERE id = ?
-    `).run(planId, plan.limit, userId);
+    `).run(planId, plan.limit, planId, invId, userId);
+
+    // Create/update subscription record for recurring billing
+    const existingSub = d.prepare('SELECT id FROM subscriptions WHERE user_id = ? AND status = ?').get(userId, 'active');
+    if (existingSub) {
+      // Cancel old subscription
+      d.prepare("UPDATE subscriptions SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?").run(existingSub.id);
+    }
+
+    // Create new subscription (next charge = 30 days from now)
+    d.prepare(`
+      INSERT INTO subscriptions (id, user_id, plan, amount, initial_inv_id, status, next_charge_at)
+      VALUES (?, ?, ?, ?, ?, 'active', datetime('now', '+30 days'))
+    `).run(crypto.randomUUID(), userId, planId, parseFloat(outSum), invId);
 
     // Log payment
     try {
@@ -106,20 +120,21 @@ async function processResult(params) {
           inv_id TEXT,
           plan TEXT,
           amount REAL,
+          is_recurring INTEGER DEFAULT 0,
           status TEXT DEFAULT 'completed',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `).run();
 
       d.prepare(`
-        INSERT INTO payments (id, user_id, inv_id, plan, amount) 
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO payments (id, user_id, inv_id, plan, amount, is_recurring) 
+        VALUES (?, ?, ?, ?, ?, 0)
       `).run(crypto.randomUUID(), userId, invId, planId, parseFloat(outSum));
     } catch (logErr) {
       console.error('[Robokassa Result] Payment log error:', logErr.message);
     }
 
-    console.log(`[Robokassa Result] SUCCESS — User ${userId} upgraded to ${planId}`);
+    console.log(`[Robokassa Result] SUCCESS — User ${userId} upgraded to ${planId}, subscription created (next charge in 30 days)`);
   } catch (dbErr) {
     console.error('[Robokassa Result] DB error:', dbErr.message);
   }

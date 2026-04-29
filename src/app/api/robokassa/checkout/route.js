@@ -9,16 +9,14 @@ const PLANS = {
   business: { price: 4990, name: 'Бизнес — 200 генераций', limit: 200 },
 };
 
-function generateSignature(login, sum, invId, password) {
-  const str = `${login}:${sum}:${invId}:${password}`;
-  return crypto.createHash('md5').update(str).digest('hex');
-}
-
 export async function GET(request) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.redirect(new URL('/auth', request.url));
+      // Not logged in — redirect to auth with plan in query (will redirect back after login)
+      const { searchParams } = new URL(request.url);
+      const planId = searchParams.get('plan');
+      return NextResponse.redirect(new URL(`/auth?redirect=/api/robokassa/checkout?plan=${planId}`, request.url));
     }
 
     const { searchParams } = new URL(request.url);
@@ -38,18 +36,27 @@ export async function GET(request) {
       return NextResponse.redirect(new URL('/?error=payment_not_configured', request.url));
     }
 
-    // Use a unique invoice ID based on timestamp + user
+    // Unique invoice ID
     const invId = Math.floor(Date.now() / 1000);
     const outSum = plan.price.toFixed(2);
 
-    // Generate signature: MerchantLogin:OutSum:InvId:Password1
-    const signature = generateSignature(merchantLogin, outSum, invId, password1);
+    // Shp_ params (must be sorted alphabetically in signature)
+    const shpParams = {
+      'Shp_planId': planId,
+      'Shp_userId': user.id,
+    };
+
+    // Sort Shp_ keys alphabetically
+    const shpStr = Object.keys(shpParams)
+      .sort()
+      .map(k => `${k}=${shpParams[k]}`)
+      .join(':');
+
+    // Signature: MerchantLogin:OutSum:InvId:Password1:Shp_...
+    const sigSource = `${merchantLogin}:${outSum}:${invId}:${password1}:${shpStr}`;
+    const signature = crypto.createHash('md5').update(sigSource).digest('hex');
 
     // Build Robokassa payment URL
-    const baseUrl = isTest
-      ? 'https://auth.robokassa.ru/Merchant/Index.aspx'
-      : 'https://auth.robokassa.ru/Merchant/Index.aspx';
-
     const params = new URLSearchParams({
       MerchantLogin: merchantLogin,
       OutSum: outSum,
@@ -58,25 +65,18 @@ export async function GET(request) {
       SignatureValue: signature,
       Culture: 'ru',
       Encoding: 'utf-8',
-      // Custom params (Shp_ prefix)
-      'Shp_userId': user.id,
-      'Shp_planId': planId,
+      // Enable recurring (subscription) — user agrees to future auto-charges
+      Recurring: 'true',
+      ...shpParams,
     });
 
     if (isTest) {
       params.set('IsTest', '1');
     }
 
-    // Re-generate signature with Shp_ params (they must be in alphabetical order)
-    const shpStr = `Shp_planId=${planId}:Shp_userId=${user.id}`;
-    const sigWithShp = crypto.createHash('md5')
-      .update(`${merchantLogin}:${outSum}:${invId}:${password1}:${shpStr}`)
-      .digest('hex');
-    params.set('SignatureValue', sigWithShp);
+    const paymentUrl = `https://auth.robokassa.ru/Merchant/Index.aspx?${params.toString()}`;
 
-    const paymentUrl = `${baseUrl}?${params.toString()}`;
-
-    console.log(`[Robokassa] Redirecting user ${user.email} to payment: plan=${planId}, sum=${outSum}, invId=${invId}`);
+    console.log(`[Robokassa] Checkout: user=${user.email}, plan=${planId}, sum=${outSum}, invId=${invId}, recurring=true`);
 
     return NextResponse.redirect(paymentUrl);
   } catch (error) {

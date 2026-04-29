@@ -101,11 +101,34 @@ function initTables() {
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_tickets_user ON tickets(user_id);
     CREATE INDEX IF NOT EXISTS idx_ticket_messages_ticket ON ticket_messages(ticket_id);
+
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      plan TEXT NOT NULL,
+      amount REAL NOT NULL,
+      initial_inv_id TEXT NOT NULL,
+      status TEXT DEFAULT 'active',
+      next_charge_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
   `);
 
   // Migrate: add role column if missing
   try { d.prepare("SELECT role FROM users LIMIT 1").get(); }
   catch { d.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); }
+
+  // Migrate: add subscription columns if missing
+  try { d.prepare("SELECT subscription_plan FROM users LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE users ADD COLUMN subscription_plan TEXT DEFAULT NULL"); }
+
+  try { d.prepare("SELECT subscription_inv_id FROM users LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE users ADD COLUMN subscription_inv_id TEXT DEFAULT NULL"); }
 }
 
 // ========================================
