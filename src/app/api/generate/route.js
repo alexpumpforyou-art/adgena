@@ -158,10 +158,10 @@ export async function POST(request) {
     let finalBuffer = rawBuffer;
     if (rawBuffer) {
       try {
-        // Resize and optimize to WebP to drastically reduce file size (fixes slow loading in Russia)
+        // Resize and optimize to WebP (Quality 98 = visually lossless for advertising, but still lighter than PNG)
         finalBuffer = await sharp(rawBuffer)
           .resize(sizeConfig.w, sizeConfig.h, { fit: 'cover', position: 'center' })
-          .webp({ quality: 80, effort: 4 })
+          .webp({ quality: 98, effort: 6 })
           .toBuffer();
         console.log(`[Generate] Resized & WebP: ${sizeConfig.w}x${sizeConfig.h} (${(finalBuffer.length / 1024).toFixed(0)}KB)`);
       } catch (sharpErr) {
