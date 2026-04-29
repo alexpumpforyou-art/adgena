@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './page.module.css';
 
 // ========================================
@@ -390,7 +391,7 @@ function Showcase() {
               <div className={styles.cardPair}>
                 <div className={styles.cardSide}>
                   <span className={styles.cardTag}>Загрузил</span>
-                  <img src={card.beforeImg} alt={card.before} className={styles.cardImage} />
+                  <Image src={card.beforeImg} alt={card.before} className={styles.cardImage} width={300} height={400} quality={85} />
                   <span className={styles.cardCaption}>{card.before}</span>
                 </div>
                 <div className={styles.cardArrow}>
@@ -400,7 +401,7 @@ function Showcase() {
                 </div>
                 <div className={styles.cardSide}>
                   <span className={styles.cardTag}>Получил</span>
-                  <img src={card.afterImg} alt={card.after} className={styles.cardImage} />
+                  <Image src={card.afterImg} alt={card.after} className={styles.cardImage} width={300} height={400} quality={85} />
                   <span className={styles.cardCaption}>{card.after}</span>
                 </div>
               </div>
