@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
 const PLANS = {
-  starter:  { limit: 50 },
-  pro:      { limit: 200 },
-  business: { limit: 500 },
+  lite:     { limit: 10 },
+  standard: { limit: 35 },
+  pro:      { limit: 100 },
+  business: { limit: 300 },
 };
 
 function verifySignature(outSum, invId, password2, shpParams) {

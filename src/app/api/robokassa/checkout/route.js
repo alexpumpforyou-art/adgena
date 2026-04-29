@@ -3,9 +3,10 @@ import { getCurrentUser } from '@/lib/auth';
 import crypto from 'crypto';
 
 const PLANS = {
-  starter:  { price: 990,  name: 'Starter — 50 генераций/мес', limit: 50 },
-  pro:      { price: 2490, name: 'Pro — 200 генераций/мес', limit: 200 },
-  business: { price: 4990, name: 'Business — 500 генераций/мес', limit: 500 },
+  lite:     { price: 290,  name: 'Лайт — 10 генераций', limit: 10 },
+  standard: { price: 790,  name: 'Стандарт — 35 генераций', limit: 35 },
+  pro:      { price: 1990, name: 'Про — 100 генераций', limit: 100 },
+  business: { price: 4490, name: 'Бизнес — 300 генераций', limit: 300 },
 };
 
 function generateSignature(login, sum, invId, password) {

@@ -363,7 +363,7 @@
    ======================================== */
 .pricing { position: relative; z-index: 2; padding: 100px 0; background: var(--bg-primary); }
 
-.priceGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.priceGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
 .priceCard {
   padding: 32px 24px; border-radius: 16px;
   background: var(--bg-secondary); border: 1px solid var(--border-subtle);

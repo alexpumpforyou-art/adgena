@@ -64,7 +64,7 @@ export default function ProfilePage() {
   if (!user) return null;
 
   const initials = (user.name || user.email || '?').charAt(0).toUpperCase();
-  const planNames = { free: 'Бесплатный', starter: 'Стартер', pro: 'Про', business: 'Бизнес' };
+  const planNames = { free: 'Бесплатный', lite: 'Лайт', standard: 'Стандарт', pro: 'Про', business: 'Бизнес' };
   const usedPercent = user.generations_limit > 0
     ? Math.round((user.generations_used / user.generations_limit) * 100)
     : 0;

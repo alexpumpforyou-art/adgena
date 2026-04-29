@@ -50,13 +50,14 @@ export default function TermsPage() {
           <h2>3. Тарифы и оплата</h2>
           <table className={styles.priceTable}>
             <thead>
-              <tr><th>Тариф</th><th>Стоимость</th><th>Генераций/мес</th><th>Включено</th></tr>
+              <tr><th>Тариф</th><th>Стоимость</th><th>Генераций</th><th>Включено</th></tr>
             </thead>
             <tbody>
-              <tr><td>Free</td><td>Бесплатно</td><td>5</td><td>Базовые концепции, экспорт JPG</td></tr>
-              <tr><td>Starter</td><td>990 ₽/мес</td><td>50</td><td>Все концепции, все форматы, улучшения</td></tr>
-              <tr><td>Pro</td><td>2 490 ₽/мес</td><td>200</td><td>Все возможности, рекламные форматы, история версий, приоритет</td></tr>
-              <tr><td>Business</td><td>4 990 ₽/мес</td><td>500</td><td>API доступ, мульти-юзеры, Brand Kit</td></tr>
+              <tr><td>Free</td><td>Бесплатно</td><td>3</td><td>Базовые концепции, экспорт JPG</td></tr>
+              <tr><td>Лайт</td><td>290 ₽</td><td>10</td><td>Все концепции, все форматы</td></tr>
+              <tr><td>Стандарт</td><td>790 ₽</td><td>35</td><td>Все возможности, рекламные форматы, улучшения</td></tr>
+              <tr><td>Про</td><td>1 990 ₽</td><td>100</td><td>Всё включено, история версий, приоритет</td></tr>
+              <tr><td>Бизнес</td><td>4 490 ₽</td><td>300</td><td>API доступ, мульти-юзеры, Brand Kit</td></tr>
             </tbody>
           </table>
           <p>
@@ -93,7 +94,7 @@ export default function TermsPage() {
           </ul>
           <p>
             Для запроса возврата направьте обращение на{' '}
-            <a href="mailto:deni5orlove@yandex.ru">deni5orlove@yandex.ru</a> с указанием
+            <a href="mailto:info@adgena.pro">info@adgena.pro</a> с указанием
             email аккаунта и причины возврата. Срок рассмотрения — до 10 рабочих дней.
             Возврат средств осуществляется тем же способом, которым была произведена оплата.
           </p>
@@ -143,7 +144,7 @@ export default function TermsPage() {
           <h2>9. Контактные данные Исполнителя</h2>
           <ul className={styles.contactList}>
             <li><strong>Исполнитель:</strong> Самозанятый Орлов Д.Э.</li>
-            <li><strong>Email:</strong> <a href="mailto:deni5orlove@yandex.ru">deni5orlove@yandex.ru</a></li>
+            <li><strong>Email:</strong> <a href="mailto:info@adgena.pro">info@adgena.pro</a></li>
             <li><strong>Сайт:</strong> <a href="https://adgena.pro">https://adgena.pro</a></li>
           </ul>
         </section>

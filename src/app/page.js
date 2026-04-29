@@ -483,10 +483,11 @@ function HowItWorks() {
 // ========================================
 function Pricing() {
   const plans = [
-    { id: 'free', name: 'Free', price: 0, desc: 'Попробуйте бесплатно', feat: ['5 генераций/мес', 'Базовые концепции', 'Экспорт JPG'], cta: 'Начать бесплатно' },
-    { id: 'starter', name: 'Starter', price: 990, desc: 'Для начинающих', feat: ['50 генераций/мес', 'Все концепции', 'Все форматы', 'Улучшения'], cta: 'Выбрать' },
-    { id: 'pro', name: 'Pro', price: 2490, desc: 'Для продавцов', feat: ['200 генераций/мес', 'Все возможности', 'Рекламные форматы', 'История версий', 'Приоритет'], cta: 'Выбрать', hl: true, badge: 'Популярный' },
-    { id: 'business', name: 'Business', price: 4990, desc: 'Для команд', feat: ['500 генераций/мес', 'API доступ', 'Мульти-юзеры', 'Brand Kit'], cta: 'Выбрать' },
+    { id: 'free', name: 'Free', price: 0, desc: 'Попробуйте бесплатно', feat: ['3 генерации', 'Базовые концепции', 'Экспорт JPG'], cta: 'Попробовать' },
+    { id: 'lite', name: 'Лайт', price: 290, desc: 'Для пробы сервиса', feat: ['10 генераций', 'Все концепции', 'Все форматы'], cta: 'Выбрать' },
+    { id: 'standard', name: 'Стандарт', price: 790, desc: 'Для серии товаров', feat: ['35 генераций', 'Все возможности', 'Рекламные форматы', 'Улучшения'], cta: 'Выбрать', hl: true, badge: 'Популярный' },
+    { id: 'pro', name: 'Про', price: 1990, desc: 'Оптимальный выбор', feat: ['100 генераций', 'Всё включено', 'История версий', 'Приоритет'], cta: 'Выбрать' },
+    { id: 'business', name: 'Бизнес', price: 4490, desc: 'Максимум возможностей', feat: ['300 генераций', 'API доступ', 'Мульти-юзеры', 'Brand Kit'], cta: 'Выбрать' },
   ];
 
   return (
@@ -527,7 +528,7 @@ function Footer() {
           <div>
             <Logo className={styles.footerLogo} />
             <p className={styles.footerDesc}>AI-генератор карточек товара и рекламных креативов</p>
-            <p className={styles.footerContact}>Связь: <a href="mailto:deni5orlove@yandex.ru">deni5orlove@yandex.ru</a></p>
+            <p className={styles.footerContact}>Связь: <a href="mailto:info@adgena.pro">info@adgena.pro</a></p>
           </div>
           <div className={styles.footerLinks}>
             <div><h4>Продукт</h4><a href="#showcase">Примеры</a><a href="#features">Возможности</a><a href="#pricing">Тарифы</a></div>

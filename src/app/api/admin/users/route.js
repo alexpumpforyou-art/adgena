@@ -54,7 +54,7 @@ export async function PUT(request) {
     const d = db();
 
     if (plan) {
-      const limits = { free: 5, starter: 50, pro: 200, business: 500, unlimited: 99999 };
+      const limits = { free: 3, lite: 10, standard: 35, pro: 100, business: 300, unlimited: 99999 };
       d.prepare('UPDATE users SET plan = ?, generations_limit = ?, updated_at = datetime(\'now\') WHERE id = ?')
         .run(plan, generationsLimit || limits[plan] || 5, userId);
     }

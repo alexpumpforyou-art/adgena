@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           </p>
           <p>
             Оператор персональных данных: самозанятый Орлов Д.Э.
-            <br />Email для связи: <a href="mailto:deni5orlove@yandex.ru">deni5orlove@yandex.ru</a>
+            <br />Email для связи: <a href="mailto:info@adgena.pro">info@adgena.pro</a>
           </p>
           <p>
             Использование Сервиса означает безоговорочное согласие Пользователя с настоящей Политикой
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
             <li>Отозвать согласие на обработку данных.</li>
           </ul>
           <p>
-            Для реализации своих прав направьте запрос на <a href="mailto:deni5orlove@yandex.ru">deni5orlove@yandex.ru</a>.
+            Для реализации своих прав направьте запрос на <a href="mailto:info@adgena.pro">info@adgena.pro</a>.
           </p>
         </section>
 

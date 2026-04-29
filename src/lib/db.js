@@ -149,7 +149,7 @@ export function verifyPassword(plainPassword, hash) {
 
 export function updateUserPlan(userId, plan) {
   const d = getDb();
-  const limits = { free: 5, starter: 50, pro: 200, business: 500 };
+  const limits = { free: 3, lite: 10, standard: 35, pro: 100, business: 300 };
   d.prepare('UPDATE users SET plan = ?, generations_limit = ?, updated_at = datetime(\'now\') WHERE id = ?')
     .run(plan, limits[plan] || 5, userId);
 }
