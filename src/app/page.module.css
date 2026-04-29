@@ -415,6 +415,12 @@
 .footerLinks a:hover { color: var(--text-primary); }
 .footerBottom { padding-top: 24px; border-top: 1px solid var(--border-subtle); }
 .footerBottom p { font-size: 12px; color: var(--text-tertiary); }
+.footerContact { font-size: 12px; color: var(--text-tertiary); margin-top: 8px; }
+.footerContact a { color: var(--accent-primary); text-decoration: none; }
+.footerContact a:hover { text-decoration: underline; }
+.footerLegal { margin-top: 6px; font-size: 11px; }
+.footerLegal a { color: var(--text-tertiary); text-decoration: underline; text-underline-offset: 2px; }
+.footerLegal a:hover { color: var(--text-secondary); }
 
 /* ========================================
    RESPONSIVE

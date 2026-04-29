@@ -1,0 +1,159 @@
+/* ========================================
+   LEGAL PAGES — Privacy & Terms
+   ======================================== */
+
+.page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: blur(16px);
+}
+
+.headerLogo {
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none; color: var(--text-primary);
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+}
+
+.headerBtn {
+  padding: 8px 20px; border-radius: 999px;
+  background: var(--bg-primary); color: var(--text-primary);
+  font-size: 13px; font-weight: 600; text-decoration: none;
+  border: 1px solid var(--border-default);
+  transition: all 0.2s;
+}
+.headerBtn:hover { background: var(--bg-tertiary); }
+
+.main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+.main h1 {
+  font-family: var(--font-display);
+  font-size: 32px; font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.updated {
+  color: var(--text-tertiary);
+  font-size: 13px; margin-bottom: 40px;
+}
+
+.main section {
+  margin-bottom: 36px;
+}
+
+.main h2 {
+  font-size: 20px; font-weight: 700;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.main h3 {
+  font-size: 15px; font-weight: 600;
+  margin: 16px 0 8px;
+  color: var(--text-secondary);
+}
+
+.main p {
+  font-size: 14px; line-height: 1.8;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.main ul {
+  padding-left: 20px;
+  margin: 0 0 12px;
+}
+
+.main li {
+  font-size: 14px; line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.main a {
+  color: #f97316;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.main a:hover { color: #fb923c; }
+
+.main strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Price Table */
+.priceTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.priceTable th, .priceTable td {
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border-subtle);
+}
+
+.priceTable th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priceTable td {
+  color: var(--text-secondary);
+}
+
+.priceTable tr:nth-child(even) td {
+  background: var(--bg-secondary);
+}
+
+.contactList {
+  list-style: none;
+  padding: 0;
+}
+
+.contactList li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.contactList li:last-child { border-bottom: none; }
+
+.footer {
+  text-align: center;
+  padding: 24px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 640px) {
+  .header { padding: 12px 16px; }
+  .main { padding: 32px 16px 64px; }
+  .main h1 { font-size: 24px; }
+  .priceTable { font-size: 11px; }
+  .priceTable th, .priceTable td { padding: 8px; }
+}

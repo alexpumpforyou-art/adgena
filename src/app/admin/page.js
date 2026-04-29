@@ -18,6 +18,11 @@ export default function AdminPage() {
   const [editLimit, setEditLimit] = useState(5);
   const [editRole, setEditRole] = useState('user');
 
+  // History & Impersonate
+  const [historyUser, setHistoryUser] = useState(null);
+  const [userHistory, setUserHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   // Tickets
   const [tickets, setTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -119,6 +124,37 @@ export default function AdminPage() {
       body: JSON.stringify({ userId }),
     });
     loadData();
+  };
+
+  const handleViewHistory = async (user) => {
+    setHistoryUser(user);
+    setLoadingHistory(true);
+    setUserHistory([]);
+    try {
+      const res = await fetch(`/api/admin/users/history?userId=${user.id}`);
+      const data = await res.json();
+      if (data.history) setUserHistory(data.history);
+    } catch { /* ignore */ }
+    setLoadingHistory(false);
+  };
+
+  const handleImpersonate = async (userId) => {
+    if (!confirm('Войти как этот пользователь? Вы будете перенаправлены в дашборд.')) return;
+    try {
+      const res = await fetch('/api/admin/users/impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = '/dashboard';
+      } else {
+        alert(data.error || 'Ошибка входа');
+      }
+    } catch (err) {
+      alert('Ошибка соединения');
+    }
   };
 
   const handleViewTicket = async (ticketId) => {
@@ -425,6 +461,43 @@ export default function AdminPage() {
               <button className={styles.modalCancel} onClick={() => setEditingUser(null)}>Отмена</button>
               <button className={styles.modalSave} onClick={() => handleUpdateUser(editingUser)}>Сохранить</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {historyUser && (
+        <div className={styles.modalOverlay} onClick={() => setHistoryUser(null)}>
+          <div className={styles.modal} style={{ maxWidth: '800px', width: '90%' }} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>История: {historyUser.email}</h3>
+              <button className={styles.modalCloseBtn} onClick={() => setHistoryUser(null)}>✕</button>
+            </div>
+            
+            {loadingHistory ? (
+              <p style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>Загрузка истории...</p>
+            ) : userHistory.length === 0 ? (
+              <p style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>У пользователя нет генераций</p>
+            ) : (
+              <div className={styles.historyGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px', maxHeight: '60vh', overflowY: 'auto', padding: '10px' }}>
+                {userHistory.map(gen => (
+                  <div key={gen.id} style={{ background: 'var(--bg-secondary)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                    {gen.image_output_path ? (
+                      <a href={gen.image_output_path} target="_blank" rel="noreferrer">
+                        <img src={gen.image_output_path} alt="gen" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                      </a>
+                    ) : (
+                      <div style={{ width: '100%', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1f2937', color: '#9ca3af', fontSize: '12px' }}>Нет фото</div>
+                    )}
+                    <div style={{ padding: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                      <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{gen.product_name || 'Без названия'}</div>
+                      <div>{gen.type} • {gen.template_id}</div>
+                      <div>{new Date(gen.created_at).toLocaleDateString('ru-RU')}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

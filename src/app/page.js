@@ -507,7 +507,7 @@ function Pricing() {
                 {p.price > 0 && <span>/мес</span>}
               </div>
               <ul className={styles.priceFeats}>{p.feat.map((f, i) => <li key={i}>{f}</li>)}</ul>
-              <Link href={p.id === 'free' ? '/dashboard' : `/api/checkout?plan=${p.id}`} className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}>{p.cta}</Link>
+              <Link href={p.id === 'free' ? '/auth' : `/api/robokassa/checkout?plan=${p.id}`} className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}>{p.cta}</Link>
             </div>
           ))}
         </div>
@@ -527,13 +527,17 @@ function Footer() {
           <div>
             <Logo className={styles.footerLogo} />
             <p className={styles.footerDesc}>AI-генератор карточек товара и рекламных креативов</p>
+            <p className={styles.footerContact}>Связь: <a href="mailto:deni5orlove@yandex.ru">deni5orlove@yandex.ru</a></p>
           </div>
           <div className={styles.footerLinks}>
             <div><h4>Продукт</h4><a href="#showcase">Примеры</a><a href="#features">Возможности</a><a href="#pricing">Тарифы</a></div>
-            <div><h4>Юридическое</h4><a href="#">Политика конфиденциальности</a><a href="#">Оферта</a></div>
+            <div><h4>Юридическое</h4><Link href="/privacy">Политика конфиденциальности</Link><Link href="/terms">Публичная оферта</Link></div>
           </div>
         </div>
-        <div className={styles.footerBottom}><p>&copy; {new Date().getFullYear()} Adgena</p></div>
+        <div className={styles.footerBottom}>
+          <p>&copy; {new Date().getFullYear()} Adgena — Самозанятый Орлов Д.Э.</p>
+          <p className={styles.footerLegal}>Оплата производится через сервис Робокасса. <Link href="/terms">Условия использования</Link> &bull; <Link href="/privacy">Конфиденциальность</Link></p>
+        </div>
       </div>
     </footer>
   );
