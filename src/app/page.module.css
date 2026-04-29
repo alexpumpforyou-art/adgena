@@ -363,7 +363,21 @@
    ======================================== */
 .pricing { position: relative; z-index: 2; padding: 100px 0; background: var(--bg-primary); }
 
-.priceGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.freeBanner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px; border-radius: 12px; margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(255, 106, 0, 0.08), rgba(255, 138, 51, 0.04));
+  border: 1px solid rgba(255, 106, 0, 0.2);
+  font-size: 14px; color: var(--text-secondary);
+}
+.freeBanner strong { color: var(--text-primary); }
+.freeLink {
+  color: var(--accent-primary); font-weight: 600; font-size: 13px;
+  text-decoration: none; white-space: nowrap;
+}
+.freeLink:hover { text-decoration: underline; }
+
+.priceGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .priceCard {
   padding: 32px 24px; border-radius: 16px;
   background: var(--bg-secondary); border: 1px solid var(--border-subtle);

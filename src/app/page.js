@@ -483,11 +483,10 @@ function HowItWorks() {
 // ========================================
 function Pricing() {
   const plans = [
-    { id: 'free', name: 'Free', price: 0, desc: 'Попробуйте бесплатно', feat: ['3 генерации', 'Базовые концепции', 'Экспорт JPG'], cta: 'Попробовать' },
-    { id: 'lite', name: 'Лайт', price: 290, desc: 'Для пробы сервиса', feat: ['10 генераций', 'Все концепции', 'Все форматы'], cta: 'Выбрать' },
-    { id: 'standard', name: 'Стандарт', price: 790, desc: 'Для серии товаров', feat: ['35 генераций', 'Все возможности', 'Рекламные форматы', 'Улучшения'], cta: 'Выбрать', hl: true, badge: 'Популярный' },
-    { id: 'pro', name: 'Про', price: 1990, desc: 'Оптимальный выбор', feat: ['100 генераций', 'Всё включено', 'История версий', 'Приоритет'], cta: 'Выбрать' },
-    { id: 'business', name: 'Бизнес', price: 4490, desc: 'Максимум возможностей', feat: ['300 генераций', 'API доступ', 'Мульти-юзеры', 'Brand Kit'], cta: 'Выбрать' },
+    { id: 'lite', name: 'Лайт', price: 390, desc: 'Для пробы сервиса', feat: ['10 генераций', 'Все концепции', 'Все форматы'], cta: 'Выбрать' },
+    { id: 'standard', name: 'Стандарт', price: 990, desc: 'Для серии товаров', feat: ['30 генераций', 'Все возможности', 'Рекламные форматы', 'Улучшения'], cta: 'Выбрать', hl: true, badge: 'Популярный' },
+    { id: 'pro', name: 'Про', price: 2490, desc: 'Оптимальный выбор', feat: ['80 генераций', 'Всё включено', 'История версий', 'Приоритет'], cta: 'Выбрать' },
+    { id: 'business', name: 'Бизнес', price: 4990, desc: 'Максимум возможностей', feat: ['200 генераций', 'API доступ', 'Мульти-юзеры', 'Brand Kit'], cta: 'Выбрать' },
   ];
 
   return (
@@ -497,6 +496,10 @@ function Pricing() {
           <span className={styles.sectionLabel}>Тарифы</span>
           <h2 className={styles.sectionTitle}>Прозрачные цены</h2>
         </div>
+        <div className={styles.freeBanner}>
+          <span>🎁 <strong>1 бесплатная генерация</strong> для знакомства с сервисом</span>
+          <Link href="/auth" className={styles.freeLink}>Попробовать →</Link>
+        </div>
         <div className={styles.priceGrid}>
           {plans.map(p => (
             <div key={p.id} className={`${styles.priceCard} ${p.hl ? styles.priceCardHl : ''}`}>
@@ -504,11 +507,10 @@ function Pricing() {
               <h3 className={styles.priceName}>{p.name}</h3>
               <p className={styles.priceDesc}>{p.desc}</p>
               <div className={styles.priceAmount}>
-                {p.price ? `${p.price.toLocaleString()} \u20BD` : 'Бесплатно'}
-                {p.price > 0 && <span>/мес</span>}
+                {`${p.price.toLocaleString()} \u20BD`}
               </div>
               <ul className={styles.priceFeats}>{p.feat.map((f, i) => <li key={i}>{f}</li>)}</ul>
-              <Link href={p.id === 'free' ? '/auth' : `/api/robokassa/checkout?plan=${p.id}`} className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}>{p.cta}</Link>
+              <Link href={`/api/robokassa/checkout?plan=${p.id}`} className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}>{p.cta}</Link>
             </div>
           ))}
         </div>

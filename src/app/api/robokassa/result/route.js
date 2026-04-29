@@ -3,9 +3,9 @@ import crypto from 'crypto';
 
 const PLANS = {
   lite:     { limit: 10 },
-  standard: { limit: 35 },
-  pro:      { limit: 100 },
-  business: { limit: 300 },
+  standard: { limit: 30 },
+  pro:      { limit: 80 },
+  business: { limit: 200 },
 };
 
 function verifySignature(outSum, invId, password2, shpParams) {

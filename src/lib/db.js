@@ -45,7 +45,7 @@ function initTables() {
       role TEXT DEFAULT 'user',
       plan TEXT DEFAULT 'free',
       generations_used INTEGER DEFAULT 0,
-      generations_limit INTEGER DEFAULT 5,
+      generations_limit INTEGER DEFAULT 1,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
@@ -149,7 +149,7 @@ export function verifyPassword(plainPassword, hash) {
 
 export function updateUserPlan(userId, plan) {
   const d = getDb();
-  const limits = { free: 3, lite: 10, standard: 35, pro: 100, business: 300 };
+  const limits = { free: 1, lite: 10, standard: 30, pro: 80, business: 200 };
   d.prepare('UPDATE users SET plan = ?, generations_limit = ?, updated_at = datetime(\'now\') WHERE id = ?')
     .run(plan, limits[plan] || 5, userId);
 }
