@@ -538,7 +538,7 @@ function Footer() {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>&copy; {new Date().getFullYear()} Adgena — Самозанятый Орлов Д.Э.</p>
+          <p>&copy; {new Date().getFullYear()} Adgena — Самозанятый Орлов Денис Эдуардович, ИНН 665903565502</p>
           <p className={styles.footerLegal}>Оплата производится через сервис Робокасса. <Link href="/terms">Условия использования</Link> &bull; <Link href="/privacy">Конфиденциальность</Link></p>
         </div>
       </div>

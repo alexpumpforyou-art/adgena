@@ -26,7 +26,7 @@ export default function PrivacyPage() {
             расположенного по адресу <a href="https://adgena.pro">https://adgena.pro</a>.
           </p>
           <p>
-            Оператор персональных данных: самозанятый Орлов Д.Э.
+            Оператор персональных данных: самозанятый Орлов Денис Эдуардович, ИНН 665903565502
             <br />Email для связи: <a href="mailto:info@adgena.pro">info@adgena.pro</a>
           </p>
           <p>
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
       </main>
 
       <footer className={styles.footer}>
-        <p>© {new Date().getFullYear()} Adgena — Самозанятый Орлов Д.Э.</p>
+        <p>© {new Date().getFullYear()} Adgena — Самозанятый Орлов Денис Эдуардович, ИНН 665903565502</p>
       </footer>
     </div>
   );

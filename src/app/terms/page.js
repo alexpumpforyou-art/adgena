@@ -22,7 +22,7 @@ export default function TermsPage() {
           <h2>1. Общие положения</h2>
           <p>
             Настоящий документ является публичной офертой (далее — «Оферта») самозанятого
-            Орлова Д.Э. (далее — «Исполнитель») и определяет условия предоставления
+            Орлова Дениса Эдуардовича, ИНН 665903565502 (далее — «Исполнитель») и определяет условия предоставления
             доступа к сервису Adgena (далее — «Сервис»), расположенному по адресу{' '}
             <a href="https://adgena.pro">https://adgena.pro</a>.
           </p>
@@ -143,7 +143,7 @@ export default function TermsPage() {
         <section>
           <h2>9. Контактные данные Исполнителя</h2>
           <ul className={styles.contactList}>
-            <li><strong>Исполнитель:</strong> Самозанятый Орлов Д.Э.</li>
+            <li><strong>Исполнитель:</strong> Самозанятый Орлов Денис Эдуардович, ИНН 665903565502</li>
             <li><strong>Email:</strong> <a href="mailto:info@adgena.pro">info@adgena.pro</a></li>
             <li><strong>Сайт:</strong> <a href="https://adgena.pro">https://adgena.pro</a></li>
           </ul>
@@ -169,7 +169,7 @@ export default function TermsPage() {
       </main>
 
       <footer className={styles.footer}>
-        <p>© {new Date().getFullYear()} Adgena — Самозанятый Орлов Д.Э.</p>
+        <p>© {new Date().getFullYear()} Adgena — Самозанятый Орлов Денис Эдуардович, ИНН 665903565502</p>
       </footer>
     </div>
   );
