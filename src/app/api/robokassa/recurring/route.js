@@ -104,23 +104,35 @@ export async function GET(request) {
         });
 
         const responseText = await res.text();
-        console.log(`[Recurring] Robokassa response for ${sub.user_id}: ${responseText}`);
+        console.log(`[Recurring] Robokassa response for ${sub.user_id}: status=${res.status}, body=${responseText.slice(0, 200)}`);
 
-        // Update next charge date (+30 days)
-        d.prepare(`
-          UPDATE subscriptions 
-          SET next_charge_at = datetime('now', '+30 days'), updated_at = datetime('now')
-          WHERE id = ?
-        `).run(sub.id);
+        if (res.ok) {
+          // Update next charge date (+30 days) only on success
+          d.prepare(`
+            UPDATE subscriptions 
+            SET next_charge_at = datetime('now', '+30 days'), updated_at = datetime('now')
+            WHERE id = ?
+          `).run(sub.id);
 
-        results.push({
-          userId: sub.user_id,
-          email: sub.email,
-          plan: sub.plan,
-          invId: newInvId,
-          status: 'sent',
-          response: responseText.slice(0, 200),
-        });
+          results.push({
+            userId: sub.user_id,
+            email: sub.email,
+            plan: sub.plan,
+            invId: newInvId,
+            status: 'sent',
+            response: responseText.slice(0, 200),
+          });
+        } else {
+          console.error(`[Recurring] Robokassa rejected charge for ${sub.user_id}: ${res.status}`);
+          results.push({
+            userId: sub.user_id,
+            email: sub.email,
+            plan: sub.plan,
+            invId: newInvId,
+            status: 'rejected',
+            response: responseText.slice(0, 200),
+          });
+        }
       } catch (reqErr) {
         console.error(`[Recurring] Request error for ${sub.user_id}:`, reqErr.message);
         results.push({

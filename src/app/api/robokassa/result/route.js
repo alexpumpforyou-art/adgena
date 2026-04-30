@@ -114,19 +114,6 @@ async function processResult(params) {
     // Log payment
     try {
       d.prepare(`
-        CREATE TABLE IF NOT EXISTS payments (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          inv_id TEXT,
-          plan TEXT,
-          amount REAL,
-          is_recurring INTEGER DEFAULT 0,
-          status TEXT DEFAULT 'completed',
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `).run();
-
-      d.prepare(`
         INSERT INTO payments (id, user_id, inv_id, plan, amount, is_recurring) 
         VALUES (?, ?, ?, ?, ?, 0)
       `).run(crypto.randomUUID(), userId, invId, planId, parseFloat(outSum));

@@ -18,6 +18,15 @@ const SIZE_MAP = {
   'vk-post':  { w: 1080, h: 607,  aspect: '16:9' },
 };
 
+// Default output size per aspect ratio (used when sizeId is not provided)
+const ASPECT_TO_SIZE = {
+  '9:16': { w: 1080, h: 1920, aspect: '9:16' },
+  '3:4':  { w: 1080, h: 1440, aspect: '3:4' },
+  '1:1':  { w: 1440, h: 1440, aspect: '1:1' },
+  '4:3':  { w: 1440, h: 1080, aspect: '4:3' },
+  '16:9': { w: 1920, h: 1080, aspect: '16:9' },
+};
+
 export async function POST(request) {
   try {
     const formData = await request.formData();
@@ -82,7 +91,15 @@ export async function POST(request) {
     const cta = formData.get('cta') || parsedText.cta || 'Купить сейчас';
 
     // Resolve target size & aspect ratio
-    const sizeConfig = SIZE_MAP[sizeId] || SIZE_MAP['wb'];
+    // Priority: explicit sizeId → aspectRatio override → default (wb 3:4)
+    let sizeConfig;
+    if (sizeId && SIZE_MAP[sizeId]) {
+      sizeConfig = SIZE_MAP[sizeId];
+    } else if (aspectRatioOverride && ASPECT_TO_SIZE[aspectRatioOverride]) {
+      sizeConfig = ASPECT_TO_SIZE[aspectRatioOverride];
+    } else {
+      sizeConfig = SIZE_MAP['wb'];
+    }
     const aspectRatio = sizeConfig.aspect;
 
     // Create generation record

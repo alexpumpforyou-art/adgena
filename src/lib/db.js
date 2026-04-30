@@ -117,6 +117,33 @@ function initTables() {
 
     CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
+
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      inv_id TEXT,
+      plan TEXT,
+      amount REAL,
+      is_recurring INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'completed',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS consents (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      user_email TEXT NOT NULL,
+      plan TEXT NOT NULL,
+      consent_text TEXT NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
+    CREATE INDEX IF NOT EXISTS idx_consents_user ON consents(user_id);
   `);
 
   // Migrate: add role column if missing

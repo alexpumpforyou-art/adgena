@@ -21,18 +21,19 @@ export async function POST() {
       WHERE user_id = ? AND status = 'active'
     `).run(user.id);
 
-    // Clear subscription fields on user
+    // Downgrade user to free plan
     d.prepare(`
       UPDATE users 
-      SET subscription_plan = NULL, subscription_inv_id = NULL, updated_at = datetime('now')
+      SET plan = 'free', generations_limit = 1, generations_used = 0,
+          subscription_plan = NULL, subscription_inv_id = NULL, updated_at = datetime('now')
       WHERE id = ?
     `).run(user.id);
 
-    console.log(`[Subscription] User ${user.email} cancelled subscription (${result.changes} sub(s))`);
+    console.log(`[Subscription] User ${user.email} cancelled subscription (${result.changes} sub(s)), downgraded to free`);
 
     return NextResponse.json({
       success: true,
-      message: 'Подписка отменена. Тариф останется активным до конца оплаченного периода.',
+      message: 'Подписка отменена. Тариф сброшен до бесплатного.',
     });
   } catch (error) {
     console.error('[Subscription Cancel] Error:', error);

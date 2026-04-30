@@ -18,21 +18,6 @@ export async function POST(request) {
     const db = require('@/lib/db').default;
     const d = db();
 
-    // Ensure consents table exists
-    d.exec(`
-      CREATE TABLE IF NOT EXISTS consents (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        user_email TEXT NOT NULL,
-        plan TEXT NOT NULL,
-        consent_text TEXT NOT NULL,
-        ip_address TEXT,
-        user_agent TEXT,
-        created_at TEXT DEFAULT (datetime('now')),
-        FOREIGN KEY (user_id) REFERENCES users(id)
-      )
-    `);
-
     // Get request metadata
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const ua = request.headers.get('user-agent') || 'unknown';
