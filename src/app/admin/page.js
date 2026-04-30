@@ -226,6 +226,9 @@ export default function AdminPage() {
         <button className={`${styles.tab} ${activeTab === 'prompts' ? styles.tabActive : ''}`} onClick={() => setActiveTab('prompts')}>
           📝 Промпты
         </button>
+        <button className={`${styles.tab} ${activeTab === 'infra' ? styles.tabActive : ''}`} onClick={() => setActiveTab('infra')}>
+          🏗️ Инфраструктура
+        </button>
       </div>
 
       {/* ===== TAB: USERS ===== */}
@@ -430,6 +433,140 @@ export default function AdminPage() {
               ))}
             </>
           )}
+        </div>
+      )}
+
+      {/* ===== TAB: INFRASTRUCTURE ===== */}
+      {activeTab === 'infra' && (
+        <div className={styles.promptsSection}>
+          <h2 className={styles.sectionTitle}>🏗️ Инфраструктура проекта</h2>
+          <p className={styles.promptsDesc}>
+            Справка по всем используемым сервисам, чтобы ничего не забыть. Обновляйте при изменениях.
+          </p>
+
+          <div className={styles.infraGrid}>
+            {/* Domain & DNS */}
+            <div className={styles.infraCard}>
+              <h3 className={styles.infraTitle}>🌐 Домен и DNS</h3>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Регистратор</span><span className={styles.infraVal}>reg.ru</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Домен</span><span className={styles.infraVal}>adgena.pro</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>NS-серверы</span><span className={styles.infraVal}>Cloudflare (oaklyn / terry .ns.cloudflare.com)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>DNS-управление</span><a href="https://dash.cloudflare.com" target="_blank" rel="noreferrer" className={styles.infraLink}>dash.cloudflare.com →</a></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>SSL</span><span className={styles.infraVal}>Let&apos;s Encrypt (auto через Caddy)</span></div>
+              <div className={styles.infraNote}>⚠️ A-записи @ и www указывают на VPS-прокси (5.188.27.14), Proxy: DNS only (серое облако)</div>
+            </div>
+
+            {/* App hosting */}
+            <div className={styles.infraCard}>
+              <h3 className={styles.infraTitle}>🚀 Хостинг приложения</h3>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Платформа</span><span className={styles.infraVal}>Railway</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Регион</span><span className={styles.infraVal}>EU West (Amsterdam)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Auto-домен</span><span className={styles.infraVal}>adgena-production.up.railway.app</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Custom domain</span><span className={styles.infraVal}>adgena.pro</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Реплики</span><span className={styles.infraVal}>1 × 8 vCPU</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Volume</span><span className={styles.infraVal}>adgena-volume → /app/data (SQLite)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Auto-deploy</span><span className={styles.infraVal}>GitHub main → push</span></div>
+              <div className={styles.infraRow}><a href="https://railway.app/dashboard" target="_blank" rel="noreferrer" className={styles.infraLink}>railway.app/dashboard →</a></div>
+            </div>
+
+            {/* Russia proxy */}
+            <div className={styles.infraCard}>
+              <h3 className={styles.infraTitle}>🛡️ Прокси для РФ</h3>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Провайдер</span><span className={styles.infraVal}>FastVPS (RU-SMART-10, ~165₽/мес)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>IP</span><span className={styles.infraVal}>5.188.27.14</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>OS</span><span className={styles.infraVal}>Ubuntu 22.04</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Локация</span><span className={styles.infraVal}>Россия (Москва)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Прокси</span><span className={styles.infraVal}>Caddy 2 в Docker</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Конфиги</span><span className={styles.infraVal}>/opt/adgena-proxy/ (Caddyfile, docker-compose.yml, .env)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Команды</span><span className={styles.infraVal}>cd /opt/adgena-proxy &amp;&amp; docker compose logs -f</span></div>
+              <div className={styles.infraNote}>💡 Зачем: TLS терминируется в РФ → DPI РКН не блокирует SSL-handshake до Railway (EU)</div>
+            </div>
+
+            {/* Storage */}
+            <div className={styles.infraCard}>
+              <h3 className={styles.infraTitle}>📦 Хранилище файлов</h3>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Текущее</span><span className={styles.infraVal}>Cloudflare R2 (bucket: adgena-files)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Public URL</span><span className={styles.infraVal}>files.adgena.pro (CF custom domain)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Запланировано</span><span className={styles.infraVal}>⚠️ Миграция на Yandex Object Storage</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Yandex bucket</span><span className={styles.infraVal}>adgena-files (создан, не подключён)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Yandex URL</span><span className={styles.infraVal}>storage.yandexcloud.net/adgena-files</span></div>
+              <div className={styles.infraNote}>⏳ TODO: Создать сервисный аккаунт + ключ в Yandex Cloud, прописать STORAGE_PROVIDER=yandex и S3_* переменные в Railway</div>
+            </div>
+
+            {/* Database */}
+            <div className={styles.infraCard}>
+              <h3 className={styles.infraTitle}>💾 База данных</h3>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Тип</span><span className={styles.infraVal}>SQLite (better-sqlite3)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Файл</span><span className={styles.infraVal}>/app/data/adgena.db (Railway volume)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Таблицы</span><span className={styles.infraVal}>users, generations, tickets, sessions</span></div>
+              <div className={styles.infraNote}>⚠️ При &gt;200 одновременных юзеров мигрировать на PostgreSQL (Railway Managed Postgres ~$5/мес или Yandex Managed PostgreSQL)</div>
+            </div>
+
+            {/* AI Generation */}
+            <div className={styles.infraCard}>
+              <h3 className={styles.infraTitle}>🤖 AI-генерация</h3>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Провайдер</span><span className={styles.infraVal}>APIYI (api.apiyi.com)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Основная модель</span><span className={styles.infraVal}>gpt-image-2 (через images.edit API)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Fallback</span><span className={styles.infraVal}>gemini-3-pro-image-preview</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Env</span><span className={styles.infraVal}>APIYI_API_KEY, APIYI_BASE_URL, IMAGE_GEN_MODEL</span></div>
+              <div className={styles.infraNote}>💰 Оплата за генерацию. При &gt;1000 генераций/час — нужны несколько ключей или своя очередь</div>
+            </div>
+
+            {/* Payments */}
+            <div className={styles.infraCard}>
+              <h3 className={styles.infraTitle}>💳 Платежи</h3>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Провайдер</span><span className={styles.infraVal}>Robokassa</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Тип</span><span className={styles.infraVal}>Подписки (рекуррентные платежи)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Endpoints</span><span className={styles.infraVal}>/api/robokassa/{`{result,consent,recurring,cancel}`}</span></div>
+              <div className={styles.infraRow}><a href="https://partner.robokassa.ru" target="_blank" rel="noreferrer" className={styles.infraLink}>partner.robokassa.ru →</a></div>
+            </div>
+
+            {/* Email */}
+            <div className={styles.infraCard}>
+              <h3 className={styles.infraTitle}>📧 Почта</h3>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Сервис</span><span className={styles.infraVal}>Yandex 360 для домена adgena.pro</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>MX</span><span className={styles.infraVal}>mx.yandex.net (10)</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>SPF</span><span className={styles.infraVal}>v=spf1 redirect=_spf.yandex.net</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>DKIM</span><span className={styles.infraVal}>mail._domainkey (TXT в Cloudflare)</span></div>
+            </div>
+
+            {/* Scaling roadmap */}
+            <div className={styles.infraCard} style={{ gridColumn: '1 / -1' }}>
+              <h3 className={styles.infraTitle}>📈 План масштабирования</h3>
+              <table className={styles.infraTable}>
+                <thead>
+                  <tr><th>Юзеров (active)</th><th>Что сделать</th><th>Стоимость</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>0–200</td><td>Текущий сетап</td><td>~₽500/мес (VPS+R2+Railway)</td></tr>
+                  <tr><td>200–500</td><td>Закончить миграцию на Yandex S3, очередь генераций (BullMQ + Redis)</td><td>+₽300/мес</td></tr>
+                  <tr><td>500–2000</td><td>SQLite → PostgreSQL, 2 реплики Railway</td><td>+$15/мес</td></tr>
+                  <tr><td>2000+</td><td>Апгрейд VPS до 2 ГБ RAM, несколько APIYI ключей, monitoring (Grafana)</td><td>+₽500–1000/мес</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Important commands */}
+            <div className={styles.infraCard} style={{ gridColumn: '1 / -1' }}>
+              <h3 className={styles.infraTitle}>⚙️ Полезные команды</h3>
+              <pre className={styles.infraPre}>{`# Прокси-сервер (5.188.27.14)
+ssh root@5.188.27.14
+cd /opt/adgena-proxy
+docker compose logs -f caddy           # логи
+docker compose restart                 # перезапуск
+docker compose down && docker compose up -d  # полный рестарт
+
+# Изменение Railway upstream — отредактировать /opt/adgena-proxy/.env
+nano /opt/adgena-proxy/.env
+
+# Деплой приложения — auto через GitHub
+git push origin main
+
+# Проверить DNS
+nslookup adgena.pro 1.1.1.1
+curl -I https://adgena.pro`}</pre>
+            </div>
+          </div>
         </div>
       )}
 

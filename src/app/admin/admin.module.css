@@ -486,6 +486,104 @@
   font-style: italic;
 }
 
+/* Infrastructure Tab */
+.infraGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.infraCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.infraTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+.infraRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+}
+.infraRow:last-of-type { border-bottom: none; }
+.infraKey {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.infraVal {
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+.infraLink {
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+.infraLink:hover { text-decoration: underline; }
+.infraNote {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 3px solid #f59e0b;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.infraTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.infraTable th,
+.infraTable td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.infraTable th {
+  color: var(--text-tertiary);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.infraTable td:first-child {
+  font-weight: 700;
+  color: var(--accent-primary);
+  white-space: nowrap;
+}
+.infraPre {
+  background: #0a0e17;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 0;
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 12px;
+  color: #e5e7eb;
+  overflow-x: auto;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 /* Mobile */
 @media (max-width: 768px) {
   .header { padding: 12px 16px; }
@@ -498,4 +596,7 @@
   .actionsCell { flex-wrap: wrap; }
   .tabs { padding: 12px 16px 0; overflow-x: auto; }
   .ticketsSection, .promptsSection { padding: 16px; }
+  .infraGrid { grid-template-columns: 1fr; }
+  .infraRow { flex-direction: column; gap: 2px; }
+  .infraVal { text-align: left; }
 }
