@@ -89,6 +89,25 @@ const ASPECT_RATIOS = [
   { id: '16:9', label: '16:9', hint: 'Я.Директ / РСЯ',  platform: 'yandex' },
 ];
 
+// Which aspect ratios each model can produce NATIVELY (without lossy crop).
+// gpt-image-2 only has 1024², 1024x1536 (2:3), 1536x1024 (3:2). 9:16/16:9 would crop content.
+// Gemini can produce any ratio via prompt.
+const MODEL_RATIOS = {
+  'gpt-image-2': ['1:1', '3:4', '4:3'],
+  'gemini':      ['9:16', '3:4', '1:1', '4:3', '16:9'],
+};
+
+const MODEL_LABELS = {
+  'gpt-image-2': 'GPT Image',
+  'gemini':      'Gemini (nanobanana)',
+};
+
+// Mirror backend routing in src/lib/apiyi.js:
+// ads/card → gpt-image-2 (text on image), photo → Gemini.
+function resolveModelFromTab(tab) {
+  return (tab === 'ads' || tab === 'card') ? 'gpt-image-2' : 'gemini';
+}
+
 // ========================================
 // COMPONENT
 // ========================================
@@ -151,6 +170,17 @@ export default function DashboardPage() {
       localStorage.setItem('adgena-workspace', JSON.stringify(trimmed));
     } catch { /* quota exceeded — ignore */ }
   }, [workspace]);
+
+  // Keep aspectRatio valid for the currently-selected model
+  useEffect(() => {
+    const model = resolveModelFromTab(tab);
+    const allowed = MODEL_RATIOS[model] || [];
+    if (!allowed.includes(aspectRatio)) {
+      // Pick the closest sensible default
+      const fallback = allowed.includes('3:4') ? '3:4' : allowed[0];
+      if (fallback) setAspectRatio(fallback);
+    }
+  }, [tab, aspectRatio]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -621,29 +651,41 @@ export default function DashboardPage() {
             />
           </>
 
-          {/* Format — visual shapes */}
-          <label className={styles.label} style={{marginTop: 16}}>Формат</label>
-          <div className={styles.ratioRow}>
-            {ASPECT_RATIOS.map(r => {
-              const [w, h] = r.id.split(':').map(Number);
-              const maxSize = 28;
-              const ratio = w / h;
-              const shapeW = ratio >= 1 ? maxSize : Math.round(maxSize * ratio);
-              const shapeH = ratio <= 1 ? maxSize : Math.round(maxSize / ratio);
-              return (
-                <button
-                  key={r.id}
-                  className={`${styles.ratioBtn} ${aspectRatio === r.id ? styles.ratioBtnActive : ''}`}
-                  onClick={() => setAspectRatio(r.id)}
-                  title={r.hint}
-                >
-                  <span className={styles.ratioShape} style={{ width: shapeW, height: shapeH }} />
-                  <span className={styles.ratioLabel}>{r.label}</span>
-                  <span className={styles.ratioHint}>{r.hint}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Format — visual shapes (filtered by the model that will be used) */}
+          {(() => {
+            const activeModel = resolveModelFromTab(tab);
+            const allowed = MODEL_RATIOS[activeModel] || [];
+            const filtered = ASPECT_RATIOS.filter(r => allowed.includes(r.id));
+            return (
+              <>
+                <label className={styles.label} style={{marginTop: 16}}>Формат</label>
+                <div className={styles.ratioRow}>
+                  {filtered.map(r => {
+                    const [w, h] = r.id.split(':').map(Number);
+                    const maxSize = 28;
+                    const ratio = w / h;
+                    const shapeW = ratio >= 1 ? maxSize : Math.round(maxSize * ratio);
+                    const shapeH = ratio <= 1 ? maxSize : Math.round(maxSize / ratio);
+                    return (
+                      <button
+                        key={r.id}
+                        className={`${styles.ratioBtn} ${aspectRatio === r.id ? styles.ratioBtnActive : ''}`}
+                        onClick={() => setAspectRatio(r.id)}
+                        title={r.hint}
+                      >
+                        <span className={styles.ratioShape} style={{ width: shapeW, height: shapeH }} />
+                        <span className={styles.ratioLabel}>{r.label}</span>
+                        <span className={styles.ratioHint}>{r.hint}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p style={{fontSize: 11, color: 'var(--text-muted, #888)', margin: '6px 0 0'}}>
+                  Модель: <b>{MODEL_LABELS[activeModel]}</b>. Доступны только форматы, которые она поддерживает без потери качества.
+                </p>
+              </>
+            );
+          })()}
         </section>
 
         {/* Generate Button */}
