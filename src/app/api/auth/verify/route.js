@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendVerificationCode } from '@/lib/email';
+import { logEmail } from '@/lib/db';
 
 // In-memory store for verification codes
 // Key: email, Value: { code, expires, attempts }
@@ -58,6 +59,7 @@ export async function POST(request) {
     const result = await sendVerificationCode(normalizedEmail, code);
 
     if (!result.success) {
+      logEmail({ email: normalizedEmail, type: 'otp', status: 'failed' });
       // If email service not configured, return code in dev mode only
       if (process.env.NODE_ENV === 'development') {
         return NextResponse.json({ success: true, dev_code: code });
@@ -68,6 +70,7 @@ export async function POST(request) {
       );
     }
 
+    logEmail({ email: normalizedEmail, type: 'otp', status: 'sent' });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[Verify] Send code error:', err);

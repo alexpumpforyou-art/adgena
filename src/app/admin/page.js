@@ -35,6 +35,20 @@ export default function AdminPage() {
   const [editingPromptText, setEditingPromptText] = useState('');
   const [savingPrompt, setSavingPrompt] = useState(false);
 
+  // Quotas
+  const [quotas, setQuotas] = useState(null);
+  const [quotasLoading, setQuotasLoading] = useState(false);
+
+  const loadQuotas = async () => {
+    setQuotasLoading(true);
+    try {
+      const res = await fetch('/api/admin/quotas');
+      const data = await res.json();
+      if (data.success) setQuotas(data.quotas);
+    } catch { /* ignore */ }
+    setQuotasLoading(false);
+  };
+
   const loadData = async () => {
     try {
       const res = await fetch('/api/admin/users');
@@ -89,6 +103,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (activeTab === 'tickets' && tickets.length === 0) loadTickets();
     if (activeTab === 'prompts' && !prompts) loadPrompts();
+    if (activeTab === 'quotas' && !quotas) loadQuotas();
   }, [activeTab]);
 
   const handleUpdateUser = async (userId) => {
@@ -225,6 +240,9 @@ export default function AdminPage() {
         </button>
         <button className={`${styles.tab} ${activeTab === 'prompts' ? styles.tabActive : ''}`} onClick={() => setActiveTab('prompts')}>
           📝 Промпты
+        </button>
+        <button className={`${styles.tab} ${activeTab === 'quotas' ? styles.tabActive : ''}`} onClick={() => setActiveTab('quotas')}>
+          📊 Лимиты
         </button>
         <button className={`${styles.tab} ${activeTab === 'infra' ? styles.tabActive : ''}`} onClick={() => setActiveTab('infra')}>
           🏗️ Инфраструктура
@@ -436,6 +454,102 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ===== TAB: QUOTAS ===== */}
+      {activeTab === 'quotas' && (
+        <div className={styles.promptsSection}>
+          <div className={styles.quotasHeader}>
+            <div>
+              <h2 className={styles.sectionTitle}>📊 Лимиты и квоты</h2>
+              <p className={styles.promptsDesc}>
+                Внутренняя статистика использования. Обновляется при клике.
+              </p>
+            </div>
+            <button className={styles.refreshBtn} onClick={loadQuotas} disabled={quotasLoading}>
+              {quotasLoading ? '⏳ Загрузка...' : '🔄 Обновить'}
+            </button>
+          </div>
+
+          {!quotas && !quotasLoading && (
+            <p className={styles.promptsDesc}>Нажмите «Обновить» для загрузки.</p>
+          )}
+
+          {quotas && (
+            <div className={styles.quotasGrid}>
+              {/* Email */}
+              <QuotaCard
+                title={`📧 Email (${quotas.email.provider})`}
+                bars={[
+                  { label: 'Сегодня', value: quotas.email.sentToday, limit: quotas.email.limitDay, unit: 'писем' },
+                  { label: 'За 30 дней', value: quotas.email.sentMonth, limit: quotas.email.limitMonth, unit: 'писем' },
+                ]}
+                footer={quotas.email.failedMonth > 0
+                  ? `⚠️ Ошибок отправки за 30 дней: ${quotas.email.failedMonth}`
+                  : '✅ Все письма доставлены'}
+              />
+
+              {/* Generations */}
+              <QuotaCard
+                title="🎨 Генерации картинок"
+                rows={[
+                  { label: 'Сегодня', value: quotas.generations.today },
+                  { label: 'За 30 дней', value: quotas.generations.month },
+                  { label: 'Всего', value: quotas.generations.total },
+                ]}
+                footer="💰 Следите за балансом APIYI — каждая генерация платная"
+              />
+
+              {/* Users */}
+              <QuotaCard
+                title="👤 Пользователи"
+                rows={[
+                  { label: 'Всего', value: quotas.users.total },
+                  { label: 'Новых сегодня', value: quotas.users.newToday },
+                  { label: 'Новых за 30 дней', value: quotas.users.newMonth },
+                  { label: 'Активных (7д)', value: quotas.users.active7d },
+                  { label: 'Активных (30д)', value: quotas.users.active30d },
+                ]}
+              />
+
+              {/* Tickets & Subs */}
+              <QuotaCard
+                title="🎫 Поддержка и подписки"
+                rows={[
+                  { label: 'Открытых тикетов', value: quotas.tickets.open },
+                  { label: 'Всего тикетов', value: quotas.tickets.total },
+                  { label: 'Активных подписок', value: quotas.subscriptions.active },
+                ]}
+              />
+
+              {/* Database */}
+              <QuotaCard
+                title="💾 База данных (SQLite)"
+                rows={[
+                  { label: 'Размер', value: `${quotas.database.sizeMB} МБ` },
+                  { label: 'Путь', value: quotas.database.path, mono: true },
+                  ...(quotas.database.diskFreeMB !== null
+                    ? [{ label: 'Свободно на диске', value: `${quotas.database.diskFreeMB} МБ` }]
+                    : []),
+                ]}
+                footer={quotas.database.sizeMB > 500
+                  ? '⚠️ БД > 500 МБ — пора задуматься о миграции на PostgreSQL'
+                  : '✅ Размер в пределах нормы'}
+              />
+
+              {/* External limits reminder */}
+              <div className={styles.infraCard}>
+                <h3 className={styles.infraTitle}>🔗 Внешние сервисы</h3>
+                <div className={styles.infraRow}><span className={styles.infraKey}>APIYI баланс</span><a href="https://api.apiyi.com" target="_blank" rel="noreferrer" className={styles.infraLink}>открыть →</a></div>
+                <div className={styles.infraRow}><span className={styles.infraKey}>Resend usage</span><a href="https://resend.com/emails" target="_blank" rel="noreferrer" className={styles.infraLink}>resend.com →</a></div>
+                <div className={styles.infraRow}><span className={styles.infraKey}>Yandex Storage</span><a href="https://console.yandex.cloud" target="_blank" rel="noreferrer" className={styles.infraLink}>console.yandex.cloud →</a></div>
+                <div className={styles.infraRow}><span className={styles.infraKey}>Railway usage</span><a href="https://railway.app/dashboard" target="_blank" rel="noreferrer" className={styles.infraLink}>railway.app →</a></div>
+                <div className={styles.infraRow}><span className={styles.infraKey}>Cloudflare</span><a href="https://dash.cloudflare.com" target="_blank" rel="noreferrer" className={styles.infraLink}>dash.cloudflare.com →</a></div>
+                <div className={styles.infraNote}>💡 На Этапе 2 подтянем эти цифры сюда автоматически через их API</div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ===== TAB: INFRASTRUCTURE ===== */}
       {activeTab === 'infra' && (
         <div className={styles.promptsSection}>
@@ -643,6 +757,43 @@ curl -I https://adgena.pro`}</pre>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function QuotaCard({ title, rows = [], bars = [], footer }) {
+  return (
+    <div className={styles.infraCard}>
+      <h3 className={styles.infraTitle}>{title}</h3>
+
+      {bars.map((b, i) => {
+        const pct = Math.min(100, Math.round((b.value / b.limit) * 100));
+        const color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#10b981';
+        return (
+          <div key={i} style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4, color: 'var(--text-secondary)' }}>
+              <span>{b.label}</span>
+              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                {b.value} / {b.limit} {b.unit || ''}
+              </span>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 4, height: 6, overflow: 'hidden' }}>
+              <div style={{ background: color, width: `${pct}%`, height: '100%', transition: 'width 0.3s' }} />
+            </div>
+          </div>
+        );
+      })}
+
+      {rows.map((r, i) => (
+        <div key={i} className={styles.infraRow}>
+          <span className={styles.infraKey}>{r.label}</span>
+          <span className={styles.infraVal} style={r.mono ? { fontFamily: 'monospace', fontSize: 11 } : undefined}>
+            {r.value}
+          </span>
+        </div>
+      ))}
+
+      {footer && <div className={styles.infraNote}>{footer}</div>}
     </div>
   );
 }

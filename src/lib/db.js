@@ -144,6 +144,16 @@ function initTables() {
 
     CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
     CREATE INDEX IF NOT EXISTS idx_consents_user ON consents(user_id);
+
+    CREATE TABLE IF NOT EXISTS email_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      type TEXT NOT NULL DEFAULT 'otp',
+      provider TEXT NOT NULL DEFAULT 'resend',
+      status TEXT NOT NULL DEFAULT 'sent',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_email_log_created ON email_log(created_at);
   `);
 
   // Migrate: add role column if missing
@@ -361,6 +371,20 @@ export function isStaff(userId) {
   if (!user) return false;
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
   return user.role === 'admin' || user.role === 'support' || adminEmails.includes(user.email?.toLowerCase());
+}
+
+// ========================================
+// EMAIL LOG (for quota monitoring)
+// ========================================
+
+export function logEmail({ email, type = 'otp', provider = 'resend', status = 'sent' }) {
+  try {
+    const d = getDb();
+    d.prepare('INSERT INTO email_log (email, type, provider, status) VALUES (?, ?, ?, ?)')
+      .run(email, type, provider, status);
+  } catch (err) {
+    console.error('[logEmail] error:', err.message);
+  }
 }
 
 export default getDb;

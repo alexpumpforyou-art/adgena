@@ -486,6 +486,35 @@
   font-style: italic;
 }
 
+/* Quotas Tab */
+.quotasHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.quotasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.refreshBtn {
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.refreshBtn:hover:not(:disabled) { opacity: 0.9; }
+.refreshBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* Infrastructure Tab */
 .infraGrid {
   display: grid;
