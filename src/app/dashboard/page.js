@@ -153,9 +153,11 @@ export default function DashboardPage() {
   const [genStep, setGenStep] = useState(0);
   // User & History
   const [user, setUser] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
+  const [galleryFilter, setGalleryFilter] = useState('session');
   const [theme, setTheme] = useState('dark');
+  // Onboarding: show tour on first visit
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
@@ -167,6 +169,8 @@ export default function DashboardPage() {
       const ws = JSON.parse(localStorage.getItem('adgena-workspace') || '[]');
       if (Array.isArray(ws) && ws.length) setWorkspace(ws);
     } catch { /* ignore */ }
+    // Onboarding: show tour if first visit
+    if (!localStorage.getItem('adgena-onboarded')) setShowOnboarding(true);
   }, []);
 
   // Persist workspace (keep last 20). IMPORTANT: strip base64 data URLs — they blow up localStorage.
@@ -462,8 +466,14 @@ export default function DashboardPage() {
           <button className={styles.navBtn} onClick={toggleTheme}>
             {theme === 'dark' ? '☀️' : '☽'}
           </button>
-          <button className={styles.navBtn} onClick={() => setShowHistory(!showHistory)}>
-            История
+          <button
+            className={styles.navBtn}
+            onClick={() => {
+              setGeneratedResult(null); setShowResult(false);
+              setGalleryFilter(prev => prev === 'all' ? 'session' : 'all');
+            }}
+          >
+            {galleryFilter === 'all' ? 'Сессия' : 'Все работы'}
           </button>
           {user && (
             <div className={styles.userMenu}>
@@ -475,41 +485,6 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* HISTORY PANEL */}
-      {showHistory && (
-        <div className={styles.historyPanel}>
-          <div className={styles.historyHeader}>
-            <h3>История генераций</h3>
-            <button className={styles.historyClose} onClick={() => setShowHistory(false)}>✕</button>
-          </div>
-          <div className={styles.historyList}>
-            {history.length === 0 && <p className={styles.historyEmpty}>Пока нет генераций</p>}
-            {history.map(g => (
-              <div
-                key={g.id}
-                className={`${styles.historyItem} ${g.imageOutput?.startsWith('http') ? styles.historyItemClickable : ''}`}
-                onClick={() => {
-                  if (g.imageOutput?.startsWith('http')) {
-                    setGeneratedResult({ imageDataUrl: g.imageOutput, generationId: g.id });
-                    setShowHistory(false);
-                  }
-                }}
-              >
-                {g.imageOutput?.startsWith('http') && (
-                  <img src={g.imageOutput} alt="" className={styles.historyThumb} />
-                )}
-                <div className={styles.historyItemInfo}>
-                  <span className={styles.historyName}>{g.productName || '—'}</span>
-                  <span className={styles.historyMeta}>{g.type} • {g.templateId} • {new Date(g.createdAt).toLocaleDateString('ru-RU')}</span>
-                </div>
-                <span className={`${styles.historyStatus} ${g.status === 'completed' ? styles.historyStatusDone : ''}`}>
-                  {g.status === 'completed' ? '✓' : '…'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* LEFT PANEL — Settings */}
       <aside className={styles.leftPanel}>
@@ -563,6 +538,7 @@ export default function DashboardPage() {
               <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
             ))}
           </select>
+          <span className={styles.fieldHint}>Категория влияет на стиль, палитру и подбор концепций</span>
         </section>
 
         <div className={styles.divider} />
@@ -642,6 +618,7 @@ export default function DashboardPage() {
                 <input type="range" min="0" max="1" step="0.1" value={creativity} onChange={(e) => setCreativity(parseFloat(e.target.value))} className={styles.slider} />
                 <span className={styles.sliderLabel}>Свободный стиль</span>
               </div>
+              <span className={styles.fieldHint}>0 — максимально близко к оригиналу, 1 — свободная интерпретация AI</span>
             </>
           )}
 
@@ -726,6 +703,7 @@ export default function DashboardPage() {
               value={wishes}
               onChange={(e) => setWishes(e.target.value)}
             />
+            <span className={styles.fieldHint}>Опишите стиль, фон, атмосферу — AI учтёт при генерации</span>
           </>
 
           {/* Format — visual shapes (filtered by the model that will be used) */}
@@ -827,67 +805,143 @@ export default function DashboardPage() {
           );
         })()}
 
-        {!generating && !generatedResult && (
-          <div className={styles.emptyState} style={{paddingTop: workspace.length ? 24 : undefined}}>
-            {workspace.length === 0 ? (
-              <>
-                <div className={styles.emptyIcon}></div>
-                <h2>Ваши результаты</h2>
-                <p>Загрузите фото, выберите настройки и нажмите «Сгенерировать»</p>
-              </>
-            ) : (
-              <div style={{width: '100%', padding: '0 24px'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16}}>
-                  <h2 style={{margin: 0}}>Рабочее пространство</h2>
-                  <span style={{fontSize: 13, color: 'var(--text-secondary)'}}>{workspace.length} работ</span>
-                </div>
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12}}>
-                  {workspace.slice().reverse().map(item => (
-                    <div
-                      key={item.id}
-                      style={{
-                        position: 'relative',
-                        background: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 10,
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        transition: 'transform 0.15s, border-color 0.15s',
-                      }}
-                      onClick={() => selectWorkspaceItem(item.id)}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'var(--accent-primary, #3b82f6)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
-                    >
-                      <img src={item.imageUrl || item.imageDataUrl} alt={item.productName} style={{width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block'}} />
-                      <div style={{padding: '8px 10px', fontSize: 12}}>
-                        <div style={{fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.productName}</div>
-                        <div style={{color: 'var(--text-secondary)', marginTop: 2, fontSize: 11}}>
-                          {item.type} • {item.aspectRatio}
-                        </div>
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); removeFromWorkspace(item.id); }}
-                        title="Убрать из рабочего пространства"
-                        style={{
-                          position: 'absolute', top: 6, right: 6, width: 22, height: 22,
-                          borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.6)',
-                          color: '#fff', cursor: 'pointer', fontSize: 13, lineHeight: 1,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        {!generating && !generatedResult && (() => {
+          // Merge workspace (session) + history (DB) into one gallery
+          const wsIds = new Set(workspace.map(w => w.id));
+          const historyItems = history
+            .filter(g => g.imageOutput?.startsWith('http') && !wsIds.has(g.id))
+            .map(g => ({
+              id: g.id,
+              imageUrl: g.imageOutput,
+              productName: g.productName || '—',
+              type: g.type,
+              aspectRatio: null,
+              timestamp: new Date(g.createdAt).getTime(),
+              templateId: g.templateId,
+              fromHistory: true,
+            }));
+          const items = galleryFilter === 'all'
+            ? [...workspace, ...historyItems].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+            : workspace.slice().reverse();
+          const total = items.length;
+
+          return (
+            <div className={styles.emptyState} style={{paddingTop: total ? 24 : undefined}}>
+              {total === 0 ? (
+                <>
+                  <div className={styles.emptyIcon}></div>
+                  <h2>Ваши результаты</h2>
+                  <p>Загрузите фото, выберите настройки и нажмите «Сгенерировать»</p>
+                </>
+              ) : (
+                <div style={{width: '100%', padding: '0 24px'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16}}>
+                    <h2 style={{margin: 0}}>{galleryFilter === 'all' ? 'Все работы' : 'Рабочее пространство'}</h2>
+                    <span style={{fontSize: 13, color: 'var(--text-secondary)'}}>{total} работ</span>
+                  </div>
+                  <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12}}>
+                    {items.map(item => (
+                      <div
+                        key={item.id}
+                        className={styles.galleryCard}
+                        onClick={() => {
+                          if (item.fromHistory) {
+                            setGeneratedResult({ imageUrl: item.imageUrl, generationId: item.id });
+                            setShowResult(false);
+                          } else {
+                            selectWorkspaceItem(item.id);
+                          }
                         }}
-                      >✕</button>
-                    </div>
-                  ))}
+                      >
+                        <img src={item.imageUrl || item.imageDataUrl} alt={item.productName} className={styles.galleryThumb} />
+                        <div style={{padding: '8px 10px', fontSize: 12}}>
+                          <div style={{fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.productName}</div>
+                          <div style={{color: 'var(--text-secondary)', marginTop: 2, fontSize: 11}}>
+                            {item.type}{item.aspectRatio ? ` • ${item.aspectRatio}` : ''}
+                            {item.fromHistory ? ' • история' : ''}
+                          </div>
+                        </div>
+                        {/* Hover overlay with actions */}
+                        <div className={styles.galleryOverlay}>
+                          <button
+                            className={styles.galleryAction}
+                            title="Использовать как входное фото"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const url = item.imageUrl || item.imageDataUrl;
+                              if (url) {
+                                fetch(url).then(r => r.blob()).then(blob => {
+                                  const file = new File([blob], 'reuse.webp', { type: blob.type || 'image/webp' });
+                                  acceptFile(file);
+                                  setToast('Изображение загружено как входное фото');
+                                }).catch(() => setToast('Не удалось загрузить изображение'));
+                              }
+                            }}
+                          >📥 Как input</button>
+                          <button
+                            className={styles.galleryAction}
+                            title="Создать похожее (использует те же настройки)"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!item.fromHistory && item.type) setTab(item.type);
+                              if (item.productName && item.productName !== '—') setProductName(item.productName);
+                              if (item.category) setCategory(item.category);
+                              if (item.templateId) setSelectedConcept(item.templateId);
+                              if (item.aspectRatio) setAspectRatio(item.aspectRatio);
+                              setToast('Настройки скопированы — загрузите фото и нажмите Сгенерировать');
+                            }}
+                          >🔄 Похожее</button>
+                        </div>
+                        {!item.fromHistory && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeFromWorkspace(item.id); }}
+                            title="Убрать из рабочего пространства"
+                            style={{
+                              position: 'absolute', top: 6, right: 6, width: 22, height: 22,
+                              borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.6)',
+                              color: '#fff', cursor: 'pointer', fontSize: 13, lineHeight: 1,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
+                            }}
+                          >✕</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          );
+        })()}
 
         {generatedResult && !generating && !showResult && (
           <div className={styles.emptyState}>
             {generatedResult.error ? (
               <div className={styles.errorBlock}>
-                <p>{generatedResult.error}</p>
+                {(() => {
+                  const err = generatedResult.error;
+                  let icon = '⚠️';
+                  let hint = null;
+                  if (/safety|content.?policy|block|moderation/i.test(err)) {
+                    icon = '🛡️';
+                    hint = 'AI отклонил запрос по правилам безопасности. Попробуйте изменить пожелания или выбрать другую концепцию.';
+                  } else if (/timeout|timed?.?out|ETIMEDOUT/i.test(err)) {
+                    icon = '⏱️';
+                    hint = 'Превышено время ожидания. Попробуйте ещё раз или выберите другой формат.';
+                  } else if (/rate.?limit|429|too many/i.test(err)) {
+                    icon = '🚦';
+                    hint = 'Слишком много запросов. Подождите немного и попробуйте снова.';
+                  } else if (/лимит|quota|403/i.test(err)) {
+                    icon = '📊';
+                    hint = 'Обновите тариф в профиле для продолжения.';
+                  }
+                  return (
+                    <>
+                      <div style={{fontSize: 40, marginBottom: 8}}>{icon}</div>
+                      <p>{err}</p>
+                      {hint && <p style={{fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4}}>{hint}</p>}
+                    </>
+                  );
+                })()}
                 <button className={styles.linkBtn} onClick={handleCloseResult}>Попробовать снова</button>
               </div>
             ) : (
@@ -1019,6 +1073,40 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ONBOARDING TOUR */}
+      {showOnboarding && (
+        <div className={styles.resultModal} onClick={() => { setShowOnboarding(false); localStorage.setItem('adgena-onboarded', '1'); }}>
+          <div
+            className={styles.resultModalContent}
+            style={{maxWidth: 520, gridTemplateColumns: '1fr', padding: 32, textAlign: 'center', cursor: 'default'}}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{margin: '0 0 20px', fontSize: 22, color: 'var(--text-primary)'}}>Добро пожаловать в AdGena!</h2>
+            <div style={{display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left', fontSize: 14, color: 'var(--text-secondary)'}}>
+              <div style={{display: 'flex', gap: 12, alignItems: 'flex-start'}}>
+                <span style={{fontSize: 28, lineHeight: 1, flexShrink: 0}}>📸</span>
+                <div><strong style={{color: 'var(--text-primary)'}}>1. Загрузите фото товара</strong><br />JPG, PNG или WebP до 10 МБ. Чем лучше качество — тем красивее результат.</div>
+              </div>
+              <div style={{display: 'flex', gap: 12, alignItems: 'flex-start'}}>
+                <span style={{fontSize: 28, lineHeight: 1, flexShrink: 0}}>🎨</span>
+                <div><strong style={{color: 'var(--text-primary)'}}>2. Выберите стиль</strong><br />Фото, карточка или реклама. Укажите категорию и концепцию — AI адаптирует палитру и композицию.</div>
+              </div>
+              <div style={{display: 'flex', gap: 12, alignItems: 'flex-start'}}>
+                <span style={{fontSize: 28, lineHeight: 1, flexShrink: 0}}>🚀</span>
+                <div><strong style={{color: 'var(--text-primary)'}}>3. Генерируйте!</strong><br />Нажмите кнопку — через 30-60 секунд получите результат. Можно доработать или создать новый вариант.</div>
+              </div>
+            </div>
+            <button
+              className={styles.btnPrimary}
+              style={{marginTop: 24, alignSelf: 'center', padding: '12px 32px'}}
+              onClick={() => { setShowOnboarding(false); localStorage.setItem('adgena-onboarded', '1'); }}
+            >
+              Начать работу
+            </button>
           </div>
         </div>
       )}

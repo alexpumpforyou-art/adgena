@@ -501,6 +501,7 @@ ${PHOTO_TECH}. Галерейное качество. Текст на РУССК
   'ad-story': (name, headline, cta, lang, opts = {}) => {
     const h = headline || name;
     const { extras, forbid } = adExtras({ ...opts, cta }, lang);
+    const palette = adPalette(opts.category, 'fresh', lang);
     return lang === 'en'
       ? `Create a vertical STORY/REELS advertising creative (9:16 format). Use the product from the reference image.
 
@@ -512,7 +513,7 @@ TYPOGRAPHY:
 - Headline "${h}" — bold condensed sans-serif, white, positioned in the top quarter. Maximum 2 lines. Drop shadow for readability.
 ${extras}
 
-BACKGROUND: Vibrant gradient — deep purple to electric blue, or dark teal to emerald green. Subtle bokeh or lens flare effects.
+BACKGROUND: Category-aware palette: ${palette}. Vibrant vertical gradient adapted to the product. Subtle bokeh or lens flare effects.
 
 LIGHTING: Strong rim light creating a glowing silhouette. Soft fill light from front.
 
@@ -528,7 +529,7 @@ ${PHOTO_TECH}. Optimized for mobile viewing. ${NEGATIVES}`
 - Заголовок "${h}" — жирный узкий шрифт без засечек, белый, в верхней четверти. Максимум 2 строки. Тень для читаемости.
 ${extras}
 
-ФОН: Яркий градиент — фиолетовый в электрик-синий или изумрудный в бирюзовый. Лёгкое боке.
+ФОН: Палитра под категорию: ${palette}. Яркий вертикальный градиент, адаптированный под товар. Лёгкое боке.
 
 СВЕТ: Драматичный контровой свет, мягкий заполняющий спереди.
 
