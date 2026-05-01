@@ -658,6 +658,19 @@ export default function DashboardPage() {
             <>Сгенерировать</>
           )}
         </button>
+        {(uploadedImage || productName || selectedConcept) && !generating && (
+          <button
+            type="button"
+            onClick={handleReset}
+            style={{
+              background: 'transparent', border: 'none', color: 'var(--text-secondary)',
+              cursor: 'pointer', fontSize: 12, padding: '8px 0', marginTop: 4,
+              textDecoration: 'underline',
+            }}
+          >
+            Очистить форму
+          </button>
+        )}
       </aside>
 
       {/* RIGHT PANEL — Results / Workspace */}
