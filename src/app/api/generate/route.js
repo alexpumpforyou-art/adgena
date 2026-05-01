@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { canGenerate, incrementGenerations, createGeneration, updateGeneration } from '@/lib/db';
 import { generateProductCard } from '@/lib/apiyi';
+import { consumeToken, tryAcquireSlot, releaseSlot, getClientIp } from '@/lib/ratelimit';
 import sharp from 'sharp';
 
 // Size definitions with aspect ratios
@@ -28,6 +29,8 @@ const ASPECT_TO_SIZE = {
 };
 
 export async function POST(request) {
+  let rlKey = null;
+  let slotAcquired = false;
   try {
     const formData = await request.formData();
     const image = formData.get('image');
@@ -68,6 +71,27 @@ export async function POST(request) {
         { status: 403 }
       );
     }
+
+    // === RATE LIMIT ===
+    // Key: user id if authenticated, else client IP.
+    // Token bucket: capacity 5, refill 1 / 12 sec ≈ 5/min sustained.
+    rlKey = user ? `user:${user.id}` : `ip:${getClientIp(request)}`;
+    const rl = consumeToken(rlKey, 5, 1 / 12);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { success: false, error: `Слишком много запросов. Подождите ${Math.ceil(rl.retryAfterMs / 1000)} сек.` },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      );
+    }
+
+    // Concurrency guard: max 2 simultaneous generations per key
+    if (!tryAcquireSlot(rlKey, 2)) {
+      return NextResponse.json(
+        { success: false, error: 'У вас уже запущены 2 генерации. Дождитесь их завершения.' },
+        { status: 429 }
+      );
+    }
+    slotAcquired = true;
 
     // Parse AI-generated text
     let parsedText = {};
@@ -242,5 +266,7 @@ export async function POST(request) {
       { success: false, error: error.message || 'Ошибка генерации' },
       { status: 500 }
     );
+  } finally {
+    if (slotAcquired && rlKey) releaseSlot(rlKey);
   }
 }
