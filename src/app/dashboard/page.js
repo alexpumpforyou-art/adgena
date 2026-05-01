@@ -145,6 +145,10 @@ export default function DashboardPage() {
   const [activeWsId, setActiveWsId] = useState(null);
   // AI helper
   const [aiSuggesting, setAiSuggesting] = useState(false);
+  // Toast (transient notification)
+  const [toast, setToast] = useState(null);
+  // Progress step during generation: 0=sending, 1=rendering, 2=saving
+  const [genStep, setGenStep] = useState(0);
   // User & History
   const [user, setUser] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -180,11 +184,30 @@ export default function DashboardPage() {
     const model = resolveModelFromTab(tab);
     const allowed = MODEL_RATIOS[model] || [];
     if (!allowed.includes(aspectRatio)) {
-      // Pick the closest sensible default
       const fallback = allowed.includes('3:4') ? '3:4' : allowed[0];
-      if (fallback) setAspectRatio(fallback);
+      if (fallback) {
+        const prev = aspectRatio;
+        setAspectRatio(fallback);
+        setToast(`Формат ${prev} недоступен для модели ${MODEL_LABELS[model]} — переключено на ${fallback}`);
+      }
     }
   }, [tab, aspectRatio]);
+
+  // Toast auto-hide after 4 sec
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // Progress step ticker during generation
+  useEffect(() => {
+    if (!generating) { setGenStep(0); return; }
+    // 0 → 1 at 5 sec, 1 → 2 at 50 sec
+    const t1 = setTimeout(() => setGenStep(1), 5000);
+    const t2 = setTimeout(() => setGenStep(2), 50000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [generating]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -202,8 +225,19 @@ export default function DashboardPage() {
     ? (PHOTO_CONCEPTS[category] || PHOTO_CONCEPTS.other)
     : tab === 'ads' ? AD_CONCEPTS : [];
 
-  const canGenerate = uploadedImage && productName.trim() &&
-    (tab === 'card' || selectedConcept) && !generating;
+  // Derive { ok, reason } to drive a helpful hint on the disabled Generate button
+  const genReadiness = (() => {
+    if (generating) return { ok: false, reason: null };
+    if (!uploadedImage) return { ok: false, reason: 'Загрузите фото товара' };
+    if (!productName.trim()) return { ok: false, reason: 'Введите название товара' };
+    if (tab !== 'card' && !selectedConcept) return { ok: false, reason: 'Выберите концепцию ниже' };
+    // Out-of-quota check (authenticated users)
+    if (user && typeof user.generations_used === 'number' && typeof user.generations_limit === 'number' && user.generations_used >= user.generations_limit) {
+      return { ok: false, reason: 'Лимит исчерпан — обновите тариф' };
+    }
+    return { ok: true, reason: null };
+  })();
+  const canGenerate = genReadiness.ok;
 
   // --- Handlers ---
 
@@ -296,6 +330,8 @@ export default function DashboardPage() {
         addToWorkspace(data);
         setGeneratedResult(data);
         setShowResult(true);
+        // Refresh user counter (generations_used)
+        fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
       } else {
         setGeneratedResult({ error: data.error || 'Ошибка генерации' });
         setShowResult(true);
@@ -401,6 +437,26 @@ export default function DashboardPage() {
           <span className={styles.logo}>AdGena</span>
         </div>
         <div className={styles.navRight}>
+          {user && typeof user.generations_used === 'number' && typeof user.generations_limit === 'number' && (() => {
+            const left = Math.max(0, user.generations_limit - user.generations_used);
+            const ratio = user.generations_limit === 0 ? 0 : left / user.generations_limit;
+            const color = left === 0 ? '#ef4444' : ratio < 0.25 ? '#f59e0b' : '#22c55e';
+            return (
+              <a
+                href="/profile"
+                title={`Использовано ${user.generations_used} из ${user.generations_limit}`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '4px 10px', borderRadius: 8,
+                  border: `1px solid ${color}33`, background: `${color}14`,
+                  color, fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                }}
+              >
+                <span style={{width: 6, height: 6, borderRadius: '50%', background: color}} />
+                Осталось {left}/{user.generations_limit}
+              </a>
+            );
+          })()}
           <button className={styles.navBtn} onClick={toggleTheme}>
             {theme === 'dark' ? '☀️' : '☽'}
           </button>
@@ -712,9 +768,12 @@ export default function DashboardPage() {
           className={styles.generateBtn}
           disabled={!canGenerate}
           onClick={handleGenerate}
+          title={genReadiness.reason || ''}
         >
           {generating ? (
             <><span className={styles.spinner} /> Генерирую...</>
+          ) : genReadiness.reason ? (
+            <>⬆ {genReadiness.reason}</>
           ) : (
             <>Сгенерировать</>
           )}
@@ -736,13 +795,35 @@ export default function DashboardPage() {
 
       {/* RIGHT PANEL — Results / Workspace */}
       <main className={styles.rightPanel}>
-        {generating && (
-          <div className={styles.emptyState}>
-            <div className={styles.loadingPulse}><span className={styles.spinner} /></div>
-            <h2>Генерация...</h2>
-            <p>Обычно занимает 20-30 секунд</p>
-          </div>
-        )}
+        {generating && (() => {
+          const steps = [
+            { label: 'Отправляем в AI...', hint: 'Упаковываем ваше фото и передаём модели' },
+            { label: 'AI рисует...',       hint: 'Обычно это самый долгий шаг, 20-50 секунд' },
+            { label: 'Сохраняем...',       hint: 'Оптимизируем и загружаем в хранилище' },
+          ];
+          return (
+            <div className={styles.emptyState}>
+              <div className={styles.loadingPulse}><span className={styles.spinner} /></div>
+              <h2 style={{marginTop: 12}}>{steps[genStep].label}</h2>
+              <p>{steps[genStep].hint}</p>
+              <div style={{display: 'flex', gap: 6, marginTop: 14}}>
+                {steps.map((_, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      width: 28, height: 4, borderRadius: 2,
+                      background: i <= genStep ? 'var(--brand-primary, #FF6A00)' : 'var(--border-primary, #ddd)',
+                      transition: 'background 0.3s',
+                    }}
+                  />
+                ))}
+              </div>
+              <p style={{fontSize: 11, color: 'var(--text-muted, #888)', marginTop: 10}}>
+                Всё вместе обычно 30-60 секунд
+              </p>
+            </div>
+          );
+        })()}
 
         {!generating && !generatedResult && (
           <div className={styles.emptyState} style={{paddingTop: workspace.length ? 24 : undefined}}>
@@ -822,7 +903,19 @@ export default function DashboardPage() {
                 <div className={styles.resultImageWrap} onClick={() => setShowResult(true)}>
                   <img src={generatedResult.imageUrl || generatedResult.imageDataUrl} alt="Generated" className={styles.resultImage} />
                 </div>
-                <button className={styles.btnPrimary} onClick={() => setShowResult(true)}>Открыть</button>
+                <div style={{display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center'}}>
+                  <button className={styles.btnPrimary} onClick={() => setShowResult(true)}>Открыть</button>
+                  <a
+                    href={generatedResult.imageUrl || generatedResult.imageDataUrl}
+                    download={`adgena-${generatedResult.generationId || 'result'}.webp`}
+                    target={generatedResult.imageUrl ? '_blank' : undefined}
+                    rel={generatedResult.imageUrl ? 'noopener noreferrer' : undefined}
+                    className={styles.downloadBtn}
+                    style={{flex: 'none', marginLeft: 0, padding: '10px 20px'}}
+                  >
+                    Скачать
+                  </a>
+                </div>
               </div>
             )}
           </div>
@@ -925,6 +1018,24 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TOAST */}
+      {toast && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+            background: 'var(--bg-secondary, #1a1d28)', color: 'var(--text-primary, #fff)',
+            padding: '12px 18px', borderRadius: 10,
+            border: '1px solid var(--border-primary, rgba(255,255,255,0.12))',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.3)',
+            fontSize: 13, maxWidth: 'calc(100vw - 40px)', zIndex: 10000,
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          {toast}
         </div>
       )}
     </div>
