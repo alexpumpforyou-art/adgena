@@ -64,7 +64,17 @@ export async function sendVerificationCode(email, code) {
 
     if (!res.ok) {
       console.error('[Email] Resend error:', res.status, data);
-      return { success: false, error: data.message || `Resend error ${res.status}` };
+      // Friendly fallback for rate/quota exhaustion (Resend Free = 100/day, 3000/month)
+      const rawMsg = (data.message || data.name || '').toString().toLowerCase();
+      const isQuota = res.status === 429 || rawMsg.includes('quota') || rawMsg.includes('rate_limit') || rawMsg.includes('too many');
+      if (isQuota) {
+        return {
+          success: false,
+          error: 'Сервис отправки писем временно перегружен. Попробуйте через несколько минут или свяжитесь с поддержкой.',
+          code: 'email_quota',
+        };
+      }
+      return { success: false, error: data.message || `Resend error ${res.status}`, code: 'email_failed' };
     }
 
     console.log('[Email] Sent successfully, id:', data.id);
