@@ -238,13 +238,13 @@ function adExtras({ price, showButton, cta }, lang) {
   const parts = [];
   if (price) {
     parts.push(en
-      ? `- Price badge: a circular or pill-shaped badge in bright yellow/orange with bold dark text reading EXACTLY "${price}". Use this exact price, do not invent a different number.`
-      : `- Бейдж цены: круглый или pill-бейдж ярко-жёлтый/оранжевый с жирным тёмным текстом РОВНО "${price}". Использовать именно эту цену, не придумывать другие цифры.`);
+      ? `- Price badge: a perfectly circular badge (~15-18% of frame height) in bright yellow (#FACC15) with a thin glowing outer ring and soft drop shadow. Inside: bold ultra-condensed dark text reading EXACTLY "${price}". Use this exact price — do not invent a different number. Optionally add tiny starburst rays emanating from the badge outline for extra visual energy.`
+      : `- Бейдж цены: идеально круглый бейдж (~15-18% высоты кадра) насыщенно-жёлтый (#FACC15) с тонким светящимся внешним кольцом и мягкой тенью. Внутри: жирный ультра-узкий тёмный текст РОВНО "${price}". Использовать именно эту цену — не придумывать другие цифры. Опционально добавь маленькие лучики-звезду по контуру бейджа для энергии.`);
   }
   if (showButton && cta) {
     parts.push(en
-      ? `- CTA button "${cta}" — rounded rectangle, solid white or yellow background, dark bold text, subtle shadow.`
-      : `- CTA-кнопка "${cta}" — скруглённый прямоугольник, белый или жёлтый фон, тёмный жирный текст, лёгкая тень.`);
+      ? `- CTA button "${cta}" — large rounded pill shape, solid bright yellow (#FACC15) fill with a subtle gradient highlight on the top edge, bold dark text, clear drop shadow underneath, and a small right-arrow icon "→" after the text. The button should look clickable and substantial.`
+      : `- CTA-кнопка "${cta}" — крупный скруглённый pill, залитый ярко-жёлтым (#FACC15) с лёгким градиентным бликом по верху, жирный тёмный текст, отчётливая тень под кнопкой, маленькая иконка-стрелка "→" после текста. Кнопка должна выглядеть кликабельной и весомой.`);
   }
   const forbid = [];
   if (!price)          forbid.push(en ? 'no price tags or discount numbers anywhere' : 'никаких ценников и процентов скидок');
@@ -258,38 +258,58 @@ export const AD_PROMPTS = {
     const h = headline || (lang === 'en' ? 'SPECIAL OFFER' : 'ВЫГОДНОЕ ПРЕДЛОЖЕНИЕ');
     const { extras, forbid } = adExtras({ ...opts, cta }, lang);
     return lang === 'en'
-      ? `Create a high-conversion SALE advertising banner. Use the product from the reference image.
+      ? `Create a premium, visually rich high-conversion SALE advertising banner worthy of a major e-commerce brand. Use the product from the reference image.
 
 Product: "${name}"
 
-COMPOSITION: The product is placed on the left side (occupying ~40% of the frame), slightly angled and elevated with a subtle drop shadow to create depth. The product must be clearly visible, well-lit, and the hero element.
+COMPOSITION (layered & dynamic):
+- Hero product on the left, ~45% of frame width, slightly tilted 5-10° for energy, floating above a circular soft contact shadow and a glowing radial halo behind it (like a spotlight).
+- Right half: vertical hierarchy — large headline top, supporting tagline below it, then price/CTA zone.
+- Add 4-6 decorative graphic accents scattered across the background: small sparkle stars, tiny geometric shapes (triangles, circles, plus signs), abstract motion lines or diagonal light streaks. They should feel designed, not random.
 
-TYPOGRAPHY:
-- Main headline "${h}" — positioned top-right, bold sans-serif font (like Montserrat Black), white color, large size dominating the right half.
+TYPOGRAPHY (multi-layer):
+- Main headline "${h}" — top-right, bold condensed sans-serif (Montserrat Black / Bebas Neue vibe), pure white, oversized, tight leading. If the headline is two words, stack them for impact.
+- Supporting tagline underneath the headline — 1 short line in lighter weight (e.g. "Limited time", "Free shipping", "New collection") — pick something relevant to the product category, half the size, slightly muted white.
 ${extras}
 
-BACKGROUND: Smooth gradient from deep red (#DC2626) to warm orange (#F97316), with subtle radial light behind the product. Optional: tiny confetti or sparkle particles for energy.
+BACKGROUND (rich, not flat):
+- Main gradient: deep crimson (#B91C1C) → vibrant orange (#F97316) → warm golden (#FBBF24) in a soft diagonal sweep.
+- Add a large subtle radial glow behind the product (like soft sunlight).
+- Overlay: very faint diagonal light rays emanating from the upper-right corner, plus soft bokeh circles of light in the background at low opacity.
+- Optional: fine film grain / noise texture at low opacity for a premium print feel.
 
-LIGHTING: Product lit with a soft key light from top-left, rim light on the right edge. Clean, no harsh shadows.
+LIGHTING & DEPTH:
+- Product: soft key light top-left, warm rim light on the right edge matching the gradient, sharp but soft contact shadow directly beneath, subtle reflection if the product has a glossy surface.
+- 2-3 levels of depth: background layer (gradient + glow), midground (rays, bokeh, particles), foreground (product + text + badges).
 
 ${forbid}
-${PHOTO_TECH}. Render all text clearly and legibly. ${NEGATIVES}`
-      : `Создай продающий рекламный баннер. Используй товар с референсного изображения.
+${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally kerned. ${NEGATIVES}`
+      : `Создай премиальный, визуально насыщенный продающий рекламный баннер уровня крупного e-commerce бренда. Используй товар с референсного изображения.
 
 Товар: "${name}"
 
-КОМПОЗИЦИЯ: Товар расположен слева (~40% кадра), слегка под углом, приподнят с мягкой тенью для глубины. Товар — главный герой, хорошо освещён и чётко виден.
+КОМПОЗИЦИЯ (многослойная, динамичная):
+- Герой-товар слева, ~45% ширины кадра, с лёгким наклоном 5-10° для энергии, парит над круглой мягкой контактной тенью, а за ним — радиальное свечение-гало (как софитом подсвечен).
+- Правая половина: вертикальная иерархия — крупный заголовок сверху, подзаголовок под ним, ниже зона цены/CTA.
+- Добавь 4-6 декоративных графических акцентов, разбросанных по фону: маленькие звёздочки-искры, мелкие геометрические фигуры (треугольники, кружки, плюсы), диагональные световые штрихи. Они должны выглядеть дизайнерски продуманными, а не случайно.
 
-ТИПОГРАФИКА:
-- Главный заголовок "${h}" — справа сверху, жирный шрифт без засечек (как Montserrat Black), белый, крупный, доминирует правую половину.
+ТИПОГРАФИКА (многоуровневая):
+- Главный заголовок "${h}" — справа сверху, жирный узкий шрифт без засечек (в духе Montserrat Black / Bebas Neue), чисто белый, крупный, плотный межстрочный. Если заголовок из двух слов — раздели на две строки.
+- Подзаголовок под заголовком — одна короткая строка более тонким шрифтом (например «Ограниченное предложение», «Бесплатная доставка», «Новая коллекция») — выбери релевантное категории товара, в два раза меньше, слегка приглушённо-белый.
 ${extras}
 
-ФОН: Плавный градиент от насыщенного красного (#DC2626) к тёплому оранжевому (#F97316). Мягкое свечение за товаром.
+ФОН (насыщенный, не плоский):
+- Основной градиент: тёмно-малиновый (#B91C1C) → насыщенный оранжевый (#F97316) → тёплый золотистый (#FBBF24), мягкой диагональной волной.
+- Большое мягкое радиальное свечение за товаром (как солнечный свет).
+- Оверлей: очень лёгкие диагональные световые лучи из правого верхнего угла плюс мягкие боке-круги на фоне с низкой прозрачностью.
+- Опционально: тонкий зерно-шум для премиум-полиграфического эффекта.
 
-СВЕТ: Мягкий ключевой свет сверху-слева на товар, контровой свет по правому краю.
+СВЕТ И ГЛУБИНА:
+- Товар: мягкий ключевой свет сверху-слева, тёплый контровой по правому краю в цвет градиента, чёткая но мягкая тень прямо под ним, лёгкое отражение если поверхность глянцевая.
+- 3 плана глубины: фон (градиент + свечение), средний (лучи, боке, частицы), передний (товар + текст + бейджи).
 
 ${forbid}
-${PHOTO_TECH}. Весь текст — ЧИТАЕМЫЙ, на РУССКОМ языке. ${NEGATIVES}`;
+${PHOTO_TECH}. Весь текст — острый, идеально читаемый, профессиональный кернинг, на РУССКОМ языке. ${NEGATIVES}`;
   },
 
   'ad-minimal': (name, headline, cta, lang, opts = {}) => {
