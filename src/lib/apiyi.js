@@ -136,7 +136,7 @@ export async function generateProductCard({
   if (type === 'ads') {
     const promptFn = AD_PROMPTS[templateId] || AD_PROMPTS['ad-minimal'];
     prompt = typeof promptFn === 'function'
-      ? promptFn(productName, headline, cta, lang, { price, showButton })
+      ? promptFn(productName, headline, cta, lang, { price, showButton, category })
       : promptFn;
   } else if (type === 'card') {
     prompt = getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes });

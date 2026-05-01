@@ -253,10 +253,48 @@ function adExtras({ price, showButton, cta }, lang) {
   return { extras: parts.join('\n'), forbid: forbidStr };
 }
 
+function adPalette(category = 'other', style = 'sale', lang = 'ru') {
+  const en = lang === 'en';
+  const palettes = {
+    sale: {
+      clothing: en ? 'fashion sale palette: raspberry, coral, warm cream, with editorial poster energy' : 'fashion sale palette: малина, коралл, тёплый крем, энергия fashion-постера',
+      accessories: en ? 'premium accessory sale palette: graphite, amber gold, deep red accents' : 'premium accessory sale palette: графит, янтарное золото, глубокие красные акценты',
+      food: en ? 'appetizing sale palette: juicy red, orange, honey yellow, cream highlights' : 'аппетитная sale-палитра: сочный красный, оранжевый, медово-жёлтый, кремовые блики',
+      beauty: en ? 'beauty sale palette: soft rose, peach, champagne gold, glossy highlights' : 'beauty sale palette: мягкий розовый, персик, шампань-золото, глянцевые блики',
+      gadgets: en ? 'tech sale palette: deep navy, electric cyan, violet glow, small amber accent for price' : 'tech sale palette: глубокий navy, электрический cyan, фиолетовое свечение, янтарный акцент для цены',
+      home: en ? 'home sale palette: warm terracotta, beige, sage green, sunlight glow' : 'home sale palette: тёплая терракота, беж, шалфейный зелёный, солнечное свечение',
+      kids: en ? 'kids sale palette: playful sky blue, lemon yellow, coral, rounded soft shapes' : 'kids sale palette: игровой небесно-голубой, лимонный, коралл, мягкие округлые формы',
+      other: en ? 'high-energy e-commerce sale palette adapted to the product colors' : 'энергичная e-commerce sale-палитра, адаптированная под цвета товара',
+    },
+    premium: {
+      clothing: en ? 'editorial black, ivory, muted gold, boutique fashion lighting' : 'editorial black, айвори, приглушённое золото, бутик-fashion свет',
+      accessories: en ? 'luxury graphite black, champagne gold, subtle reflections' : 'люксовый графитово-чёрный, шампань-золото, тонкие отражения',
+      food: en ? 'premium warm dark brown, cream, copper, restaurant menu mood' : 'премиальный тёмно-коричневый, кремовый, медь, вайб ресторанного меню',
+      beauty: en ? 'champagne beige, pearl pink, soft gold, glossy cosmetic lighting' : 'шампань-беж, жемчужно-розовый, мягкое золото, глянцевый cosmetic-свет',
+      gadgets: en ? 'matte black, deep blue, electric cyan rim light, futuristic premium' : 'матовый чёрный, глубокий синий, cyan-контровой свет, футуристичный premium',
+      home: en ? 'warm greige, walnut brown, linen white, premium interior catalog' : 'тёплый greige, ореховый коричневый, льняной белый, premium interior catalog',
+      kids: en ? 'soft premium pastel, cream, muted sage, gentle shadows' : 'мягкая премиальная пастель, кремовый, приглушённый шалфей, деликатные тени',
+      other: en ? 'luxury dark neutral palette with one refined metallic accent' : 'люксовая тёмная нейтральная палитра с одним металлическим акцентом',
+    },
+    fresh: {
+      clothing: en ? 'light editorial pastel, sky blue, blush, warm daylight' : 'лёгкая editorial-пастель, небесный голубой, blush, тёплый дневной свет',
+      accessories: en ? 'clean beige, pale blue, soft gold, airy lifestyle feel' : 'чистый беж, светло-голубой, мягкое золото, воздушный lifestyle',
+      food: en ? 'fresh cream, mint, citrus yellow, juicy natural daylight' : 'свежий кремовый, мята, цитрусово-жёлтый, сочный натуральный daylight',
+      beauty: en ? 'spa palette: milk white, blush pink, mint, pearl highlights' : 'spa-палитра: молочный белый, blush pink, мята, жемчужные блики',
+      gadgets: en ? 'clean light tech palette: white, ice blue, soft cyan, minimal glow' : 'чистая light tech palette: белый, ледяной голубой, мягкий cyan, минимальное свечение',
+      home: en ? 'natural home palette: linen, sage, warm sunlight, beige shadows' : 'натуральная home-палитра: лён, шалфей, тёплое солнце, бежевые тени',
+      kids: en ? 'soft playful pastel: baby blue, lemon, peach, rounded sticker accents' : 'мягкая игровая пастель: baby blue, лимонный, персик, округлые sticker-акценты',
+      other: en ? 'fresh airy palette adapted to product colors, soft daylight' : 'свежая воздушная палитра под цвета товара, мягкий daylight',
+    },
+  };
+  return palettes[style]?.[category] || palettes[style]?.other || palettes.sale.other;
+}
+
 export const AD_PROMPTS = {
   'ad-sale': (name, headline, cta, lang, opts = {}) => {
     const h = headline || (lang === 'en' ? 'SPECIAL OFFER' : 'ВЫГОДНОЕ ПРЕДЛОЖЕНИЕ');
     const { extras, forbid } = adExtras({ ...opts, cta }, lang);
+    const palette = adPalette(opts.category, 'sale', lang);
     return lang === 'en'
       ? `Create a premium, visually rich high-conversion SALE advertising banner worthy of a major e-commerce brand. Use the product from the reference image.
 
@@ -273,7 +311,8 @@ TYPOGRAPHY (multi-layer):
 ${extras}
 
 BACKGROUND (rich, not flat):
-- Main gradient: deep crimson (#B91C1C) → vibrant orange (#F97316) → warm golden (#FBBF24) in a soft diagonal sweep.
+- Category-aware palette direction: ${palette}. Keep it energetic and promotional, but harmonize it with the product colors from the reference image.
+- Main gradient should follow that palette in a soft diagonal sweep.
 - Add a large subtle radial glow behind the product (like soft sunlight).
 - Overlay: very faint diagonal light rays emanating from the upper-right corner, plus soft bokeh circles of light in the background at low opacity.
 - Optional: fine film grain / noise texture at low opacity for a premium print feel.
@@ -299,7 +338,8 @@ ${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally ker
 ${extras}
 
 ФОН (насыщенный, не плоский):
-- Основной градиент: тёмно-малиновый (#B91C1C) → насыщенный оранжевый (#F97316) → тёплый золотистый (#FBBF24), мягкой диагональной волной.
+- Палитра под категорию: ${palette}. Сохрани энергичный промо-характер, но гармонизируй цвета с товаром из референса.
+- Основной градиент должен следовать этой палитре мягкой диагональной волной.
 - Большое мягкое радиальное свечение за товаром (как солнечный свет).
 - Оверлей: очень лёгкие диагональные световые лучи из правого верхнего угла плюс мягкие боке-круги на фоне с низкой прозрачностью.
 - Опционально: тонкий зерно-шум для премиум-полиграфического эффекта.
@@ -307,6 +347,112 @@ ${extras}
 СВЕТ И ГЛУБИНА:
 - Товар: мягкий ключевой свет сверху-слева, тёплый контровой по правому краю в цвет градиента, чёткая но мягкая тень прямо под ним, лёгкое отражение если поверхность глянцевая.
 - 3 плана глубины: фон (градиент + свечение), средний (лучи, боке, частицы), передний (товар + текст + бейджи).
+
+${forbid}
+${PHOTO_TECH}. Весь текст — острый, идеально читаемый, профессиональный кернинг, на РУССКОМ языке. ${NEGATIVES}`;
+  },
+
+  'ad-premium': (name, headline, cta, lang, opts = {}) => {
+    const h = headline || (lang === 'en' ? 'PREMIUM CHOICE' : 'ПРЕМИУМ ВЫБОР');
+    const { extras, forbid } = adExtras({ ...opts, cta }, lang);
+    const palette = adPalette(opts.category, 'premium', lang);
+    return lang === 'en'
+      ? `Create a premium luxury advertising banner for an e-commerce product. Use the product from the reference image.
+
+Product: "${name}"
+
+COMPOSITION:
+- Hero product slightly off-center, large and elegant, with generous negative space and a calm editorial layout.
+- Add subtle depth: refined contact shadow, soft reflection on a glossy or satin surface, and one elegant geometric frame or arc behind the product.
+- Keep decorative elements minimal: 1-2 thin metallic lines, subtle glow, or premium texture. No noisy confetti.
+
+TYPOGRAPHY:
+- Main headline "${h}" — elegant high-contrast sans-serif or modern serif, restrained size, precise spacing.
+- Add one short premium tagline underneath (e.g. "Selected quality", "Designed to impress", "Limited edition") relevant to the product.
+${extras}
+
+BACKGROUND:
+- Category-aware luxury palette: ${palette}. Harmonize with the product colors, avoid cheap aggressive colors.
+- Use a smooth dark/light editorial gradient, subtle vignette, premium material texture (silk, stone, brushed metal, paper grain) when relevant.
+
+LIGHTING:
+- Soft cinematic key light, elegant rim light, controlled shadows, premium studio/product photography mood.
+
+${forbid}
+${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally kerned. ${NEGATIVES}`
+      : `Создай премиальный люксовый рекламный баннер для e-commerce товара. Используй товар с референсного изображения.
+
+Товар: "${name}"
+
+КОМПОЗИЦИЯ:
+- Герой-товар слегка смещён от центра, крупный и элегантный, много воздуха и спокойная editorial-композиция.
+- Добавь глубину: аккуратная контактная тень, мягкое отражение на глянцевой/сатиновой поверхности, один элегантный геометрический контур или дуга за товаром.
+- Декор минимальный: 1-2 тонкие металлические линии, деликатное свечение или премиальная текстура. Никакого шумного конфетти.
+
+ТИПОГРАФИКА:
+- Главный заголовок "${h}" — элегантный контрастный sans-serif или современный serif, сдержанный размер, точная разрядка.
+- Под ним один короткий премиальный подзаголовок (например «Отборное качество», «Создано впечатлять», «Лимитированная серия») релевантно товару.
+${extras}
+
+ФОН:
+- Люксовая палитра под категорию: ${palette}. Гармонизируй с цветами товара, избегай дешёвых агрессивных цветов.
+- Плавный editorial-градиент, лёгкая виньетка, премиальная материальная текстура (шёлк, камень, матовый металл, бумажное зерно), если уместно.
+
+СВЕТ:
+- Мягкий кинематографичный ключевой свет, элегантный контровой, контролируемые тени, настроение премиальной предметной фотографии.
+
+${forbid}
+${PHOTO_TECH}. Весь текст — острый, идеально читаемый, профессиональный кернинг, на РУССКОМ языке. ${NEGATIVES}`;
+  },
+
+  'ad-fresh': (name, headline, cta, lang, opts = {}) => {
+    const h = headline || (lang === 'en' ? 'FRESH PICK' : 'СВЕЖИЙ ВЫБОР');
+    const { extras, forbid } = adExtras({ ...opts, cta }, lang);
+    const palette = adPalette(opts.category, 'fresh', lang);
+    return lang === 'en'
+      ? `Create a fresh, airy lifestyle advertising banner. Use the product from the reference image.
+
+Product: "${name}"
+
+COMPOSITION:
+- Product centered or slightly left, clean and approachable, surrounded by soft organic shapes and airy negative space.
+- Add 3-5 gentle category-relevant accents: soft leaves, light blobs, rounded stickers, subtle waves, fresh sparkles, or daylight bokeh. Keep it clean, not childish unless the category is kids.
+- If price/CTA is present, integrate it as a friendly card/badge, not an aggressive sale sticker.
+
+TYPOGRAPHY:
+- Main headline "${h}" — friendly rounded sans-serif, clear and modern, not too heavy.
+- Add one short positive tagline underneath (e.g. "For everyday comfort", "Light and natural", "Made for your routine") relevant to the product.
+${extras}
+
+BACKGROUND:
+- Category-aware fresh palette: ${palette}. Harmonize with the product colors and keep contrast high enough for readable text.
+- Bright soft gradient, clean daylight, subtle shadows, calm lifestyle mood.
+
+LIGHTING:
+- Soft natural daylight, gentle shadow, clean commercial look, realistic product material.
+
+${forbid}
+${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally kerned. ${NEGATIVES}`
+      : `Создай свежий, воздушный lifestyle-рекламный баннер. Используй товар с референсного изображения.
+
+Товар: "${name}"
+
+КОМПОЗИЦИЯ:
+- Товар по центру или слегка слева, чистый и дружелюбный, вокруг мягкие органические формы и много воздуха.
+- Добавь 3-5 мягких акцентов по категории: нежные листья, светлые blobs-формы, округлые стикеры, лёгкие волны, свежие искры или daylight-боке. Чисто, не по-детски, кроме категории детских товаров.
+- Если есть цена/CTA — интегрируй как дружелюбную карточку/бейдж, не как агрессивную sale-наклейку.
+
+ТИПОГРАФИКА:
+- Главный заголовок "${h}" — дружелюбный округлый sans-serif, чистый и современный, не слишком тяжёлый.
+- Под ним один короткий позитивный подзаголовок (например «Для комфорта каждый день», «Легко и натурально», «Для вашего ритма») релевантно товару.
+${extras}
+
+ФОН:
+- Свежая палитра под категорию: ${palette}. Гармонизируй с цветами товара и сохраняй достаточный контраст для читаемости текста.
+- Светлый мягкий градиент, чистый daylight, деликатные тени, спокойный lifestyle mood.
+
+СВЕТ:
+- Мягкий естественный дневной свет, нежная тень, чистый коммерческий вид, реалистичные материалы товара.
 
 ${forbid}
 ${PHOTO_TECH}. Весь текст — острый, идеально читаемый, профессиональный кернинг, на РУССКОМ языке. ${NEGATIVES}`;

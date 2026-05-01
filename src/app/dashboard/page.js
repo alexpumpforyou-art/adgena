@@ -76,7 +76,9 @@ const PHOTO_CONCEPTS = {
 };
 
 const AD_CONCEPTS = [
-  { id: 'ad-sale',    name: 'Продающий баннер', desc: 'Акции, скидки, промо', icon: '🔥' },
+  { id: 'ad-sale',    name: 'Яркий sale', desc: 'Акции, скидки, промо', icon: '🔥' },
+  { id: 'ad-premium', name: 'Премиум', desc: 'Дорого, сдержанно, брендово', icon: '💎' },
+  { id: 'ad-fresh',   name: 'Свежий', desc: 'Светлый, мягкий, lifestyle', icon: '🌿' },
   { id: 'ad-minimal', name: 'Минималистичный', desc: 'Премиум стиль Apple/MUJI', icon: '✨' },
   { id: 'ad-story',   name: 'Stories / Reels', desc: 'Вертикальный 9:16', icon: '📱' },
 ];
