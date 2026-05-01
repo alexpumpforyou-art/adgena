@@ -41,6 +41,20 @@ export async function GET() {
     ).get().c;
     const genTotal = d.prepare("SELECT COUNT(*) as c FROM generations").get().c;
 
+    // === AI SPEND ===
+    const spendToday = d.prepare(
+      "SELECT COALESCE(SUM(cost_usd), 0) as s FROM generations WHERE status = 'completed' AND created_at > datetime('now', '-1 day')"
+    ).get().s;
+    const spendMonth = d.prepare(
+      "SELECT COALESCE(SUM(cost_usd), 0) as s FROM generations WHERE status = 'completed' AND created_at > datetime('now', '-30 days')"
+    ).get().s;
+    const spendTotal = d.prepare(
+      "SELECT COALESCE(SUM(cost_usd), 0) as s FROM generations WHERE status = 'completed'"
+    ).get().s;
+    const spendByModel = d.prepare(
+      "SELECT COALESCE(model, 'unknown') as model, COUNT(*) as count, COALESCE(SUM(cost_usd), 0) as cost FROM generations WHERE status = 'completed' GROUP BY model"
+    ).all();
+
     // === USERS ===
     const usersTotal = d.prepare("SELECT COUNT(*) as c FROM users").get().c;
     const usersNewToday = d.prepare(
@@ -97,6 +111,16 @@ export async function GET() {
           today: genToday,
           month: genMonth,
           total: genTotal,
+        },
+        spend: {
+          today: +spendToday.toFixed(4),
+          month: +spendMonth.toFixed(4),
+          total: +spendTotal.toFixed(4),
+          byModel: spendByModel.map(r => ({
+            model: r.model,
+            count: r.count,
+            cost: +(+r.cost).toFixed(4),
+          })),
         },
         users: {
           total: usersTotal,

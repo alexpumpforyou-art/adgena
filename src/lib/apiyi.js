@@ -122,6 +122,8 @@ export async function generateProductCard({
   category = 'other',
   headline = '',
   cta = '',
+  price = '',
+  showButton = false,
   lang = 'ru',
   aspectRatio = '3:4',
   wishes = '',
@@ -133,7 +135,9 @@ export async function generateProductCard({
 
   if (type === 'ads') {
     const promptFn = AD_PROMPTS[templateId] || AD_PROMPTS['ad-minimal'];
-    prompt = typeof promptFn === 'function' ? promptFn(productName, headline, cta, lang) : promptFn;
+    prompt = typeof promptFn === 'function'
+      ? promptFn(productName, headline, cta, lang, { price, showButton })
+      : promptFn;
   } else if (type === 'card') {
     prompt = getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes });
   } else {
@@ -144,29 +148,54 @@ export async function generateProductCard({
   // Inject aspect ratio
   prompt += `\n\nIMPORTANT: Generate the image in ${aspectRatio} aspect ratio.`;
 
-  console.log(`[APIYI] ${type} | concept: ${templateId} | cat: ${category} | ratio: ${aspectRatio} | lang: ${lang}`);
+  // === MODEL ROUTING ===
+  // Rule: if output must contain text (card/ads) → OpenAI gpt-image-2 (better typography).
+  //       photo → Gemini (cheaper, better photorealism).
+  // Env overrides:
+  //   IMAGE_GEN_MODEL=gpt-image-2  → force OpenAI for everything
+  //   IMAGE_GEN_MODEL=gemini       → force Gemini for everything
+  const forced = (process.env.IMAGE_GEN_MODEL || '').toLowerCase();
+  const wantsText = type === 'ads' || type === 'card';
+  const useGptImage = forced.startsWith('gpt-image') ? true
+                    : forced.startsWith('gemini')    ? false
+                    : wantsText;
+
+  const GPT_IMAGE_MODEL = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
+  const GEMINI_MODEL    = 'gemini-3-pro-image-preview';
+
+  const COST_GPT_IMAGE = parseFloat(process.env.COST_GPT_IMAGE || '0.19');
+  const COST_GEMINI    = parseFloat(process.env.COST_GEMINI    || '0.09');
+
+  console.log(`[APIYI] ${type} | concept: ${templateId} | cat: ${category} | ratio: ${aspectRatio} | lang: ${lang} | route: ${useGptImage ? 'openai' : 'gemini'}`);
   console.log(`[APIYI] Product: ${productName}`);
 
-  const useGptImage = (process.env.IMAGE_GEN_MODEL || '').startsWith('gpt-image');
   let imageData = null;
+  let modelUsed = null;
+  let costUsd = 0;
 
   if (useGptImage) {
     try {
       imageData = await generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRatio });
+      modelUsed = GPT_IMAGE_MODEL;
+      costUsd = COST_GPT_IMAGE;
     } catch (err) {
       console.error('[GPT-IMAGE-2] Error:', err.message);
-      // Fallback to Gemini
       console.log('[APIYI] Falling back to Gemini...');
       imageData = await generateWithGemini({ prompt, imageBase64, mimeType });
+      modelUsed = GEMINI_MODEL;
+      costUsd = imageData ? COST_GEMINI : 0;
     }
   } else {
     imageData = await generateWithGemini({ prompt, imageBase64, mimeType });
+    modelUsed = GEMINI_MODEL;
+    costUsd = imageData ? COST_GEMINI : 0;
   }
 
   return {
     success: !!imageData,
     imageData,
-    model: useGptImage ? (process.env.IMAGE_GEN_MODEL || 'gpt-image-2') : 'gemini-3-pro-image-preview',
+    model: modelUsed,
+    costUsd,
     rawContent: imageData ? '[image data]' : null,
   };
 }

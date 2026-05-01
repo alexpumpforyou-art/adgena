@@ -160,6 +160,12 @@ function initTables() {
   try { d.prepare("SELECT role FROM users LIMIT 1").get(); }
   catch { d.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); }
 
+  // Migrate: add model / cost_usd to generations
+  try { d.prepare("SELECT model FROM generations LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE generations ADD COLUMN model TEXT"); }
+  try { d.prepare("SELECT cost_usd FROM generations LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE generations ADD COLUMN cost_usd REAL DEFAULT 0"); }
+
   // Migrate: add subscription columns if missing
   try { d.prepare("SELECT subscription_plan FROM users LIMIT 1").get(); }
   catch { d.exec("ALTER TABLE users ADD COLUMN subscription_plan TEXT DEFAULT NULL"); }
@@ -279,10 +285,12 @@ export function createGeneration({ userId, type, templateId, sizeId, productName
   return id;
 }
 
-export function updateGeneration(id, { status, imageOutputPath }) {
+export function updateGeneration(id, { status, imageOutputPath, model, costUsd }) {
   const d = getDb();
   const sets = [];
   const vals = [];
+  if (model !== undefined)     { sets.push('model = ?');           vals.push(model); }
+  if (costUsd !== undefined)   { sets.push('cost_usd = ?');        vals.push(costUsd); }
 
   if (status) { sets.push('status = ?'); vals.push(status); }
   if (imageOutputPath) { sets.push('image_output_path = ?'); vals.push(imageOutputPath); }

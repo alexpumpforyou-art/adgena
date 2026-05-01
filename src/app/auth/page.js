@@ -40,6 +40,18 @@ function AuthForm() {
     }
   }, [searchParams]);
 
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => {
+        if (!cancelled && d?.success && d?.user) router.replace('/dashboard');
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [router]);
+
   // Countdown timer for resend
   useEffect(() => {
     if (countdown <= 0) return;

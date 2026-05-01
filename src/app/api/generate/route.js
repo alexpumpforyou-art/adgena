@@ -89,6 +89,8 @@ export async function POST(request) {
     const bullets = parsedText.bullets || [];
     const headline = formData.get('headline') || parsedText.headline || parsedText.title || productName;
     const cta = formData.get('cta') || parsedText.cta || 'Купить сейчас';
+    const price = (formData.get('price') || '').toString().trim();
+    const showButton = formData.get('showButton') === 'true' || formData.get('showButton') === '1';
 
     // Resolve target size & aspect ratio
     // Priority: explicit sizeId → aspectRatio override → default (wb 3:4)
@@ -135,6 +137,8 @@ export async function POST(request) {
       category,
       headline,
       cta,
+      price,
+      showButton,
       lang,
       aspectRatio: finalAspectRatio,
       wishes,
@@ -214,6 +218,8 @@ export async function POST(request) {
       updateGeneration(generationId, {
         status: 'completed',
         imageOutputPath: r2Url || generationId,
+        model: result.model,
+        costUsd: result.costUsd || 0,
       });
       incrementGenerations(user.id);
     }

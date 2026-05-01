@@ -5,6 +5,23 @@ import Link from 'next/link';
 import styles from './page.module.css';
 
 // ========================================
+// SMART "Start" button — routes to /dashboard if logged in, else /auth
+// ========================================
+function SmartStartLink({ className, children }) {
+  const [authed, setAuthed] = useState(null); // null = unknown
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => { if (!cancelled) setAuthed(!!(d?.success && d?.user)); })
+      .catch(() => { if (!cancelled) setAuthed(false); });
+    return () => { cancelled = true; };
+  }, []);
+  const href = authed ? '/dashboard' : '/auth';
+  return <Link href={href} className={className}>{children}</Link>;
+}
+
+// ========================================
 // LOGO (Brand images)
 // ========================================
 function Logo({ className }) {
@@ -66,7 +83,7 @@ function Header() {
           <a href="#features">Возможности</a>
           <a href="#pricing">Тарифы</a>
         </nav>
-        <Link href="/auth" className={styles.btnStart}>Начать генерацию</Link>
+        <SmartStartLink className={styles.btnStart}>Начать генерацию</SmartStartLink>
       </div>
     </header>
   );
@@ -272,7 +289,7 @@ function Hero() {
             Загрузите фото товара — получите профессиональные креативы.
           </p>
           <div className={styles.heroCta}>
-            <Link href="/auth" className={styles.btnPrimary}>Начать генерацию</Link>
+            <SmartStartLink className={styles.btnPrimary}>Начать генерацию</SmartStartLink>
             <a href="#showcase" className={styles.btnGhost}>Смотреть примеры</a>
           </div>
         </div>

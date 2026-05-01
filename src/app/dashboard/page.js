@@ -116,10 +116,14 @@ export default function DashboardPage() {
   // Ads fields
   const [adHeadline, setAdHeadline] = useState('');
   const [adCta, setAdCta] = useState('');
+  const [adPrice, setAdPrice] = useState('');
+  const [adShowButton, setAdShowButton] = useState(false);
   // Result modal
   const [improveText, setImproveText] = useState('');
-  const [versions, setVersions] = useState([]);
-  const [activeVersion, setActiveVersion] = useState(0);
+  // Workspace: array of generated items in current session (persisted to localStorage)
+  // Each item: { id, imageDataUrl, imageUrl, productName, type, templateId, category, aspectRatio, concept, note, timestamp, settings }
+  const [workspace, setWorkspace] = useState([]);
+  const [activeWsId, setActiveWsId] = useState(null);
   // AI helper
   const [aiSuggesting, setAiSuggesting] = useState(false);
   // User & History
@@ -133,7 +137,20 @@ export default function DashboardPage() {
     fetch('/api/generations').then(r => r.json()).then(d => { if (d.success) setHistory(d.generations || []); }).catch(() => {});
     const saved = localStorage.getItem('adgena-theme');
     if (saved) { setTheme(saved); document.documentElement.setAttribute('data-theme', saved); }
+    // Restore workspace
+    try {
+      const ws = JSON.parse(localStorage.getItem('adgena-workspace') || '[]');
+      if (Array.isArray(ws) && ws.length) setWorkspace(ws);
+    } catch { /* ignore */ }
   }, []);
+
+  // Persist workspace (keep last 20)
+  useEffect(() => {
+    try {
+      const trimmed = workspace.slice(-20);
+      localStorage.setItem('adgena-workspace', JSON.stringify(trimmed));
+    } catch { /* quota exceeded — ignore */ }
+  }, [workspace]);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -175,36 +192,63 @@ export default function DashboardPage() {
     reader.readAsDataURL(file);
   }, []);
 
+  const buildFormData = (noteText) => {
+    const fd = new FormData();
+    fd.append('image', uploadedImage);
+    fd.append('templateId', selectedConcept || 'infographic');
+    fd.append('productName', productName);
+    fd.append('type', tab);
+    fd.append('category', category);
+    fd.append('lang', 'ru');
+    fd.append('wishes', noteText || wishes);
+    fd.append('aspectRatio', aspectRatio);
+    if (tab === 'card') {
+      fd.append('cardText', cardText);
+      fd.append('cardStyle', cardStyle);
+      fd.append('creativity', creativity.toString());
+    }
+    if (tab === 'ads') {
+      fd.append('headline', adHeadline);
+      fd.append('cta', adCta);
+      fd.append('price', adPrice);
+      fd.append('showButton', adShowButton ? 'true' : 'false');
+    }
+    return fd;
+  };
+
+  const addToWorkspace = (data, { noteText, parentId } = {}) => {
+    const conceptName = tab === 'card'
+      ? `Карточка (${cardStyle})`
+      : (PHOTO_CONCEPTS[category]?.concat(AD_CONCEPTS).find(c => c.id === selectedConcept)?.name || '—');
+    const item = {
+      id: data.generationId || `ws_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      parentId: parentId || null,
+      imageDataUrl: data.imageDataUrl,
+      imageUrl: data.imageUrl || null,
+      productName: productName || 'Без названия',
+      type: tab,
+      templateId: selectedConcept || null,
+      conceptName,
+      category,
+      aspectRatio,
+      note: noteText || wishes || '',
+      timestamp: Date.now(),
+      model: data.model,
+    };
+    setWorkspace(prev => [...prev, item]);
+    setActiveWsId(item.id);
+    return item;
+  };
+
   const handleGenerate = async () => {
     if (!canGenerate) return;
     setGenerating(true);
     setGeneratedResult(null);
     try {
-      const formData = new FormData();
-      formData.append('image', uploadedImage);
-      formData.append('templateId', selectedConcept || 'infographic');
-      formData.append('productName', productName);
-      formData.append('type', tab);
-      formData.append('category', category);
-      formData.append('lang', 'ru');
-      formData.append('wishes', wishes);
-      formData.append('aspectRatio', aspectRatio);
-      if (tab === 'card') {
-        formData.append('cardText', cardText);
-        formData.append('cardStyle', cardStyle);
-        formData.append('creativity', creativity.toString());
-      }
-      if (tab === 'ads') {
-        formData.append('headline', adHeadline);
-        formData.append('cta', adCta);
-      }
-
-      const res = await fetch('/api/generate', { method: 'POST', body: formData });
+      const res = await fetch('/api/generate', { method: 'POST', body: buildFormData() });
       const data = await res.json();
       if (data.success) {
-        const v = { imageDataUrl: data.imageDataUrl, timestamp: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}), label: `V${versions.length}`, note: wishes || '—' };
-        setVersions(prev => [...prev, v]);
-        setActiveVersion(versions.length);
+        addToWorkspace(data);
         setGeneratedResult(data);
         setShowResult(true);
       } else {
@@ -221,26 +265,12 @@ export default function DashboardPage() {
 
   const handleImprove = async () => {
     if (!improveText.trim() || !uploadedImage) return;
-    const oldWishes = wishes;
-    setWishes(improveText);
     setGenerating(true);
     try {
-      const formData = new FormData();
-      formData.append('image', uploadedImage);
-      formData.append('templateId', selectedConcept || 'infographic');
-      formData.append('productName', productName);
-      formData.append('type', tab);
-      formData.append('category', category);
-      formData.append('lang', 'ru');
-      formData.append('wishes', improveText);
-      formData.append('aspectRatio', aspectRatio);
-
-      const res = await fetch('/api/generate', { method: 'POST', body: formData });
+      const res = await fetch('/api/generate', { method: 'POST', body: buildFormData(improveText) });
       const data = await res.json();
       if (data.success) {
-        const v = { imageDataUrl: data.imageDataUrl, timestamp: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}), label: `V${versions.length}`, note: improveText };
-        setVersions(prev => [...prev, v]);
-        setActiveVersion(versions.length);
+        addToWorkspace(data, { noteText: improveText, parentId: activeWsId });
         setGeneratedResult(data);
         setImproveText('');
       }
@@ -248,21 +278,43 @@ export default function DashboardPage() {
       console.error('Improve error:', err);
     } finally {
       setGenerating(false);
-      setWishes(oldWishes);
     }
   };
 
+  // Close current result (keeps form + workspace intact — user can generate another)
+  const handleCloseResult = () => {
+    setGeneratedResult(null);
+    setShowResult(false);
+    setActiveWsId(null);
+  };
+
+  // Select an item from workspace to view it in the right panel
+  const selectWorkspaceItem = (id) => {
+    const item = workspace.find(w => w.id === id);
+    if (!item) return;
+    setActiveWsId(id);
+    setGeneratedResult({ imageDataUrl: item.imageDataUrl, imageUrl: item.imageUrl, generationId: item.id, model: item.model });
+    setShowResult(false);
+  };
+
+  const removeFromWorkspace = (id) => {
+    setWorkspace(prev => prev.filter(w => w.id !== id));
+    if (activeWsId === id) handleCloseResult();
+  };
+
+  // Full reset — clear form AND selection (workspace stays in localStorage)
   const handleReset = () => {
     setUploadedImage(null);
     setImagePreview(null);
     setProductName('');
     setSelectedConcept(null);
-    setGeneratedResult(null);
     setWishes('');
     setCardText('');
-    setVersions([]);
-    setActiveVersion(0);
-    setShowResult(false);
+    setAdHeadline('');
+    setAdCta('');
+    setAdPrice('');
+    setAdShowButton(false);
+    handleCloseResult();
   };
 
   const handleAiSuggest = async () => {
@@ -528,10 +580,31 @@ export default function DashboardPage() {
                 type="text"
                 className={styles.input}
                 style={{marginTop: 8}}
-                placeholder="Кнопка CTA: Купить, Подробнее, Заказать..."
+                placeholder="Текст кнопки: Купить, Подробнее, Заказать..."
                 value={adCta}
                 onChange={(e) => setAdCta(e.target.value)}
               />
+
+              <label style={{display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 13, cursor: 'pointer', color: 'var(--text-secondary)'}}>
+                <input
+                  type="checkbox"
+                  checked={adShowButton}
+                  onChange={(e) => setAdShowButton(e.target.checked)}
+                />
+                Показать кнопку на картинке
+              </label>
+
+              <label className={styles.label} style={{marginTop: 16}}>Цена (опционально)</label>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Например: 1990₽ или -50% или $19.99"
+                value={adPrice}
+                onChange={(e) => setAdPrice(e.target.value)}
+              />
+              <p style={{fontSize: 11, color: 'var(--text-muted, #888)', margin: '4px 0 0'}}>
+                Оставьте пустым — на картинке не будет никакой цены.
+              </p>
             </>
           )}
 
@@ -587,15 +660,8 @@ export default function DashboardPage() {
         </button>
       </aside>
 
-      {/* RIGHT PANEL — Results */}
+      {/* RIGHT PANEL — Results / Workspace */}
       <main className={styles.rightPanel}>
-        {!generating && !generatedResult && (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}></div>
-            <h2>Ваши результаты</h2>
-            <p>Загрузите фото, выберите настройки и нажмите «Сгенерировать»</p>
-          </div>
-        )}
         {generating && (
           <div className={styles.emptyState}>
             <div className={styles.loadingPulse}><span className={styles.spinner} /></div>
@@ -603,15 +669,82 @@ export default function DashboardPage() {
             <p>Обычно занимает 20-30 секунд</p>
           </div>
         )}
+
+        {!generating && !generatedResult && (
+          <div className={styles.emptyState} style={{paddingTop: workspace.length ? 24 : undefined}}>
+            {workspace.length === 0 ? (
+              <>
+                <div className={styles.emptyIcon}></div>
+                <h2>Ваши результаты</h2>
+                <p>Загрузите фото, выберите настройки и нажмите «Сгенерировать»</p>
+              </>
+            ) : (
+              <div style={{width: '100%', padding: '0 24px'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16}}>
+                  <h2 style={{margin: 0}}>Рабочее пространство</h2>
+                  <span style={{fontSize: 13, color: 'var(--text-secondary)'}}>{workspace.length} работ</span>
+                </div>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12}}>
+                  {workspace.slice().reverse().map(item => (
+                    <div
+                      key={item.id}
+                      style={{
+                        position: 'relative',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: 10,
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        transition: 'transform 0.15s, border-color 0.15s',
+                      }}
+                      onClick={() => selectWorkspaceItem(item.id)}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'var(--accent-primary, #3b82f6)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+                    >
+                      <img src={item.imageDataUrl} alt={item.productName} style={{width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block'}} />
+                      <div style={{padding: '8px 10px', fontSize: 12}}>
+                        <div style={{fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.productName}</div>
+                        <div style={{color: 'var(--text-secondary)', marginTop: 2, fontSize: 11}}>
+                          {item.type} • {item.aspectRatio}
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeFromWorkspace(item.id); }}
+                        title="Убрать из рабочего пространства"
+                        style={{
+                          position: 'absolute', top: 6, right: 6, width: 22, height: 22,
+                          borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.6)',
+                          color: '#fff', cursor: 'pointer', fontSize: 13, lineHeight: 1,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {generatedResult && !generating && !showResult && (
           <div className={styles.emptyState}>
             {generatedResult.error ? (
               <div className={styles.errorBlock}>
                 <p>{generatedResult.error}</p>
-                <button className={styles.linkBtn} onClick={() => setGeneratedResult(null)}>Попробовать снова</button>
+                <button className={styles.linkBtn} onClick={handleCloseResult}>Попробовать снова</button>
               </div>
             ) : (
-              <div className={styles.resultArea}>
+              <div className={styles.resultArea} style={{position: 'relative'}}>
+                <button
+                  onClick={handleCloseResult}
+                  title="Закрыть (работа сохранится в рабочем пространстве)"
+                  style={{
+                    position: 'absolute', top: 8, right: 8, zIndex: 2,
+                    background: 'rgba(0,0,0,0.7)', color: '#fff',
+                    border: 'none', borderRadius: 20, padding: '6px 12px',
+                    cursor: 'pointer', fontSize: 13,
+                  }}
+                >✕ Новая генерация</button>
                 <div className={styles.resultImageWrap} onClick={() => setShowResult(true)}>
                   <img src={generatedResult.imageDataUrl} alt="Generated" className={styles.resultImage} />
                 </div>
@@ -626,26 +759,34 @@ export default function DashboardPage() {
       {showResult && generatedResult && !generatedResult.error && (
         <div className={styles.resultModal}>
           <div className={styles.resultModalContent}>
-            {/* Close */}
+            {/* Close — just hides modal, keeps result visible */}
             <button className={styles.modalClose} onClick={() => setShowResult(false)}>✕</button>
 
             {/* Left: Image */}
             <div className={styles.modalLeft}>
               <div className={styles.modalImageWrap}>
-                <img src={versions[activeVersion]?.imageDataUrl || generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
+                <img src={generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
               </div>
-              <div className={styles.modalImageActions}>
+              <div className={styles.modalImageActions} style={{display: 'flex', gap: 8, flexWrap: 'wrap'}}>
                 <a
-                  href={versions[activeVersion]?.imageDataUrl || generatedResult.imageDataUrl}
-                  download={`adgena-${generatedResult.generationId || 'result'}.jpg`}
+                  href={generatedResult.imageDataUrl}
+                  download={`adgena-${generatedResult.generationId || 'result'}.webp`}
                   className={styles.downloadBtn}
                 >
-                  Скачать оригинал
+                  Скачать
                 </a>
+                <button
+                  className={styles.downloadBtn}
+                  style={{background: 'transparent', border: '1px solid var(--border-subtle)', cursor: 'pointer'}}
+                  onClick={() => { handleCloseResult(); }}
+                  title="Закрыть и начать новую генерацию (работа сохранится)"
+                >
+                  ✕ Новая генерация
+                </button>
               </div>
             </div>
 
-            {/* Right: Info + Improve + Versions */}
+            {/* Right: Info + Improve + Workspace */}
             <div className={styles.modalRight}>
               {/* Concept info */}
               <div className={styles.modalSection}>
@@ -659,16 +800,10 @@ export default function DashboardPage() {
                 <p className={styles.modalValue}>{wishes || '—'}</p>
               </div>
 
-              {/* Quick actions */}
-              <div className={styles.modalQuickActions}>
-                <button className={styles.quickBtn} onClick={() => { setTab('card'); setShowResult(false); }}>Создать карточку</button>
-              </div>
-
               {/* Improve */}
               <div className={styles.modalSection}>
                 <div className={styles.modalLabelRow}>
-                  <span className={styles.modalLabel}>Улучшения</span>
-                  <span className={styles.modalCount}>Сделано: {versions.length > 0 ? versions.length - 1 : 0}</span>
+                  <span className={styles.modalLabel}>Доделать / улучшить</span>
                 </div>
                 <input
                   type="text"
@@ -680,29 +815,34 @@ export default function DashboardPage() {
                 />
                 <button
                   className={styles.improveBtn}
-                  disabled={!improveText.trim() || generating}
+                  disabled={!improveText.trim() || generating || !uploadedImage}
                   onClick={handleImprove}
                 >
-                  {generating ? 'Улучшаю...' : 'Улучшить'}
+                  {generating ? 'Генерирую...' : 'Создать версию'}
                 </button>
               </div>
 
-              {/* Versions */}
+              {/* Workspace */}
               <div className={styles.modalSection}>
                 <div className={styles.modalLabelRow}>
-                  <span className={styles.modalLabel}>Версии</span>
-                  <span className={styles.modalCount}>Текущая: V{activeVersion}</span>
+                  <span className={styles.modalLabel}>Рабочее пространство</span>
+                  <span className={styles.modalCount}>{workspace.length}</span>
                 </div>
                 <div className={styles.versionList}>
-                  {versions.map((v, i) => (
+                  {workspace.slice().reverse().map(item => (
                     <div
-                      key={i}
-                      className={`${styles.versionItem} ${activeVersion === i ? styles.versionItemActive : ''}`}
-                      onClick={() => { setActiveVersion(i); setGeneratedResult(prev => ({...prev, imageDataUrl: v.imageDataUrl})); }}
+                      key={item.id}
+                      className={`${styles.versionItem} ${activeWsId === item.id ? styles.versionItemActive : ''}`}
+                      onClick={() => selectWorkspaceItem(item.id)}
+                      style={{cursor: 'pointer'}}
                     >
-                      <span className={styles.versionLabel}>{v.label} {i === 0 ? '- Оригинал' : ''}</span>
-                      <span className={styles.versionTime}>{v.timestamp}</span>
-                      <span className={styles.versionNote}>{v.note}</span>
+                      <span className={styles.versionLabel}>{item.productName}</span>
+                      <span className={styles.versionTime}>
+                        {new Date(item.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}
+                      </span>
+                      <span className={styles.versionNote}>
+                        {item.type} • {item.aspectRatio} {item.note ? `• ${item.note}` : ''}
+                      </span>
                     </div>
                   ))}
                 </div>

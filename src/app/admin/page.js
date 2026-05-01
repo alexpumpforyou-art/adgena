@@ -487,6 +487,23 @@ export default function AdminPage() {
                   : '✅ Все письма доставлены'}
               />
 
+              {/* AI Spend */}
+              {quotas.spend && (
+                <QuotaCard
+                  title="💰 Расход на AI (APIYI)"
+                  rows={[
+                    { label: 'Сегодня',    value: `$${quotas.spend.today.toFixed(4)}` },
+                    { label: 'За 30 дней', value: `$${quotas.spend.month.toFixed(4)}` },
+                    { label: 'Всего',      value: `$${quotas.spend.total.toFixed(4)}` },
+                    ...quotas.spend.byModel.map(m => ({
+                      label: `└ ${m.model}`,
+                      value: `${m.count}× = $${m.cost.toFixed(4)}`,
+                    })),
+                  ]}
+                  footer="💡 Цены из .env (COST_GPT_IMAGE, COST_GEMINI). Старые генерации без model/cost не учтены."
+                />
+              )}
+
               {/* Generations */}
               <QuotaCard
                 title="🎨 Генерации картинок"
