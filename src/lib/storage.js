@@ -1,22 +1,18 @@
-// S3-compatible Storage (Cloudflare R2 / Yandex Object Storage / any S3)
-// Controlled via env vars — zero code changes when switching providers
+// S3-compatible Storage (Yandex Object Storage / any S3-compatible)
+// Controlled via env vars: S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET, S3_PUBLIC_URL
 
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
 
 // === Storage config from env ===
-const STORAGE_PROVIDER = process.env.STORAGE_PROVIDER || 'r2'; // 'r2' | 'yandex' | 'custom'
-const S3_ACCESS_KEY = process.env.S3_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID;
-const S3_SECRET_KEY = process.env.S3_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY;
-const S3_BUCKET = process.env.S3_BUCKET || process.env.R2_BUCKET || 'adgena-files';
-const S3_PUBLIC_URL = process.env.S3_PUBLIC_URL || process.env.R2_PUBLIC_URL;
+const STORAGE_PROVIDER = process.env.STORAGE_PROVIDER || 'yandex'; // 'yandex' | 'custom'
+const S3_ACCESS_KEY = process.env.S3_ACCESS_KEY_ID;
+const S3_SECRET_KEY = process.env.S3_SECRET_ACCESS_KEY;
+const S3_BUCKET = process.env.S3_BUCKET || 'adgena-files';
+const S3_PUBLIC_URL = process.env.S3_PUBLIC_URL;
 
 // Provider-specific endpoints
 const PROVIDER_CONFIGS = {
-  r2: {
-    endpoint: `https://${process.env.R2_ACCOUNT_ID || ''}.r2.cloudflarestorage.com`,
-    region: 'auto',
-  },
   yandex: {
     endpoint: 'https://storage.yandexcloud.net',
     region: 'ru-central1',

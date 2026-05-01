@@ -231,25 +231,25 @@ export async function POST(request) {
       }
     }
 
-    // === UPLOAD TO S3-COMPATIBLE STORAGE (Yandex / R2) ===
-    let r2Url = null;
+    // === UPLOAD TO S3 STORAGE (Yandex Object Storage) ===
+    let s3Url = null;
     try {
       const { uploadFile } = await import('@/lib/storage');
       const uploadBuffer = finalBuffer || rawBuffer;
       if (uploadBuffer) {
-        const r2Result = await uploadFile(uploadBuffer, 'image/webp', 'generations', 'webp');
-        if (r2Result) {
-          r2Url = r2Result.url;
-          console.log(`[Generate] S3 uploaded: ${r2Url}`);
+        const s3Result = await uploadFile(uploadBuffer, 'image/webp', 'generations', 'webp');
+        if (s3Result) {
+          s3Url = s3Result.url;
+          console.log(`[Generate] S3 uploaded: ${s3Url}`);
         }
       }
-    } catch (r2Err) {
-      console.error('[Generate] S3 upload error (non-fatal):', r2Err.message);
+    } catch (s3Err) {
+      console.error('[Generate] S3 upload error (non-fatal):', s3Err.message);
     }
 
     // Build transient data URL ONLY if S3 upload failed (fallback so client still renders something)
     // Normal path: return only imageUrl to avoid shipping 3-5 MB base64 over the network.
-    const imageDataUrl = r2Url ? null : (finalBuffer
+    const imageDataUrl = s3Url ? null : (finalBuffer
       ? `data:image/webp;base64,${finalBuffer.toString('base64')}`
       : result.imageData);
 
@@ -257,19 +257,19 @@ export async function POST(request) {
     if (user) {
       updateGeneration(generationId, {
         status: 'completed',
-        imageOutputPath: r2Url || generationId,
+        imageOutputPath: s3Url || generationId,
         model: result.model,
         costUsd: result.costUsd || 0,
       });
       incrementGenerations(user.id);
     }
 
-    console.log(`[Generate] ✅ Done: ${generationId} (${(finalBuffer?.length / 1024).toFixed(0) || '?'}KB)${r2Url ? ' → R2' : ''}`);
+    console.log(`[Generate] Done: ${generationId} (${(finalBuffer?.length / 1024).toFixed(0) || '?'}KB)${s3Url ? ' → S3' : ''}`);
 
     return NextResponse.json({
       success: true,
       imageDataUrl,
-      imageUrl: r2Url,
+      imageUrl: s3Url,
       generationId,
       template: templateId,
       size: sizeId,
