@@ -55,6 +55,22 @@ export async function POST(request) {
       );
     }
 
+    // Upload constraints — mirrored on the client
+    const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+    const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+    if (image.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { success: false, error: `Файл слишком большой (${(image.size / 1024 / 1024).toFixed(1)} MB). Максимум — 10 MB.` },
+        { status: 413 }
+      );
+    }
+    if (image.type && !ACCEPTED_MIME.includes(image.type)) {
+      return NextResponse.json(
+        { success: false, error: `Формат ${image.type} не поддерживается. Загрузите JPG, PNG или WebP.` },
+        { status: 415 }
+      );
+    }
+
     if (!productName?.trim()) {
       return NextResponse.json(
         { success: false, error: 'Укажите название товара' },

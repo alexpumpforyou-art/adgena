@@ -207,23 +207,34 @@ export default function DashboardPage() {
 
   // --- Handlers ---
 
-  const handleFileUpload = useCallback((e) => {
-    const file = e.target.files?.[0];
+  // Upload constraints (kept in sync with server-side check in /api/generate)
+  const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+  const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+
+  const acceptFile = (file) => {
     if (!file) return;
+    if (!ACCEPTED_MIME.includes(file.type)) {
+      alert(`Формат ${file.type || 'unknown'} не поддерживается. Загрузите JPG, PNG или WebP.`);
+      return;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert(`Файл слишком большой: ${(file.size / 1024 / 1024).toFixed(1)} MB. Максимум — 10 MB.`);
+      return;
+    }
     setUploadedImage(file);
     const reader = new FileReader();
     reader.onload = (ev) => setImagePreview(ev.target.result);
     reader.readAsDataURL(file);
+  };
+
+  const handleFileUpload = useCallback((e) => {
+    acceptFile(e.target.files?.[0]);
+    e.target.value = ''; // allow re-uploading the same file
   }, []);
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (!file || !file.type.startsWith('image/')) return;
-    setUploadedImage(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setImagePreview(ev.target.result);
-    reader.readAsDataURL(file);
+    acceptFile(e.dataTransfer.files?.[0]);
   }, []);
 
   const buildFormData = (noteText) => {
@@ -455,7 +466,7 @@ export default function DashboardPage() {
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
           >
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} hidden />
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileUpload} hidden />
             {imagePreview ? (
               <img src={imagePreview} alt="Product" className={styles.uploadPreview} />
             ) : (
@@ -465,10 +476,14 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-          {imagePreview && (
+          {imagePreview ? (
             <button className={styles.linkBtn} onClick={() => { setUploadedImage(null); setImagePreview(null); }}>
               Удалить фото
             </button>
+          ) : (
+            <p style={{fontSize: 11, color: 'var(--text-muted, #888)', margin: '6px 0 0', textAlign: 'center'}}>
+              JPG, PNG или WebP • до 10 MB
+            </p>
           )}
 
           {/* Name */}
