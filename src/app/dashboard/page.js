@@ -163,11 +163,15 @@ export default function DashboardPage() {
     } catch { /* ignore */ }
   }, []);
 
-  // Persist workspace (keep last 20)
+  // Persist workspace (keep last 20). IMPORTANT: strip base64 data URLs — they blow up localStorage.
+  // Items without imageUrl (S3 upload failed) are transient and won't survive reload.
   useEffect(() => {
     try {
-      const trimmed = workspace.slice(-20);
-      localStorage.setItem('adgena-workspace', JSON.stringify(trimmed));
+      const persistable = workspace
+        .filter(w => w.imageUrl)
+        .slice(-20)
+        .map(w => ({ ...w, imageDataUrl: undefined }));
+      localStorage.setItem('adgena-workspace', JSON.stringify(persistable));
     } catch { /* quota exceeded — ignore */ }
   }, [workspace]);
 
@@ -756,7 +760,7 @@ export default function DashboardPage() {
                       onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'var(--accent-primary, #3b82f6)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
                     >
-                      <img src={item.imageDataUrl} alt={item.productName} style={{width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block'}} />
+                      <img src={item.imageUrl || item.imageDataUrl} alt={item.productName} style={{width: '100%', aspectRatio: '1/1', objectFit: 'cover', display: 'block'}} />
                       <div style={{padding: '8px 10px', fontSize: 12}}>
                         <div style={{fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.productName}</div>
                         <div style={{color: 'var(--text-secondary)', marginTop: 2, fontSize: 11}}>
@@ -801,7 +805,7 @@ export default function DashboardPage() {
                   }}
                 >✕ Новая генерация</button>
                 <div className={styles.resultImageWrap} onClick={() => setShowResult(true)}>
-                  <img src={generatedResult.imageDataUrl} alt="Generated" className={styles.resultImage} />
+                  <img src={generatedResult.imageUrl || generatedResult.imageDataUrl} alt="Generated" className={styles.resultImage} />
                 </div>
                 <button className={styles.btnPrimary} onClick={() => setShowResult(true)}>Открыть</button>
               </div>
@@ -820,12 +824,14 @@ export default function DashboardPage() {
             {/* Left: Image */}
             <div className={styles.modalLeft}>
               <div className={styles.modalImageWrap}>
-                <img src={generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
+                <img src={generatedResult.imageUrl || generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
               </div>
               <div className={styles.modalImageActions} style={{display: 'flex', gap: 8, flexWrap: 'wrap'}}>
                 <a
-                  href={generatedResult.imageDataUrl}
+                  href={generatedResult.imageUrl || generatedResult.imageDataUrl}
                   download={`adgena-${generatedResult.generationId || 'result'}.webp`}
+                  target={generatedResult.imageUrl ? '_blank' : undefined}
+                  rel={generatedResult.imageUrl ? 'noopener noreferrer' : undefined}
                   className={styles.downloadBtn}
                 >
                   Скачать

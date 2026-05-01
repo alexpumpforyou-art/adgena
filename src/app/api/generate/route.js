@@ -191,27 +191,27 @@ export async function POST(request) {
       }
     }
 
-    // Build data URL for client
-    const imageDataUrl = finalBuffer
-      ? `data:image/webp;base64,${finalBuffer.toString('base64')}`
-      : result.imageData;
-
-    // === UPLOAD TO R2 STORAGE ===
+    // === UPLOAD TO S3-COMPATIBLE STORAGE (Yandex / R2) ===
     let r2Url = null;
     try {
       const { uploadFile } = await import('@/lib/storage');
       const uploadBuffer = finalBuffer || rawBuffer;
       if (uploadBuffer) {
-        // Upload as WebP
         const r2Result = await uploadFile(uploadBuffer, 'image/webp', 'generations', 'webp');
         if (r2Result) {
           r2Url = r2Result.url;
-          console.log(`[Generate] R2 uploaded: ${r2Url}`);
+          console.log(`[Generate] S3 uploaded: ${r2Url}`);
         }
       }
     } catch (r2Err) {
-      console.error('[Generate] R2 upload error (non-fatal):', r2Err.message);
+      console.error('[Generate] S3 upload error (non-fatal):', r2Err.message);
     }
+
+    // Build transient data URL ONLY if S3 upload failed (fallback so client still renders something)
+    // Normal path: return only imageUrl to avoid shipping 3-5 MB base64 over the network.
+    const imageDataUrl = r2Url ? null : (finalBuffer
+      ? `data:image/webp;base64,${finalBuffer.toString('base64')}`
+      : result.imageData);
 
     // Update generation record
     if (user) {
