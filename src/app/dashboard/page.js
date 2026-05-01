@@ -2,6 +2,12 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import styles from './dashboard.module.css';
+import {
+  IconFire, IconDiamond, IconLeaf, IconSparkle, IconPhone,
+  IconSun, IconMoon, IconWand, IconLoader, IconDownload, IconRefresh,
+  IconShield, IconClock, IconTrafficLight, IconChart, IconWarning,
+  IconCamera, IconPalette, IconRocket, IconPlus,
+} from '@/components/Icons';
 
 // ========================================
 // DATA
@@ -76,11 +82,11 @@ const PHOTO_CONCEPTS = {
 };
 
 const AD_CONCEPTS = [
-  { id: 'ad-sale',    name: 'Яркий sale', desc: 'Акции, скидки, промо', icon: '🔥' },
-  { id: 'ad-premium', name: 'Премиум', desc: 'Дорого, сдержанно, брендово', icon: '💎' },
-  { id: 'ad-fresh',   name: 'Свежий', desc: 'Светлый, мягкий, lifestyle', icon: '🌿' },
-  { id: 'ad-minimal', name: 'Минималистичный', desc: 'Премиум стиль Apple/MUJI', icon: '✨' },
-  { id: 'ad-story',   name: 'Stories / Reels', desc: 'Вертикальный 9:16', icon: '📱' },
+  { id: 'ad-sale',    name: 'Яркий sale', desc: 'Акции, скидки, промо', icon: <IconFire size={22} /> },
+  { id: 'ad-premium', name: 'Премиум', desc: 'Дорого, сдержанно, брендово', icon: <IconDiamond size={22} /> },
+  { id: 'ad-fresh',   name: 'Свежий', desc: 'Светлый, мягкий, lifestyle', icon: <IconLeaf size={22} /> },
+  { id: 'ad-minimal', name: 'Минималистичный', desc: 'Премиум стиль Apple/MUJI', icon: <IconSparkle size={22} /> },
+  { id: 'ad-story',   name: 'Stories / Reels', desc: 'Вертикальный 9:16', icon: <IconPhone size={22} /> },
 ];
 
 const ASPECT_RATIOS = [
@@ -464,7 +470,7 @@ export default function DashboardPage() {
             );
           })()}
           <button className={styles.navBtn} onClick={toggleTheme}>
-            {theme === 'dark' ? '☀️' : '☽'}
+            {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
           </button>
           <button
             className={styles.navBtn}
@@ -504,7 +510,7 @@ export default function DashboardPage() {
               <img src={imagePreview} alt="Product" className={styles.uploadPreview} />
             ) : (
               <div className={styles.uploadPlaceholder}>
-                <span className={styles.uploadIcon}>+</span>
+                <span className={styles.uploadIcon}><IconPlus size={20} /></span>
                 <span className={styles.uploadText}>Загрузить фото</span>
               </div>
             )}
@@ -535,7 +541,7 @@ export default function DashboardPage() {
             onChange={(e) => { setCategory(e.target.value); setSelectedConcept(null); }}
           >
             {CATEGORIES.map(c => (
-              <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
           <span className={styles.fieldHint}>Категория влияет на стиль, палитру и подбор концепций</span>
@@ -594,7 +600,7 @@ export default function DashboardPage() {
                   disabled={aiSuggesting || !productName.trim()}
                   onClick={handleAiSuggest}
                 >
-                  {aiSuggesting ? '⏳' : '✨'} AI
+                  {aiSuggesting ? <IconLoader size={14} /> : <IconWand size={14} />} AI
                 </button>
               </div>
               <textarea
@@ -650,7 +656,7 @@ export default function DashboardPage() {
                   disabled={aiSuggesting || !productName.trim()}
                   onClick={handleAiSuggest}
                 >
-                  {aiSuggesting ? '⏳' : '✨'} AI
+                  {aiSuggesting ? <IconLoader size={14} /> : <IconWand size={14} />} AI
                 </button>
               </div>
               <input
@@ -829,7 +835,7 @@ export default function DashboardPage() {
             <div className={styles.emptyState} style={{paddingTop: total ? 24 : undefined}}>
               {total === 0 ? (
                 <>
-                  <div className={styles.emptyIcon}></div>
+                  <div className={styles.emptyIcon}><IconCamera size={48} /></div>
                   <h2>Ваши результаты</h2>
                   <p>Загрузите фото, выберите настройки и нажмите «Сгенерировать»</p>
                 </>
@@ -877,7 +883,7 @@ export default function DashboardPage() {
                                 }).catch(() => setToast('Не удалось загрузить изображение'));
                               }
                             }}
-                          >📥 Как input</button>
+                          ><IconDownload size={14} /> Как input</button>
                           <button
                             className={styles.galleryAction}
                             title="Создать похожее (использует те же настройки)"
@@ -890,7 +896,7 @@ export default function DashboardPage() {
                               if (item.aspectRatio) setAspectRatio(item.aspectRatio);
                               setToast('Настройки скопированы — загрузите фото и нажмите Сгенерировать');
                             }}
-                          >🔄 Похожее</button>
+                          ><IconRefresh size={14} /> Похожее</button>
                         </div>
                         {!item.fromHistory && (
                           <button
@@ -919,24 +925,24 @@ export default function DashboardPage() {
               <div className={styles.errorBlock}>
                 {(() => {
                   const err = generatedResult.error;
-                  let icon = '⚠️';
+                  let ErrorIcon = IconWarning;
                   let hint = null;
                   if (/safety|content.?policy|block|moderation/i.test(err)) {
-                    icon = '🛡️';
+                    ErrorIcon = IconShield;
                     hint = 'AI отклонил запрос по правилам безопасности. Попробуйте изменить пожелания или выбрать другую концепцию.';
                   } else if (/timeout|timed?.?out|ETIMEDOUT/i.test(err)) {
-                    icon = '⏱️';
+                    ErrorIcon = IconClock;
                     hint = 'Превышено время ожидания. Попробуйте ещё раз или выберите другой формат.';
                   } else if (/rate.?limit|429|too many/i.test(err)) {
-                    icon = '🚦';
+                    ErrorIcon = IconTrafficLight;
                     hint = 'Слишком много запросов. Подождите немного и попробуйте снова.';
                   } else if (/лимит|quota|403/i.test(err)) {
-                    icon = '📊';
+                    ErrorIcon = IconChart;
                     hint = 'Обновите тариф в профиле для продолжения.';
                   }
                   return (
                     <>
-                      <div style={{fontSize: 40, marginBottom: 8}}>{icon}</div>
+                      <div style={{marginBottom: 8, color: 'var(--text-tertiary)'}}><ErrorIcon size={40} /></div>
                       <p>{err}</p>
                       {hint && <p style={{fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4}}>{hint}</p>}
                     </>
@@ -1088,15 +1094,15 @@ export default function DashboardPage() {
             <h2 style={{margin: '0 0 20px', fontSize: 22, color: 'var(--text-primary)'}}>Добро пожаловать в AdGena!</h2>
             <div style={{display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left', fontSize: 14, color: 'var(--text-secondary)'}}>
               <div style={{display: 'flex', gap: 12, alignItems: 'flex-start'}}>
-                <span style={{fontSize: 28, lineHeight: 1, flexShrink: 0}}>📸</span>
+                <span style={{flexShrink: 0, color: 'var(--brand-primary)'}}><IconCamera size={28} /></span>
                 <div><strong style={{color: 'var(--text-primary)'}}>1. Загрузите фото товара</strong><br />JPG, PNG или WebP до 10 МБ. Чем лучше качество — тем красивее результат.</div>
               </div>
               <div style={{display: 'flex', gap: 12, alignItems: 'flex-start'}}>
-                <span style={{fontSize: 28, lineHeight: 1, flexShrink: 0}}>🎨</span>
+                <span style={{flexShrink: 0, color: 'var(--brand-primary)'}}><IconPalette size={28} /></span>
                 <div><strong style={{color: 'var(--text-primary)'}}>2. Выберите стиль</strong><br />Фото, карточка или реклама. Укажите категорию и концепцию — AI адаптирует палитру и композицию.</div>
               </div>
               <div style={{display: 'flex', gap: 12, alignItems: 'flex-start'}}>
-                <span style={{fontSize: 28, lineHeight: 1, flexShrink: 0}}>🚀</span>
+                <span style={{flexShrink: 0, color: 'var(--brand-primary)'}}><IconRocket size={28} /></span>
                 <div><strong style={{color: 'var(--text-primary)'}}>3. Генерируйте!</strong><br />Нажмите кнопку — через 30-60 секунд получите результат. Можно доработать или создать новый вариант.</div>
               </div>
             </div>

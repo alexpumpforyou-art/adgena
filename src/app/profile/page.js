@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './profile.module.css';
+import { IconCrown, IconShield, IconUser, IconMail } from '@/components/Icons';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -130,7 +131,7 @@ export default function ProfilePage() {
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>Роль</span>
               <span className={styles.infoValue}>
-                {user.role === 'admin' ? '👑 Админ' : user.role === 'support' ? '🛡️ Саппорт' : '👤 Пользователь'}
+                {user.role === 'admin' ? <><IconCrown size={14} /> Админ</> : user.role === 'support' ? <><IconShield size={14} /> Саппорт</> : <><IconUser size={14} /> Пользователь</>}
               </span>
             </div>
           </div>
@@ -143,7 +144,7 @@ export default function ProfilePage() {
               className={styles.feedbackBtn}
               onClick={() => { setShowTicketForm(!showTicketForm); setTicketSuccess(''); }}
             >
-              ✉️ Создать тикет
+              <IconMail size={14} /> Создать тикет
             </button>
 
             {ticketSuccess && <p className={styles.successMsg}>{ticketSuccess}</p>}

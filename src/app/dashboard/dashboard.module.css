@@ -379,7 +379,7 @@
   background: rgba(var(--brand-rgb, 99,102,241), 0.08);
 }
 
-.conceptIcon { font-size: 24px; flex-shrink: 0; }
+.conceptIcon { flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; }
 
 .conceptText { display: flex; flex-direction: column; gap: 2px; }
 .conceptName { font-size: 14px; font-weight: 600; color: var(--text-primary); }
@@ -503,7 +503,7 @@
 }
 .emptyState h2 { font-size: 20px; color: var(--text-secondary); margin: 0; }
 .emptyState p { font-size: 14px; margin: 0; }
-.emptyIcon { font-size: 64px; margin-bottom: 8px; opacity: 0.4; }
+.emptyIcon { margin-bottom: 8px; opacity: 0.3; color: var(--text-tertiary); }
 
 .loadingPulse { animation: pulse 1.5s ease-in-out infinite; }
 @keyframes pulse {
