@@ -33,7 +33,7 @@ export async function GET(request) {
   const sampleBullets = ['качество', 'натуральный состав', 'быстрый эффект'];
 
   const photoConcepts = ['on-model', 'in-store', 'flat-lay', 'studio', 'in-use', 'in-context', 'close-up', 'in-interior', 'texture', 'plated'];
-  const adConcepts = ['ad-sale', 'ad-minimal', 'ad-story'];
+  const adConcepts = ['ad-sale', 'ad-premium', 'ad-fresh', 'ad-minimal', 'ad-story'];
   const cardStyles = ['classic', 'premium'];
 
   const prompts = {
@@ -78,7 +78,7 @@ export async function GET(request) {
     try {
       const promptFn = AD_PROMPTS[adId];
       if (typeof promptFn === 'function') {
-        prompts.ads[adId] = promptFn(sampleProduct, 'Заголовок', 'Купить', 'ru');
+        prompts.ads[adId] = promptFn(sampleProduct, 'Заголовок', 'Купить', 'ru', { category: 'beauty', price: '990₽', showButton: true });
       }
     } catch { /* skip */ }
   }
