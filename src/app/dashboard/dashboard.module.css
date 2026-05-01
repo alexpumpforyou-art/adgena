@@ -651,10 +651,50 @@
 /* ========================================
    RESPONSIVE
    ======================================== */
-@media (max-width: 768px) {
+
+/* Tablet: stack panels below 960px (two columns were too cramped otherwise) */
+@media (max-width: 960px) {
   .page { grid-template-columns: 1fr; }
-  .leftPanel { max-height: none; position: relative; border-right: none; border-bottom: 1px solid var(--border-primary); }
-  .rightPanel { min-height: 50vh; padding: 24px 16px; }
-  .resultModalContent { grid-template-columns: 1fr; max-height: 95vh; }
-  .modalRight { max-height: 40vh; }
+  .leftPanel {
+    max-height: none;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid var(--border-primary);
+    padding: 20px 16px;
+  }
+  .rightPanel { min-height: 60vh; padding: 24px 16px; }
+  .resultModalContent { grid-template-columns: 1fr; max-height: 95vh; overflow-y: auto; }
+  .modalLeft { max-height: 55vh; }
+  .modalImage { max-height: 50vh; }
+  .modalRight { max-height: 40vh; border-left: none; border-top: 1px solid var(--border-primary); }
+}
+
+/* Phone: tighten spacing + ensure touch targets are ≥44px */
+@media (max-width: 600px) {
+  .navbar { padding: 0 12px; height: 48px; }
+  .navLeft { gap: 8px; }
+  .navRight { gap: 6px; }
+  .navBtn { padding: 6px 10px; font-size: 12px; min-height: 36px; }
+  .logo { font-size: 15px; }
+
+  .leftPanel { padding: 16px 12px; gap: 14px; }
+  .rightPanel { padding: 16px 10px; min-height: 50vh; }
+
+  .uploadZone { max-height: 200px; }
+  .input, .textarea { font-size: 16px; /* prevents iOS zoom-on-focus */ }
+  .generateBtn { font-size: 15px; padding: 14px; min-height: 48px; }
+
+  /* Concept / tab buttons: bigger hit area */
+  .tabBtn { padding: 10px 8px; min-height: 40px; }
+  .conceptItem { padding: 12px; }
+  .ratioBtn { min-width: 64px; padding: 8px 10px; min-height: 56px; }
+
+  /* History panel takes full width on narrow phones */
+  .historyPanel { width: 100%; }
+
+  /* Modal: close button larger & offset safer */
+  .modalClose { width: 40px; height: 40px; top: 8px; right: 8px; }
+  .modalImageActions { flex-wrap: wrap; padding: 10px 14px; }
+  .downloadBtn { flex: 1 1 100%; margin-left: 0; }
+  .modalRight { padding: 16px 14px; max-height: 45vh; }
 }
