@@ -485,12 +485,14 @@ export default function AdminPage() {
             {/* Storage */}
             <div className={styles.infraCard}>
               <h3 className={styles.infraTitle}>📦 Хранилище файлов</h3>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Текущее</span><span className={styles.infraVal}>Cloudflare R2 (bucket: adgena-files)</span></div>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Public URL</span><span className={styles.infraVal}>files.adgena.pro (CF custom domain)</span></div>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Запланировано</span><span className={styles.infraVal}>⚠️ Миграция на Yandex Object Storage</span></div>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Yandex bucket</span><span className={styles.infraVal}>adgena-files (создан, не подключён)</span></div>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Yandex URL</span><span className={styles.infraVal}>storage.yandexcloud.net/adgena-files</span></div>
-              <div className={styles.infraNote}>⏳ TODO: Создать сервисный аккаунт + ключ в Yandex Cloud, прописать STORAGE_PROVIDER=yandex и S3_* переменные в Railway</div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Активный провайдер</span><span className={styles.infraVal}>✅ Yandex Object Storage</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Bucket</span><span className={styles.infraVal}>adgena-files</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Endpoint</span><span className={styles.infraVal}>storage.yandexcloud.net</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Public URL</span><span className={styles.infraVal}>storage.yandexcloud.net/adgena-files</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Регион</span><span className={styles.infraVal}>ru-central1</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Env-переменные</span><span className={styles.infraVal}>STORAGE_PROVIDER, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET, S3_PUBLIC_URL</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Старое (R2)</span><span className={styles.infraVal}>Cloudflare R2 — переменные R2_* остались как fallback, не активны</span></div>
+              <div className={styles.infraNote}>💡 Картинки в API-ответе приходят как data:base64 (для скорости рендера), параллельно грузятся в Yandex и URL пишется в БД (image_output_path)</div>
             </div>
 
             {/* Database */}
