@@ -83,8 +83,17 @@ export async function DELETE(request) {
     const db = require('@/lib/db').default;
     const d = db();
 
+    // Delete all related data respecting FK constraints
     d.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
     d.prepare('DELETE FROM generations WHERE user_id = ?').run(userId);
+    const ticketIds = d.prepare('SELECT id FROM tickets WHERE user_id = ?').all(userId).map(t => t.id);
+    for (const tid of ticketIds) {
+      d.prepare('DELETE FROM ticket_messages WHERE ticket_id = ?').run(tid);
+    }
+    d.prepare('DELETE FROM tickets WHERE user_id = ?').run(userId);
+    d.prepare('DELETE FROM subscriptions WHERE user_id = ?').run(userId);
+    d.prepare('DELETE FROM payments WHERE user_id = ?').run(userId);
+    d.prepare('DELETE FROM consents WHERE user_id = ?').run(userId);
     d.prepare('DELETE FROM users WHERE id = ?').run(userId);
 
     return NextResponse.json({ success: true });
