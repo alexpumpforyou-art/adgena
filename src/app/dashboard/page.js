@@ -305,7 +305,7 @@ export default function DashboardPage() {
     acceptFile(e.dataTransfer.files?.[0]);
   }, []);
 
-  const buildFormData = (noteText) => {
+  const buildFormData = (noteText, overrides = {}) => {
     const fd = new FormData();
     fd.append('image', uploadedImage);
     fd.append('templateId', selectedConcept || 'infographic');
@@ -316,14 +316,14 @@ export default function DashboardPage() {
     fd.append('wishes', noteText || wishes);
     fd.append('aspectRatio', aspectRatio);
     if (tab === 'card') {
-      fd.append('cardText', cardText);
+      fd.append('cardText', overrides.cardText ?? cardText);
       fd.append('cardStyle', cardStyle);
       fd.append('creativity', creativity.toString());
     }
     if (tab === 'ads') {
-      fd.append('headline', adHeadline);
-      fd.append('cta', adCta);
-      fd.append('price', adPrice);
+      fd.append('headline', overrides.headline ?? adHeadline);
+      fd.append('cta', overrides.cta ?? adCta);
+      fd.append('price', overrides.price ?? adPrice);
       fd.append('showButton', adShowButton ? 'true' : 'false');
     }
     return fd;
@@ -373,24 +373,28 @@ export default function DashboardPage() {
 
   const confirmTextAndGenerate = () => {
     setShowTextPreview(false);
+    let overrides = {};
     if (previewTexts.noText) {
-      // Clear all text fields so prompt generates without text
-      if (tab === 'ads') { setAdHeadline('__NOTEXT__'); setAdCta(''); setAdPrice(''); }
-      if (tab === 'card') { setCardText('__NOTEXT__'); }
+      overrides = { headline: '__NOTEXT__', cta: '', price: '', cardText: '__NOTEXT__' };
     } else {
-      if (tab === 'ads') { setAdHeadline(previewTexts.headline); setAdCta(previewTexts.cta); setAdPrice(previewTexts.price); }
-      if (tab === 'card') { setCardText(previewTexts.cardText); }
+      if (tab === 'ads') {
+        overrides = { headline: previewTexts.headline, cta: previewTexts.cta, price: previewTexts.price };
+        setAdHeadline(previewTexts.headline); setAdCta(previewTexts.cta); setAdPrice(previewTexts.price);
+      }
+      if (tab === 'card') {
+        overrides = { cardText: previewTexts.cardText };
+        setCardText(previewTexts.cardText);
+      }
     }
-    // Small delay to let state update
-    setTimeout(() => handleGenerate(), 50);
+    handleGenerate(null, overrides);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (noteTextOverride, formOverrides) => {
     if (!canGenerate) return;
     setGenerating(true);
     setGeneratedResult(null);
     try {
-      const res = await fetch('/api/generate', { method: 'POST', body: buildFormData() });
+      const res = await fetch('/api/generate', { method: 'POST', body: buildFormData(noteTextOverride, formOverrides) });
       const data = await res.json();
       if (data.success) {
         addToWorkspace(data);
