@@ -1,19 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
+import { PLANS } from '@/lib/plans';
 import crypto from 'crypto';
-
-const PLANS = {
-  lite:     { price: 390,  name: 'Лайт — 10 генераций', limit: 10 },
-  standard: { price: 990,  name: 'Стандарт — 30 генераций', limit: 30 },
-  pro:      { price: 2490, name: 'Про — 80 генераций', limit: 80 },
-  business: { price: 4990, name: 'Бизнес — 200 генераций', limit: 200 },
-};
 
 export async function GET(request) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      // Not logged in — redirect to auth with plan in query (will redirect back after login)
       const { searchParams } = new URL(request.url);
       const planId = searchParams.get('plan');
       return NextResponse.redirect(new URL(`/auth?redirect=/api/robokassa/checkout?plan=${planId}`, request.url));
@@ -36,36 +29,46 @@ export async function GET(request) {
       return NextResponse.redirect(new URL('/?error=payment_not_configured', request.url));
     }
 
-    // Unique invoice ID
     const invId = Math.floor(Date.now() / 1000);
     const outSum = plan.price.toFixed(2);
 
-    // Shp_ params (must be sorted alphabetically in signature)
+    // 54-FZ Receipt
+    const receipt = JSON.stringify({
+      items: [{
+        name: `Подписка Adgena «${plan.name}» (${plan.description})`,
+        quantity: 1,
+        sum: plan.price,
+        payment_method: 'full_payment',
+        payment_object: 'service',
+        tax: 'none',
+      }],
+    });
+    const receiptEncoded = encodeURIComponent(receipt);
+
+    // Shp_ params (sorted alphabetically for signature)
     const shpParams = {
       'Shp_planId': planId,
       'Shp_userId': user.id,
     };
-
-    // Sort Shp_ keys alphabetically
     const shpStr = Object.keys(shpParams)
       .sort()
       .map(k => `${k}=${shpParams[k]}`)
       .join(':');
 
-    // Signature: MerchantLogin:OutSum:InvId:Password1:Shp_...
-    const sigSource = `${merchantLogin}:${outSum}:${invId}:${password1}:${shpStr}`;
+    // Signature: MerchantLogin:OutSum:InvId:Receipt:Password1:Shp_...
+    const sigSource = `${merchantLogin}:${outSum}:${invId}:${receiptEncoded}:${password1}:${shpStr}`;
     const signature = crypto.createHash('md5').update(sigSource).digest('hex');
 
-    // Build Robokassa payment URL
     const params = new URLSearchParams({
       MerchantLogin: merchantLogin,
       OutSum: outSum,
       InvId: invId.toString(),
-      Description: plan.name,
+      Description: `Подписка Adgena «${plan.name}»`,
       SignatureValue: signature,
+      Receipt: receiptEncoded,
+      Email: user.email,
       Culture: 'ru',
       Encoding: 'utf-8',
-      // Enable recurring (subscription) — user agrees to future auto-charges
       Recurring: 'true',
       ...shpParams,
     });
@@ -75,7 +78,6 @@ export async function GET(request) {
     }
 
     const paymentUrl = `https://auth.robokassa.ru/Merchant/Index.aspx?${params.toString()}`;
-
     console.log(`[Robokassa] Checkout: user=${user.email}, plan=${planId}, sum=${outSum}, invId=${invId}, recurring=true`);
 
     return NextResponse.redirect(paymentUrl);

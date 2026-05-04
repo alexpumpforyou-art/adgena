@@ -175,8 +175,6 @@ export default function DashboardPage() {
       const ws = JSON.parse(localStorage.getItem('adgena-workspace') || '[]');
       if (Array.isArray(ws) && ws.length) setWorkspace(ws);
     } catch { /* ignore */ }
-    // Onboarding: show tour if first visit
-    if (!localStorage.getItem('adgena-onboarded')) setShowOnboarding(true);
   }, []);
 
   // Persist workspace (keep last 20). IMPORTANT: strip base64 data URLs — they blow up localStorage.
@@ -1085,7 +1083,7 @@ export default function DashboardPage() {
 
       {/* ONBOARDING TOUR */}
       {showOnboarding && (
-        <div className={styles.resultModal} onClick={() => { setShowOnboarding(false); localStorage.setItem('adgena-onboarded', '1'); }}>
+        <div className={styles.resultModal} onClick={() => { setShowOnboarding(false); fetch('/api/auth/onboarded', { method: 'POST' }).catch(() => {}); }}>
           <div
             className={styles.resultModalContent}
             style={{maxWidth: 520, gridTemplateColumns: '1fr', padding: 32, textAlign: 'center', cursor: 'default'}}
@@ -1109,7 +1107,7 @@ export default function DashboardPage() {
             <button
               className={styles.btnPrimary}
               style={{marginTop: 24, alignSelf: 'center', padding: '12px 32px'}}
-              onClick={() => { setShowOnboarding(false); localStorage.setItem('adgena-onboarded', '1'); }}
+              onClick={() => { setShowOnboarding(false); fetch('/api/auth/onboarded', { method: 'POST' }).catch(() => {}); }}
             >
               Начать работу
             </button>

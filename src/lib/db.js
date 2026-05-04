@@ -46,6 +46,7 @@ function initTables() {
       plan TEXT DEFAULT 'free',
       generations_used INTEGER DEFAULT 0,
       generations_limit INTEGER DEFAULT 1,
+      onboarded INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
@@ -172,6 +173,10 @@ function initTables() {
 
   try { d.prepare("SELECT subscription_inv_id FROM users LIMIT 1").get(); }
   catch { d.exec("ALTER TABLE users ADD COLUMN subscription_inv_id TEXT DEFAULT NULL"); }
+
+  // Migrate: add onboarded column if missing
+  try { d.prepare("SELECT onboarded FROM users LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE users ADD COLUMN onboarded INTEGER DEFAULT 0"); }
 }
 
 // ========================================
@@ -206,7 +211,7 @@ export function getUserByEmail(email) {
 
 export function getUserById(id) {
   const d = getDb();
-  return d.prepare('SELECT id, email, name, role, plan, generations_used, generations_limit, created_at FROM users WHERE id = ?').get(id);
+  return d.prepare('SELECT id, email, name, role, plan, generations_used, generations_limit, onboarded, created_at FROM users WHERE id = ?').get(id);
 }
 
 export function verifyPassword(plainPassword, hash) {
@@ -215,9 +220,9 @@ export function verifyPassword(plainPassword, hash) {
 
 export function updateUserPlan(userId, plan) {
   const d = getDb();
-  const limits = { free: 1, lite: 10, standard: 30, pro: 80, business: 200 };
+  const { getPlanLimit } = require('@/lib/plans');
   d.prepare('UPDATE users SET plan = ?, generations_limit = ?, updated_at = datetime(\'now\') WHERE id = ?')
-    .run(plan, limits[plan] || 5, userId);
+    .run(plan, getPlanLimit(plan), userId);
 }
 
 export function incrementGenerations(userId) {
@@ -240,6 +245,11 @@ export function canGenerate(userId) {
 export function setUserRole(userId, role) {
   const d = getDb();
   d.prepare("UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?").run(role, userId);
+}
+
+export function setOnboarded(userId) {
+  const d = getDb();
+  d.prepare("UPDATE users SET onboarded = 1, updated_at = datetime('now') WHERE id = ?").run(userId);
 }
 
 // ========================================

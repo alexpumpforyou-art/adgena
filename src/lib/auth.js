@@ -55,6 +55,7 @@ export async function getCurrentUser() {
       plan: user.plan,
       generations_used: user.generations_used,
       generations_limit: user.generations_limit,
+      onboarded: !!user.onboarded,
       created_at: user.created_at,
     };
   } catch {

@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
+import { PLANS } from '@/lib/plans';
 import crypto from 'crypto';
-
-const PLANS = {
-  lite:     { price: 390,  limit: 10 },
-  standard: { price: 990,  limit: 30 },
-  pro:      { price: 2490, limit: 80 },
-  business: { price: 4990, limit: 200 },
-};
 
 function verifySignature(outSum, invId, password2, shpParams) {
   const shpStr = Object.keys(shpParams)
@@ -89,7 +83,7 @@ async function processResult(params) {
 
     const plan = PLANS[planId];
 
-    // Update user plan + reset generations + save subscription reference
+    // Update user plan + reset generations counter
     d.prepare(`
       UPDATE users 
       SET plan = ?, generations_limit = ?, generations_used = 0, 
@@ -98,30 +92,36 @@ async function processResult(params) {
       WHERE id = ?
     `).run(planId, plan.limit, planId, invId, userId);
 
-    // Create/update subscription record for recurring billing
+    // Check if this is a recurring charge (subscription already exists for this user)
     const existingSub = d.prepare('SELECT id FROM subscriptions WHERE user_id = ? AND status = ?').get(userId, 'active');
-    if (existingSub) {
-      // Cancel old subscription
-      d.prepare("UPDATE subscriptions SET status = 'cancelled', updated_at = datetime('now') WHERE id = ?").run(existingSub.id);
-    }
+    const isRecurring = !!existingSub;
 
-    // Create new subscription (next charge = 30 days from now)
-    d.prepare(`
-      INSERT INTO subscriptions (id, user_id, plan, amount, initial_inv_id, status, next_charge_at)
-      VALUES (?, ?, ?, ?, ?, 'active', datetime('now', '+30 days'))
-    `).run(crypto.randomUUID(), userId, planId, parseFloat(outSum), invId);
+    if (existingSub) {
+      // Recurring charge — update next_charge_at and refresh the inv_id
+      d.prepare(`
+        UPDATE subscriptions 
+        SET next_charge_at = datetime('now', '+30 days'), initial_inv_id = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).run(invId, existingSub.id);
+    } else {
+      // First payment — create new subscription (next charge in 30 days)
+      d.prepare(`
+        INSERT INTO subscriptions (id, user_id, plan, amount, initial_inv_id, status, next_charge_at)
+        VALUES (?, ?, ?, ?, ?, 'active', datetime('now', '+30 days'))
+      `).run(crypto.randomUUID(), userId, planId, parseFloat(outSum), invId);
+    }
 
     // Log payment
     try {
       d.prepare(`
         INSERT INTO payments (id, user_id, inv_id, plan, amount, is_recurring) 
-        VALUES (?, ?, ?, ?, ?, 0)
-      `).run(crypto.randomUUID(), userId, invId, planId, parseFloat(outSum));
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(crypto.randomUUID(), userId, invId, planId, parseFloat(outSum), isRecurring ? 1 : 0);
     } catch (logErr) {
       console.error('[Robokassa Result] Payment log error:', logErr.message);
     }
 
-    console.log(`[Robokassa Result] SUCCESS — User ${userId} upgraded to ${planId}, subscription created (next charge in 30 days)`);
+    console.log(`[Robokassa Result] SUCCESS — User ${userId} ${isRecurring ? 'renewed' : 'upgraded to'} ${planId}, next charge in 30 days`);
   } catch (dbErr) {
     console.error('[Robokassa Result] DB error:', dbErr.message);
   }

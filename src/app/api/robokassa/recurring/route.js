@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { PLANS } from '@/lib/plans';
 import crypto from 'crypto';
 
 /**
@@ -8,21 +9,14 @@ import crypto from 'crypto';
  * Flow:
  * 1. Find all active subscriptions where next_charge_at <= now
  * 2. For each, send a POST to Robokassa's recurring endpoint with PreviousInvoiceID
- * 3. If Robokassa accepts, the actual charge result comes via the normal Result URL callback
+ * 3. Robokassa charges the card and sends result to the normal Result URL callback
+ * 4. Result callback updates plan, resets generations, extends next_charge_at
  */
-
-const PLANS = {
-  lite:     { price: 390,  limit: 10 },
-  standard: { price: 990,  limit: 30 },
-  pro:      { price: 2490, limit: 80 },
-  business: { price: 4990, limit: 200 },
-};
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get('secret');
 
-  // Simple auth to prevent unauthorized access
   const cronSecret = process.env.CRON_SECRET || 'adgena_cron_2026';
   if (secret !== cronSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -40,7 +34,7 @@ export async function GET(request) {
     const db = require('@/lib/db').default;
     const d = db();
 
-    // Find subscriptions that need to be charged
+    // Find subscriptions due for charge
     const dueSubscriptions = d.prepare(`
       SELECT s.*, u.email, u.name
       FROM subscriptions s
@@ -55,35 +49,47 @@ export async function GET(request) {
     for (const sub of dueSubscriptions) {
       const plan = PLANS[sub.plan];
       if (!plan) {
-        console.error(`[Recurring] Unknown plan: ${sub.plan}`);
+        console.error(`[Recurring] Unknown plan: ${sub.plan}, skipping`);
         continue;
       }
 
       const newInvId = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000);
       const outSum = plan.price.toFixed(2);
 
+      // 54-FZ Receipt (required for recurring too)
+      const receipt = JSON.stringify({
+        items: [{
+          name: `Подписка Adgena «${plan.name}» (${plan.description})`,
+          quantity: 1,
+          sum: plan.price,
+          payment_method: 'full_payment',
+          payment_object: 'service',
+          tax: 'none',
+        }],
+      });
+      const receiptEncoded = encodeURIComponent(receipt);
+
       // Shp_ params for the recurring charge
       const shpParams = {
         'Shp_planId': sub.plan,
         'Shp_userId': sub.user_id,
       };
-
       const shpStr = Object.keys(shpParams)
         .sort()
         .map(k => `${k}=${shpParams[k]}`)
         .join(':');
 
-      // Signature for recurring: MerchantLogin:OutSum:InvId:Password1:Shp_...
-      // Note: PreviousInvoiceID is NOT included in signature calculation
-      const sigSource = `${merchantLogin}:${outSum}:${newInvId}:${password1}:${shpStr}`;
+      // Signature: MerchantLogin:OutSum:InvId:Receipt:Password1:Shp_...
+      const sigSource = `${merchantLogin}:${outSum}:${newInvId}:${receiptEncoded}:${password1}:${shpStr}`;
       const signature = crypto.createHash('md5').update(sigSource).digest('hex');
 
       const params = new URLSearchParams({
         MerchantLogin: merchantLogin,
         OutSum: outSum,
         InvId: newInvId.toString(),
-        Description: `Подписка Adgena: ${sub.plan}`,
+        Description: `Подписка Adgena «${plan.name}» (продление)`,
         SignatureValue: signature,
+        Receipt: receiptEncoded,
         PreviousInvoiceID: sub.initial_inv_id,
         ...shpParams,
       });
@@ -106,32 +112,19 @@ export async function GET(request) {
         const responseText = await res.text();
         console.log(`[Recurring] Robokassa response for ${sub.user_id}: status=${res.status}, body=${responseText.slice(0, 200)}`);
 
-        if (res.ok) {
-          // Update next charge date (+30 days) only on success
-          d.prepare(`
-            UPDATE subscriptions 
-            SET next_charge_at = datetime('now', '+30 days'), updated_at = datetime('now')
-            WHERE id = ?
-          `).run(sub.id);
+        // Note: we do NOT update next_charge_at here — the Result callback handles that
+        // after Robokassa confirms the charge was successful
+        results.push({
+          userId: sub.user_id,
+          email: sub.email,
+          plan: sub.plan,
+          invId: newInvId,
+          status: res.ok ? 'sent' : 'rejected',
+          response: responseText.slice(0, 200),
+        });
 
-          results.push({
-            userId: sub.user_id,
-            email: sub.email,
-            plan: sub.plan,
-            invId: newInvId,
-            status: 'sent',
-            response: responseText.slice(0, 200),
-          });
-        } else {
+        if (!res.ok) {
           console.error(`[Recurring] Robokassa rejected charge for ${sub.user_id}: ${res.status}`);
-          results.push({
-            userId: sub.user_id,
-            email: sub.email,
-            plan: sub.plan,
-            invId: newInvId,
-            status: 'rejected',
-            response: responseText.slice(0, 200),
-          });
         }
       } catch (reqErr) {
         console.error(`[Recurring] Request error for ${sub.user_id}:`, reqErr.message);
