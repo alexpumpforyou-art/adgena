@@ -211,6 +211,12 @@ function initTables() {
   catch { d.exec("ALTER TABLE users ADD COLUMN referred_by TEXT"); }
   try { d.prepare("SELECT referral_balance FROM users LIMIT 1").get(); }
   catch { d.exec("ALTER TABLE users ADD COLUMN referral_balance REAL DEFAULT 0"); }
+
+  // Data fix: sync generations_limit for paid plans that still have limit=1
+  const planLimits = { lite: 10, standard: 30, pro: 80, business: 200 };
+  for (const [plan, limit] of Object.entries(planLimits)) {
+    d.prepare("UPDATE users SET generations_limit = ? WHERE plan = ? AND generations_limit < ?").run(limit, plan, limit);
+  }
 }
 
 // ========================================
