@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && node -e \"const fs=require('fs');function cpR(s,d){if(!fs.existsSync(s))return;fs.mkdirSync(d,{recursive:true});for(const f of fs.readdirSync(s)){const sp=s+'/'+f,dp=d+'/'+f;fs.statSync(sp).isDirectory()?cpR(sp,dp):fs.copyFileSync(sp,dp)}}cpR('public','.next/standalone/public');cpR('.next/static','.next/standalone/.next/static')\"",
-    "start": "HOSTNAME=0.0.0.0 node .next/standalone/server.js"
+    "start": "node start.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1038.0",
