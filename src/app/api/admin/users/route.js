@@ -94,6 +94,8 @@ export async function DELETE(request) {
     d.prepare('DELETE FROM subscriptions WHERE user_id = ?').run(userId);
     d.prepare('DELETE FROM payments WHERE user_id = ?').run(userId);
     d.prepare('DELETE FROM consents WHERE user_id = ?').run(userId);
+    d.prepare('DELETE FROM referral_rewards WHERE referrer_id = ? OR referred_id = ?').run(userId, userId);
+    d.prepare('DELETE FROM referral_withdrawals WHERE user_id = ?').run(userId);
     d.prepare('DELETE FROM users WHERE id = ?').run(userId);
 
     return NextResponse.json({ success: true });

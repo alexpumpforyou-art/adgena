@@ -39,6 +39,9 @@ export default function AdminPage() {
   const [quotas, setQuotas] = useState(null);
   const [quotasLoading, setQuotasLoading] = useState(false);
 
+  // Withdrawals
+  const [withdrawals, setWithdrawals] = useState([]);
+
   const loadQuotas = async () => {
     setQuotasLoading(true);
     try {
@@ -84,6 +87,14 @@ export default function AdminPage() {
     } catch { /* ignore */ }
   };
 
+  const loadWithdrawals = async () => {
+    try {
+      const res = await fetch('/api/admin/withdrawals');
+      const data = await res.json();
+      if (data.withdrawals) setWithdrawals(data.withdrawals);
+    } catch { /* ignore */ }
+  };
+
   const handleSavePrompt = async (key) => {
     setSavingPrompt(true);
     try {
@@ -104,6 +115,7 @@ export default function AdminPage() {
     if (activeTab === 'tickets' && tickets.length === 0) loadTickets();
     if (activeTab === 'prompts' && !prompts) loadPrompts();
     if (activeTab === 'quotas' && !quotas) loadQuotas();
+    if (activeTab === 'withdrawals' && withdrawals.length === 0) loadWithdrawals();
   }, [activeTab]);
 
   const handleUpdateUser = async (userId) => {
@@ -243,6 +255,9 @@ export default function AdminPage() {
         </button>
         <button className={`${styles.tab} ${activeTab === 'quotas' ? styles.tabActive : ''}`} onClick={() => setActiveTab('quotas')}>
           📊 Лимиты
+        </button>
+        <button className={`${styles.tab} ${activeTab === 'withdrawals' ? styles.tabActive : ''}`} onClick={() => setActiveTab('withdrawals')}>
+          💳 Выводы {withdrawals.filter(w => w.status === 'pending').length > 0 && <span className={styles.tabBadge}>{withdrawals.filter(w => w.status === 'pending').length}</span>}
         </button>
         <button className={`${styles.tab} ${activeTab === 'infra' ? styles.tabActive : ''}`} onClick={() => setActiveTab('infra')}>
           🏗️ Инфраструктура
@@ -562,6 +577,65 @@ export default function AdminPage() {
                 <div className={styles.infraRow}><span className={styles.infraKey}>Cloudflare</span><a href="https://dash.cloudflare.com" target="_blank" rel="noreferrer" className={styles.infraLink}>dash.cloudflare.com →</a></div>
                 <div className={styles.infraNote}>💡 На Этапе 2 подтянем эти цифры сюда автоматически через их API</div>
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ===== TAB: WITHDRAWALS ===== */}
+      {activeTab === 'withdrawals' && (
+        <div className={styles.promptsSection}>
+          <h2 className={styles.sectionTitle}>Заявки на вывод</h2>
+          {withdrawals.length === 0 ? (
+            <p style={{ color: '#9ca3af', textAlign: 'center', padding: 20 }}>Нет заявок</p>
+          ) : (
+            <div className={styles.ticketsList}>
+              {withdrawals.map(w => (
+                <div key={w.id} className={styles.ticketCard} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                      {w.email} — <span style={{ color: '#f97316' }}>{w.amount} ₽</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                      Карта: {w.card_info} | {new Date(w.created_at).toLocaleString('ru-RU')}
+                    </div>
+                    {w.admin_note && <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>Заметка: {w.admin_note}</div>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {w.status === 'pending' ? (
+                      <>
+                        <button
+                          className={styles.modalSave}
+                          onClick={async () => {
+                            await fetch('/api/admin/withdrawals', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ withdrawalId: w.id, status: 'completed' }),
+                            });
+                            loadWithdrawals();
+                          }}
+                        >Выплачено</button>
+                        <button
+                          className={styles.modalCancel}
+                          onClick={async () => {
+                            const note = prompt('Причина отклонения:');
+                            await fetch('/api/admin/withdrawals', {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ withdrawalId: w.id, status: 'rejected', adminNote: note }),
+                            });
+                            loadWithdrawals();
+                          }}
+                        >Отклонить</button>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 12, fontWeight: 600, color: w.status === 'completed' ? '#22c55e' : '#ef4444' }}>
+                        {w.status === 'completed' ? '✅ Выплачено' : '❌ Отклонено'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
