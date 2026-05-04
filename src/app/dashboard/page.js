@@ -891,7 +891,7 @@ export default function DashboardPage() {
                         <div style={{padding: '8px 10px', fontSize: 12}}>
                           <div style={{fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.productName}</div>
                           <div style={{color: 'var(--text-secondary)', marginTop: 2, fontSize: 11}}>
-                            {item.type}{item.aspectRatio ? ` • ${item.aspectRatio}` : ''}
+                            {{ photo: 'фото', card: 'карточка', ads: 'реклама' }[item.type] || item.type}{item.aspectRatio ? ` • ${item.aspectRatio}` : ''}
                             {item.fromHistory ? ' • история' : ''}
                           </div>
                         </div>
@@ -904,14 +904,28 @@ export default function DashboardPage() {
                               e.stopPropagation();
                               const url = item.imageUrl || item.imageDataUrl;
                               if (url) {
-                                fetch(url).then(r => r.blob()).then(blob => {
-                                  const file = new File([blob], 'reuse.webp', { type: blob.type || 'image/webp' });
-                                  acceptFile(file);
-                                  setToast('Изображение загружено как входное фото');
-                                }).catch(() => setToast('Не удалось загрузить изображение'));
+                                const img = new Image();
+                                img.crossOrigin = 'anonymous';
+                                img.onload = () => {
+                                  const canvas = document.createElement('canvas');
+                                  canvas.width = img.naturalWidth;
+                                  canvas.height = img.naturalHeight;
+                                  canvas.getContext('2d').drawImage(img, 0, 0);
+                                  canvas.toBlob(blob => {
+                                    if (blob) {
+                                      const file = new File([blob], 'reuse.webp', { type: 'image/webp' });
+                                      acceptFile(file);
+                                      setToast('Изображение загружено как исходное');
+                                    } else {
+                                      setToast('Не удалось загрузить изображение');
+                                    }
+                                  }, 'image/webp');
+                                };
+                                img.onerror = () => setToast('Не удалось загрузить изображение');
+                                img.src = url;
                               }
                             }}
-                          ><IconDownload size={14} /> Как input</button>
+                          ><IconDownload size={14} /> Как исходное</button>
                           <button
                             className={styles.galleryAction}
                             title="Создать похожее (использует те же настройки)"
@@ -924,7 +938,7 @@ export default function DashboardPage() {
                               if (item.aspectRatio) setAspectRatio(item.aspectRatio);
                               setToast('Настройки скопированы — загрузите фото и нажмите Сгенерировать');
                             }}
-                          ><IconRefresh size={14} /> Похожее</button>
+                          ><IconRefresh size={14} /> Повторить</button>
                         </div>
                         {!item.fromHistory && (
                           <button
