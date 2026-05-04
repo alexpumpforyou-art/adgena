@@ -904,25 +904,15 @@ export default function DashboardPage() {
                               e.stopPropagation();
                               const url = item.imageUrl || item.imageDataUrl;
                               if (url) {
-                                const img = new Image();
-                                img.crossOrigin = 'anonymous';
-                                img.onload = () => {
-                                  const canvas = document.createElement('canvas');
-                                  canvas.width = img.naturalWidth;
-                                  canvas.height = img.naturalHeight;
-                                  canvas.getContext('2d').drawImage(img, 0, 0);
-                                  canvas.toBlob(blob => {
-                                    if (blob) {
-                                      const file = new File([blob], 'reuse.webp', { type: 'image/webp' });
-                                      acceptFile(file);
-                                      setToast('Изображение загружено как исходное');
-                                    } else {
-                                      setToast('Не удалось загрузить изображение');
-                                    }
-                                  }, 'image/webp');
-                                };
-                                img.onerror = () => setToast('Не удалось загрузить изображение');
-                                img.src = url;
+                                const proxyUrl = url.startsWith('data:') ? url : `/api/proxy-image?url=${encodeURIComponent(url)}`;
+                                fetch(proxyUrl)
+                                  .then(r => { if (!r.ok) throw new Error(); return r.blob(); })
+                                  .then(blob => {
+                                    const file = new File([blob], 'reuse.webp', { type: blob.type || 'image/webp' });
+                                    acceptFile(file);
+                                    setToast('Изображение загружено как исходное');
+                                  })
+                                  .catch(() => setToast('Не удалось загрузить изображение'));
                               }
                             }}
                           ><IconDownload size={14} /> Как исходное</button>
