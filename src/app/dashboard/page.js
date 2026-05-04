@@ -936,7 +936,34 @@ export default function DashboardPage() {
           ];
           return (
             <div className={styles.emptyState}>
-              <div className={styles.loadingPulse}><span className={styles.spinner} /></div>
+              <div style={{width: 80, height: 80, position: 'relative'}}>
+                <svg viewBox="0 0 100 100" width="80" height="80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="aGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFD600" />
+                      <stop offset="50%" stopColor="#FF6A00" />
+                      <stop offset="100%" stopColor="#3D3D3D" />
+                    </linearGradient>
+                  </defs>
+                  {/* Outer A shape — drawn with stroke animation */}
+                  <path
+                    d="M50 8 L14 88 L30 88 L38 68 L62 68 L70 88 L86 88 L50 8 Z M42 56 L50 34 L58 56 L42 56 Z"
+                    stroke="url(#aGrad)"
+                    strokeWidth="2.5"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    fill="none"
+                    className={styles.drawA}
+                  />
+                  {/* Filled A that fades in after drawing */}
+                  <path
+                    d="M50 8 L14 88 L30 88 L38 68 L62 68 L70 88 L86 88 L50 8 Z M42 56 L50 34 L58 56 L42 56 Z"
+                    fill="url(#aGrad)"
+                    fillRule="evenodd"
+                    className={styles.fillA}
+                  />
+                </svg>
+              </div>
               <h2 style={{marginTop: 12}}>{steps[genStep].label}</h2>
               <p>{steps[genStep].hint}</p>
               <div style={{display: 'flex', gap: 6, marginTop: 14}}>

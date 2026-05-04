@@ -515,6 +515,29 @@
   50% { opacity: 0.4; }
 }
 
+/* A-letter draw animation */
+.drawA {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: drawStroke 2s ease-in-out forwards, drawLoop 3s ease-in-out 2s infinite;
+}
+@keyframes drawStroke {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes drawLoop {
+  0%, 100% { stroke-dashoffset: 0; opacity: 1; }
+  50% { stroke-dashoffset: 500; opacity: 0.3; }
+}
+.fillA {
+  opacity: 0;
+  animation: fillFade 1s ease-in-out 1.8s forwards, fillPulse 3s ease-in-out 2s infinite;
+}
+@keyframes fillFade { to { opacity: 1; } }
+@keyframes fillPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
 /* Result */
 .resultArea {
   width: 100%;
