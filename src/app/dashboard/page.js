@@ -171,6 +171,29 @@ export default function DashboardPage() {
   // Text preview dialog before generation
   const [showTextPreview, setShowTextPreview] = useState(false);
   const [previewTexts, setPreviewTexts] = useState({ headline: '', cta: '', price: '', cardText: '', noText: false });
+  // Download menu state
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+
+  // Universal download helper — converts image to chosen format on the fly via proxy
+  const downloadImage = async (imageUrl, format = 'webp', filenameBase = 'adgena') => {
+    if (!imageUrl) return;
+    try {
+      const isData = imageUrl.startsWith('data:');
+      const proxyUrl = isData
+        ? imageUrl
+        : `/api/proxy-image?url=${encodeURIComponent(imageUrl)}${format !== 'webp' ? `&format=${format}` : ''}`;
+      const res = await fetch(proxyUrl);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${filenameBase}.${format === 'jpeg' ? 'jpg' : format}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      setToast?.('Не удалось скачать');
+    }
+    setDownloadMenuOpen(false);
+  };
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
@@ -1169,66 +1192,91 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* RESULT MODAL (Aidentika-style) */}
+      {/* RESULT MODAL */}
       {showResult && generatedResult && !generatedResult.error && (
-        <div className={styles.resultModal}>
+        <div className={styles.resultModal} onClick={(e) => { if (e.target === e.currentTarget) setShowResult(false); }}>
           <div className={styles.resultModalContent}>
-            {/* Close — just hides modal, keeps result visible */}
-            <button className={styles.modalClose} onClick={() => setShowResult(false)}>✕</button>
+            <button className={styles.modalClose} onClick={() => setShowResult(false)} aria-label="Закрыть">✕</button>
 
             {/* Left: Image */}
             <div className={styles.modalLeft}>
               <div className={styles.modalImageWrap}>
                 <img src={generatedResult.imageUrl || generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
               </div>
-              <div className={styles.modalImageActions} style={{display: 'flex', gap: 8, flexWrap: 'wrap'}}>
+              <div className={styles.modalImageActions}>
+                <div style={{position: 'relative', flex: 1}}>
+                  <button
+                    className={styles.downloadBtn}
+                    style={{width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8}}
+                    onClick={() => setDownloadMenuOpen(v => !v)}
+                  >
+                    <span>⬇ Скачать</span>
+                    <span style={{fontSize: 10, opacity: 0.8}}>▼</span>
+                  </button>
+                  {downloadMenuOpen && (
+                    <>
+                      <div
+                        style={{position: 'fixed', inset: 0, zIndex: 1}}
+                        onClick={() => setDownloadMenuOpen(false)}
+                      />
+                      <div style={{
+                        position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, right: 0,
+                        background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)',
+                        borderRadius: 10, padding: 6, zIndex: 2,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                      }}>
+                        {[
+                          { fmt: 'webp', label: 'WebP', hint: 'Лёгкий, для веба' },
+                          { fmt: 'png', label: 'PNG', hint: 'Универсальный, без потерь' },
+                          { fmt: 'jpeg', label: 'JPEG', hint: 'Для соцсетей, маркетплейсов' },
+                        ].map(opt => (
+                          <button
+                            key={opt.fmt}
+                            onClick={() => downloadImage(
+                              generatedResult.imageUrl || generatedResult.imageDataUrl,
+                              opt.fmt,
+                              `adgena-${generatedResult.generationId || 'result'}`
+                            )}
+                            style={{
+                              display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+                              width: '100%', padding: '8px 12px', borderRadius: 6,
+                              background: 'transparent', border: 'none', cursor: 'pointer',
+                              color: 'var(--text-primary)', textAlign: 'left',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <span style={{fontSize: 13, fontWeight: 600}}>{opt.label}</span>
+                            <span style={{fontSize: 11, color: 'var(--text-tertiary)'}}>{opt.hint}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
                 <button
                   className={styles.downloadBtn}
-                  style={{cursor: 'pointer'}}
-                  onClick={() => {
-                    const url = generatedResult.imageUrl || generatedResult.imageDataUrl;
-                    const proxyUrl = url.startsWith('data:') ? url : `/api/proxy-image?url=${encodeURIComponent(url)}`;
-                    fetch(proxyUrl).then(r => r.blob()).then(blob => {
-                      const a = document.createElement('a');
-                      a.href = URL.createObjectURL(blob);
-                      a.download = `adgena-${generatedResult.generationId || 'result'}.webp`;
-                      a.click();
-                      URL.revokeObjectURL(a.href);
-                    }).catch(() => setToast('Не удалось скачать'));
-                  }}
+                  style={{background: 'transparent', border: '1px solid var(--border-primary)', color: 'var(--text-secondary)', cursor: 'pointer', flex: 'none', marginLeft: 0, padding: '10px 16px'}}
+                  onClick={handleCloseResult}
+                  title="Закрыть и начать новую генерацию"
                 >
-                  Скачать
-                </button>
-                <button
-                  className={styles.downloadBtn}
-                  style={{background: 'transparent', border: '1px solid var(--border-subtle)', cursor: 'pointer'}}
-                  onClick={() => { handleCloseResult(); }}
-                  title="Закрыть и начать новую генерацию (работа сохранится)"
-                >
-                  ✕ Новая генерация
+                  Новая генерация
                 </button>
               </div>
             </div>
 
             {/* Right: Info + Improve + Workspace */}
             <div className={styles.modalRight}>
-              {/* Concept info */}
               <div className={styles.modalSection}>
                 <span className={styles.modalLabel}>Концепция</span>
                 <h3 className={styles.modalConceptName}>
                   {concepts.find(c => c.id === selectedConcept)?.name || (tab === 'card' ? `Карточка (${cardStyle})` : '—')}
                 </h3>
-              </div>
-              <div className={styles.modalSection}>
-                <span className={styles.modalLabel}>Пожелания</span>
-                <p className={styles.modalValue}>{wishes || '—'}</p>
+                {wishes && <p className={styles.modalValue} style={{marginTop: 6, fontSize: 12, color: 'var(--text-tertiary)'}}>{wishes}</p>}
               </div>
 
-              {/* Improve */}
               <div className={styles.modalSection}>
-                <div className={styles.modalLabelRow}>
-                  <span className={styles.modalLabel}>Доделать / улучшить</span>
-                </div>
+                <span className={styles.modalLabel}>Доделать / улучшить</span>
                 <input
                   type="text"
                   className={styles.input}
@@ -1246,31 +1294,41 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              {/* Workspace */}
-              <div className={styles.modalSection}>
-                <div className={styles.modalLabelRow}>
-                  <span className={styles.modalLabel}>Рабочее пространство</span>
-                  <span className={styles.modalCount}>{workspace.length}</span>
+              {workspace.length > 0 && (
+                <div className={styles.modalSection}>
+                  <div className={styles.modalLabelRow}>
+                    <span className={styles.modalLabel}>Рабочее пространство</span>
+                    <span className={styles.modalCount}>{workspace.length}</span>
+                  </div>
+                  <div className={styles.versionList}>
+                    {workspace.slice().reverse().map(item => (
+                      <div
+                        key={item.id}
+                        className={`${styles.versionItem} ${activeWsId === item.id ? styles.versionItemActive : ''}`}
+                        onClick={() => selectWorkspaceItem(item.id)}
+                        style={{cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center'}}
+                      >
+                        {(item.imageUrl || item.imageDataUrl) && (
+                          <img
+                            src={item.imageUrl || item.imageDataUrl}
+                            alt=""
+                            style={{width: 40, height: 40, borderRadius: 6, objectFit: 'cover', flexShrink: 0}}
+                          />
+                        )}
+                        <div style={{flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2}}>
+                          <span className={styles.versionLabel} style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.productName}</span>
+                          <span className={styles.versionNote} style={{fontSize: 11}}>
+                            {item.type} • {item.aspectRatio}
+                          </span>
+                        </div>
+                        <span className={styles.versionTime} style={{fontSize: 11, flexShrink: 0}}>
+                          {new Date(item.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className={styles.versionList}>
-                  {workspace.slice().reverse().map(item => (
-                    <div
-                      key={item.id}
-                      className={`${styles.versionItem} ${activeWsId === item.id ? styles.versionItemActive : ''}`}
-                      onClick={() => selectWorkspaceItem(item.id)}
-                      style={{cursor: 'pointer'}}
-                    >
-                      <span className={styles.versionLabel}>{item.productName}</span>
-                      <span className={styles.versionTime}>
-                        {new Date(item.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}
-                      </span>
-                      <span className={styles.versionNote}>
-                        {item.type} • {item.aspectRatio} {item.note ? `• ${item.note}` : ''}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
