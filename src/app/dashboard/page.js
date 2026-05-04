@@ -438,15 +438,29 @@ export default function DashboardPage() {
   };
 
   const handleImprove = async () => {
-    if (!improveText.trim() || !uploadedImage) return;
+    if (!improveText.trim() || !generatedResult) return;
     setGenerating(true);
     try {
-      const res = await fetch('/api/generate', { method: 'POST', body: buildFormData(improveText) });
+      // Use the current generated image as the input for the next iteration
+      const sourceUrl = generatedResult.imageUrl || generatedResult.imageDataUrl;
+      let inputBlob;
+      if (sourceUrl?.startsWith('data:')) {
+        inputBlob = await (await fetch(sourceUrl)).blob();
+      } else {
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(sourceUrl)}`;
+        inputBlob = await (await fetch(proxyUrl)).blob();
+      }
+      const fd = buildFormData(improveText);
+      // Replace the image field with current result
+      fd.set('image', new File([inputBlob], 'current.webp', { type: 'image/webp' }));
+      const res = await fetch('/api/generate', { method: 'POST', body: fd });
       const data = await res.json();
       if (data.success) {
         addToWorkspace(data, { noteText: improveText, parentId: activeWsId });
         setGeneratedResult(data);
         setImproveText('');
+      } else {
+        setToast?.(data.error || 'Не удалось поправить');
       }
     } catch (err) {
       console.error('Improve error:', err);
@@ -1226,9 +1240,9 @@ export default function DashboardPage() {
                         boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
                       }}>
                         {[
-                          { fmt: 'webp', label: 'WebP', hint: 'Лёгкий, для веба' },
-                          { fmt: 'png', label: 'PNG', hint: 'Универсальный, без потерь' },
-                          { fmt: 'jpeg', label: 'JPEG', hint: 'Для соцсетей, маркетплейсов' },
+                          { fmt: 'png', label: 'PNG', hint: 'Рекомендуем — лучшее качество' },
+                          { fmt: 'jpeg', label: 'JPEG', hint: 'Для WB, Ozon, соцсетей' },
+                          { fmt: 'webp', label: 'WebP', hint: 'Самый лёгкий — для сайта' },
                         ].map(opt => (
                           <button
                             key={opt.fmt}
@@ -1276,21 +1290,21 @@ export default function DashboardPage() {
               </div>
 
               <div className={styles.modalSection}>
-                <span className={styles.modalLabel}>Доделать / улучшить</span>
+                <span className={styles.modalLabel}>Поправить эту картинку</span>
                 <input
                   type="text"
                   className={styles.input}
-                  placeholder="Например: сделай фон темнее"
+                  placeholder="Например: сделай фон темнее, убери текст"
                   value={improveText}
                   onChange={(e) => setImproveText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleImprove()}
                 />
                 <button
                   className={styles.improveBtn}
-                  disabled={!improveText.trim() || generating || !uploadedImage}
+                  disabled={!improveText.trim() || generating || !generatedResult}
                   onClick={handleImprove}
                 >
-                  {generating ? 'Генерирую...' : 'Создать версию'}
+                  {generating ? 'Правлю...' : 'Поправить'}
                 </button>
               </div>
 
