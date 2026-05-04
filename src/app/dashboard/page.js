@@ -999,16 +999,23 @@ export default function DashboardPage() {
                 </div>
                 <div style={{display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center'}}>
                   <button className={styles.btnPrimary} onClick={() => setShowResult(true)}>Открыть</button>
-                  <a
-                    href={generatedResult.imageUrl || generatedResult.imageDataUrl}
-                    download={`adgena-${generatedResult.generationId || 'result'}.webp`}
-                    target={generatedResult.imageUrl ? '_blank' : undefined}
-                    rel={generatedResult.imageUrl ? 'noopener noreferrer' : undefined}
+                  <button
                     className={styles.downloadBtn}
-                    style={{flex: 'none', marginLeft: 0, padding: '10px 20px'}}
+                    style={{flex: 'none', marginLeft: 0, padding: '10px 20px', cursor: 'pointer'}}
+                    onClick={() => {
+                      const url = generatedResult.imageUrl || generatedResult.imageDataUrl;
+                      const proxyUrl = url.startsWith('data:') ? url : `/api/proxy-image?url=${encodeURIComponent(url)}`;
+                      fetch(proxyUrl).then(r => r.blob()).then(blob => {
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `adgena-${generatedResult.generationId || 'result'}.webp`;
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                      }).catch(() => setToast('Не удалось скачать'));
+                    }}
                   >
                     Скачать
-                  </a>
+                  </button>
                 </div>
               </div>
             )}
@@ -1029,15 +1036,23 @@ export default function DashboardPage() {
                 <img src={generatedResult.imageUrl || generatedResult.imageDataUrl} alt="Result" className={styles.modalImage} />
               </div>
               <div className={styles.modalImageActions} style={{display: 'flex', gap: 8, flexWrap: 'wrap'}}>
-                <a
-                  href={generatedResult.imageUrl || generatedResult.imageDataUrl}
-                  download={`adgena-${generatedResult.generationId || 'result'}.webp`}
-                  target={generatedResult.imageUrl ? '_blank' : undefined}
-                  rel={generatedResult.imageUrl ? 'noopener noreferrer' : undefined}
+                <button
                   className={styles.downloadBtn}
+                  style={{cursor: 'pointer'}}
+                  onClick={() => {
+                    const url = generatedResult.imageUrl || generatedResult.imageDataUrl;
+                    const proxyUrl = url.startsWith('data:') ? url : `/api/proxy-image?url=${encodeURIComponent(url)}`;
+                    fetch(proxyUrl).then(r => r.blob()).then(blob => {
+                      const a = document.createElement('a');
+                      a.href = URL.createObjectURL(blob);
+                      a.download = `adgena-${generatedResult.generationId || 'result'}.webp`;
+                      a.click();
+                      URL.revokeObjectURL(a.href);
+                    }).catch(() => setToast('Не удалось скачать'));
+                  }}
                 >
                   Скачать
-                </a>
+                </button>
                 <button
                   className={styles.downloadBtn}
                   style={{background: 'transparent', border: '1px solid var(--border-subtle)', cursor: 'pointer'}}
