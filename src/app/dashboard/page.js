@@ -739,9 +739,6 @@ export default function DashboardPage() {
                     );
                   })}
                 </div>
-                <p style={{fontSize: 11, color: 'var(--text-muted, #888)', margin: '6px 0 0'}}>
-                  Модель: <b>{MODEL_LABELS[activeModel]}</b>. Доступны только форматы, которые она поддерживает без потери качества.
-                </p>
               </>
             );
           })()}

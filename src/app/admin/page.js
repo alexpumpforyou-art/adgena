@@ -792,12 +792,17 @@ curl -I https://adgena.pro`}</pre>
             </select>
 
             <label className={styles.modalLabel}>План</label>
-            <select className={styles.modalSelect} value={editPlan} onChange={(e) => setEditPlan(e.target.value)}>
+            <select className={styles.modalSelect} value={editPlan} onChange={(e) => {
+              const p = e.target.value;
+              setEditPlan(p);
+              const autoLimits = { free: 1, lite: 10, standard: 30, pro: 80, business: 200, unlimited: 99999 };
+              setEditLimit(autoLimits[p] || 1);
+            }}>
               <option value="free">Free</option>
-              <option value="lite">Лайт</option>
-              <option value="standard">Стандарт</option>
-              <option value="pro">Про</option>
-              <option value="business">Бизнес</option>
+              <option value="lite">Лайт (10)</option>
+              <option value="standard">Стандарт (30)</option>
+              <option value="pro">Про (80)</option>
+              <option value="business">Бизнес (200)</option>
               <option value="unlimited">Unlimited</option>
             </select>
 
