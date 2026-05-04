@@ -127,10 +127,12 @@ export async function POST(request) {
 
     // Extract text fields
     const bullets = parsedText.bullets || [];
-    const headline = formData.get('headline') || parsedText.headline || parsedText.title || productName;
-    const cta = formData.get('cta') || parsedText.cta || 'Купить сейчас';
-    const price = (formData.get('price') || '').toString().trim();
-    const showButton = formData.get('showButton') === 'true' || formData.get('showButton') === '1';
+    const rawHeadline = formData.get('headline') || '';
+    const noText = rawHeadline === '__NOTEXT__' || (formData.get('cardText') || '') === '__NOTEXT__';
+    const headline = noText ? '' : (rawHeadline || parsedText.headline || parsedText.title || productName);
+    const cta = noText ? '' : (formData.get('cta') || parsedText.cta || 'Купить сейчас');
+    const price = noText ? '' : (formData.get('price') || '').toString().trim();
+    const showButton = noText ? false : (formData.get('showButton') === 'true' || formData.get('showButton') === '1');
 
     // Resolve target size & aspect ratio
     // Priority: explicit sizeId → aspectRatio override → default (wb 3:4)
@@ -182,9 +184,10 @@ export async function POST(request) {
       lang,
       aspectRatio: finalAspectRatio,
       wishes,
-      cardText,
+      cardText: noText ? '' : cardText,
       cardStyle,
       creativity,
+      noText,
     });
 
     if (!result.success || !result.imageData) {

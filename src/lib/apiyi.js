@@ -130,6 +130,7 @@ export async function generateProductCard({
   cardText = '',
   cardStyle = 'classic',
   creativity = 0.5,
+  noText = false,
 }) {
   let prompt;
 
@@ -148,6 +149,11 @@ export async function generateProductCard({
   // Inject aspect ratio
   prompt += `\n\nIMPORTANT: Generate the image in ${aspectRatio} aspect ratio.`;
 
+  // No text mode: override to remove all text from the image
+  if (noText) {
+    prompt += `\n\nCRITICAL OVERRIDE: Do NOT place ANY text, letters, words, numbers, headlines, labels, watermarks, or typography on the image. The image must be completely free of any written content. Only the product and visual design elements are allowed.`;
+  }
+
   // === MODEL ROUTING ===
   // Rule: if output must contain text (card/ads) → OpenAI gpt-image-2 (better typography).
   //       photo → Gemini (cheaper, better photorealism).
@@ -155,7 +161,7 @@ export async function generateProductCard({
   //   IMAGE_GEN_MODEL=gpt-image-2  → force OpenAI for everything
   //   IMAGE_GEN_MODEL=gemini       → force Gemini for everything
   const forced = (process.env.IMAGE_GEN_MODEL || '').toLowerCase();
-  const wantsText = type === 'ads' || type === 'card';
+  const wantsText = (type === 'ads' || type === 'card') && !noText;
   const useGptImage = forced.startsWith('gpt-image') ? true
                     : forced.startsWith('gemini')    ? false
                     : wantsText;

@@ -168,6 +168,9 @@ export default function DashboardPage() {
   const [conceptThumbs, setConceptThumbs] = useState({});
   // Auto-detect product
   const [detecting, setDetecting] = useState(false);
+  // Text preview dialog before generation
+  const [showTextPreview, setShowTextPreview] = useState(false);
+  const [previewTexts, setPreviewTexts] = useState({ headline: '', cta: '', price: '', cardText: '', noText: false });
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
@@ -348,6 +351,38 @@ export default function DashboardPage() {
     setWorkspace(prev => [...prev, item]);
     setActiveWsId(item.id);
     return item;
+  };
+
+  const handleGenerateClick = () => {
+    if (!canGenerate) return;
+    // For ads and cards — show text preview dialog
+    if (tab === 'ads' || tab === 'card') {
+      const defaults = {
+        headline: tab === 'ads' ? (adHeadline || productName) : '',
+        cta: tab === 'ads' ? (adCta || '') : '',
+        price: tab === 'ads' ? (adPrice || '') : '',
+        cardText: tab === 'card' ? (cardText || productName) : '',
+        noText: false,
+      };
+      setPreviewTexts(defaults);
+      setShowTextPreview(true);
+      return;
+    }
+    handleGenerate();
+  };
+
+  const confirmTextAndGenerate = () => {
+    setShowTextPreview(false);
+    if (previewTexts.noText) {
+      // Clear all text fields so prompt generates without text
+      if (tab === 'ads') { setAdHeadline('__NOTEXT__'); setAdCta(''); setAdPrice(''); }
+      if (tab === 'card') { setCardText('__NOTEXT__'); }
+    } else {
+      if (tab === 'ads') { setAdHeadline(previewTexts.headline); setAdCta(previewTexts.cta); setAdPrice(previewTexts.price); }
+      if (tab === 'card') { setCardText(previewTexts.cardText); }
+    }
+    // Small delay to let state update
+    setTimeout(() => handleGenerate(), 50);
   };
 
   const handleGenerate = async () => {
@@ -781,7 +816,7 @@ export default function DashboardPage() {
         <button
           className={styles.generateBtn}
           disabled={!canGenerate}
-          onClick={handleGenerate}
+          onClick={handleGenerateClick}
           title={genReadiness.reason || ''}
         >
           {generating ? (
@@ -806,6 +841,86 @@ export default function DashboardPage() {
           </button>
         )}
       </aside>
+
+      {/* TEXT PREVIEW DIALOG */}
+      {showTextPreview && (
+        <div style={{position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:16}}>
+          <div style={{background:'var(--bg-secondary, #1a1a2e)', borderRadius:16, padding:24, maxWidth:420, width:'100%', boxShadow:'0 20px 60px rgba(0,0,0,0.5)'}}>
+            <h3 style={{fontSize:16, fontWeight:700, color:'var(--text-primary)', marginBottom:4}}>Текст на изображении</h3>
+            <p style={{fontSize:12, color:'var(--text-tertiary)', marginBottom:16}}>Проверьте и отредактируйте текст, который появится на картинке. Или уберите текст полностью.</p>
+
+            {tab === 'ads' && (
+              <>
+                <label style={{fontSize:12, fontWeight:600, color:'var(--text-secondary)', display:'block', marginBottom:4}}>Заголовок</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={previewTexts.headline}
+                  onChange={(e) => setPreviewTexts(p => ({...p, headline: e.target.value}))}
+                  disabled={previewTexts.noText}
+                  style={{marginBottom:10, opacity: previewTexts.noText ? 0.4 : 1}}
+                />
+                <label style={{fontSize:12, fontWeight:600, color:'var(--text-secondary)', display:'block', marginBottom:4}}>Кнопка / призыв</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Купить сейчас"
+                  value={previewTexts.cta}
+                  onChange={(e) => setPreviewTexts(p => ({...p, cta: e.target.value}))}
+                  disabled={previewTexts.noText}
+                  style={{marginBottom:10, opacity: previewTexts.noText ? 0.4 : 1}}
+                />
+                <label style={{fontSize:12, fontWeight:600, color:'var(--text-secondary)', display:'block', marginBottom:4}}>Цена</label>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="1 990 ₽"
+                  value={previewTexts.price}
+                  onChange={(e) => setPreviewTexts(p => ({...p, price: e.target.value}))}
+                  disabled={previewTexts.noText}
+                  style={{marginBottom:12, opacity: previewTexts.noText ? 0.4 : 1}}
+                />
+              </>
+            )}
+
+            {tab === 'card' && (
+              <>
+                <label style={{fontSize:12, fontWeight:600, color:'var(--text-secondary)', display:'block', marginBottom:4}}>Текст на карточке</label>
+                <textarea
+                  className={styles.input}
+                  rows={3}
+                  value={previewTexts.cardText}
+                  onChange={(e) => setPreviewTexts(p => ({...p, cardText: e.target.value}))}
+                  disabled={previewTexts.noText}
+                  style={{marginBottom:12, resize:'vertical', opacity: previewTexts.noText ? 0.4 : 1}}
+                />
+              </>
+            )}
+
+            <label style={{display:'flex', alignItems:'center', gap:8, fontSize:13, color:'var(--text-secondary)', cursor:'pointer', marginBottom:16}}>
+              <input
+                type="checkbox"
+                checked={previewTexts.noText}
+                onChange={(e) => setPreviewTexts(p => ({...p, noText: e.target.checked}))}
+                style={{width:16, height:16, accentColor:'var(--brand-primary)'}}
+              />
+              Без текста на изображении
+            </label>
+
+            <div style={{display:'flex', gap:8}}>
+              <button
+                onClick={() => setShowTextPreview(false)}
+                style={{flex:1, padding:'10px 16px', borderRadius:10, border:'1px solid var(--border-subtle)', background:'transparent', color:'var(--text-secondary)', cursor:'pointer', fontSize:14}}
+              >Отмена</button>
+              <button
+                onClick={confirmTextAndGenerate}
+                className={styles.generateBtn}
+                style={{flex:1, margin:0}}
+              >Сгенерировать</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* RIGHT PANEL — Results / Workspace */}
       <main className={styles.rightPanel}>
