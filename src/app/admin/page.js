@@ -42,6 +42,10 @@ export default function AdminPage() {
   // Withdrawals
   const [withdrawals, setWithdrawals] = useState([]);
 
+  // Concept thumbnails
+  const [conceptThumbs, setConceptThumbs] = useState({});
+  const [conceptUploading, setConceptUploading] = useState(null);
+
   const loadQuotas = async () => {
     setQuotasLoading(true);
     try {
@@ -95,6 +99,37 @@ export default function AdminPage() {
     } catch { /* ignore */ }
   };
 
+  const loadConcepts = async () => {
+    try {
+      const res = await fetch('/api/admin/concepts');
+      const data = await res.json();
+      if (data.thumbnails) setConceptThumbs(data.thumbnails);
+    } catch { /* ignore */ }
+  };
+
+  const handleConceptUpload = async (conceptKey, file) => {
+    setConceptUploading(conceptKey);
+    try {
+      const fd = new FormData();
+      fd.append('conceptKey', conceptKey);
+      fd.append('image', file);
+      const res = await fetch('/api/admin/concepts', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.thumbnails) setConceptThumbs(data.thumbnails);
+    } catch { /* ignore */ }
+    setConceptUploading(null);
+  };
+
+  const handleConceptDelete = async (conceptKey) => {
+    const res = await fetch('/api/admin/concepts', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conceptKey }),
+    });
+    const data = await res.json();
+    if (data.thumbnails) setConceptThumbs(data.thumbnails);
+  };
+
   const handleSavePrompt = async (key) => {
     setSavingPrompt(true);
     try {
@@ -116,6 +151,7 @@ export default function AdminPage() {
     if (activeTab === 'prompts' && !prompts) loadPrompts();
     if (activeTab === 'quotas' && !quotas) loadQuotas();
     if (activeTab === 'withdrawals' && withdrawals.length === 0) loadWithdrawals();
+    if (activeTab === 'concepts' && Object.keys(conceptThumbs).length === 0) loadConcepts();
   }, [activeTab]);
 
   const handleUpdateUser = async (userId) => {
@@ -258,6 +294,9 @@ export default function AdminPage() {
         </button>
         <button className={`${styles.tab} ${activeTab === 'withdrawals' ? styles.tabActive : ''}`} onClick={() => setActiveTab('withdrawals')}>
           💳 Выводы {withdrawals.filter(w => w.status === 'pending').length > 0 && <span className={styles.tabBadge}>{withdrawals.filter(w => w.status === 'pending').length}</span>}
+        </button>
+        <button className={`${styles.tab} ${activeTab === 'concepts' ? styles.tabActive : ''}`} onClick={() => setActiveTab('concepts')}>
+          🖼️ Примеры
         </button>
         <button className={`${styles.tab} ${activeTab === 'infra' ? styles.tabActive : ''}`} onClick={() => setActiveTab('infra')}>
           🏗️ Инфраструктура
@@ -640,6 +679,71 @@ export default function AdminPage() {
           )}
         </div>
       )}
+
+      {/* ===== TAB: CONCEPTS ===== */}
+      {activeTab === 'concepts' && (() => {
+        const CATS = [
+          { id: 'clothing', name: 'Одежда и обувь' }, { id: 'accessories', name: 'Аксессуары' },
+          { id: 'food', name: 'Еда и напитки' }, { id: 'beauty', name: 'Косметика и уход' },
+          { id: 'gadgets', name: 'Гаджеты и техника' }, { id: 'home', name: 'Дом и сад' },
+          { id: 'kids', name: 'Детские товары' }, { id: 'other', name: 'Прочее' },
+        ];
+        const CONCEPTS = {
+          clothing: ['on-model','in-store','flat-lay','studio'],
+          accessories: ['on-model','flat-lay','in-context','studio'],
+          food: ['plated','in-context','flat-lay','studio'],
+          beauty: ['in-use','in-context','texture','studio'],
+          gadgets: ['in-use','in-context','close-up','studio'],
+          home: ['in-interior','in-use','close-up','studio'],
+          kids: ['in-use','in-context','flat-lay','studio'],
+          other: ['in-use','in-context','flat-lay','studio'],
+        };
+        const NAMES = {
+          'on-model':'На модели','in-store':'Как в магазине','flat-lay':'Раскладка сверху',
+          'studio':'Каталог (студийно)','in-context':'В окружении','in-use':'В использовании',
+          'plated':'Сервировка','texture':'Текстура крупно','close-up':'Крупный план',
+          'in-interior':'В интерьере',
+        };
+        return (
+          <div className={styles.promptsSection}>
+            <h2 className={styles.sectionTitle}>Примеры для концепций</h2>
+            <p className={styles.promptsDesc}>Загрузите миниатюры-примеры для каждой концепции. Они покажутся пользователям рядом с названием.</p>
+            {CATS.map(cat => (
+              <div key={cat.id} style={{marginBottom: 24}}>
+                <h3 style={{fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8}}>{cat.name}</h3>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10}}>
+                  {(CONCEPTS[cat.id] || []).map(cId => {
+                    const key = `${cat.id}__${cId}`;
+                    const url = conceptThumbs[key];
+                    return (
+                      <div key={key} style={{display:'flex', alignItems:'center', gap:10, padding:10, background:'var(--bg-tertiary)', borderRadius:10, border:'1px solid var(--border-subtle)'}}>
+                        {url ? (
+                          <img src={url} alt={cId} style={{width:48, height:48, borderRadius:8, objectFit:'cover', flexShrink:0}} />
+                        ) : (
+                          <div style={{width:48, height:48, borderRadius:8, background:'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', color:'#9ca3af', fontSize:18, flexShrink:0}}>+</div>
+                        )}
+                        <div style={{flex:1, minWidth:0}}>
+                          <div style={{fontSize:13, fontWeight:600, color:'var(--text-primary)'}}>{NAMES[cId] || cId}</div>
+                          <div style={{display:'flex', gap:6, marginTop:4}}>
+                            <label style={{fontSize:11, color:'var(--brand-primary)', cursor:'pointer'}}>
+                              {conceptUploading === key ? '⏳' : (url ? 'Заменить' : 'Загрузить')}
+                              <input type="file" accept="image/*" hidden onChange={(e) => {
+                                if (e.target.files?.[0]) handleConceptUpload(key, e.target.files[0]);
+                                e.target.value = '';
+                              }} />
+                            </label>
+                            {url && <button style={{fontSize:11, color:'#ef4444', background:'none', border:'none', cursor:'pointer', fontFamily:'inherit'}} onClick={() => handleConceptDelete(key)}>Удалить</button>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* ===== TAB: INFRASTRUCTURE ===== */}
       {activeTab === 'infra' && (

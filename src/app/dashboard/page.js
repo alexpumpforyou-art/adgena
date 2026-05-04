@@ -164,10 +164,15 @@ export default function DashboardPage() {
   const [theme, setTheme] = useState('dark');
   // Onboarding: show tour on first visit
   const [showOnboarding, setShowOnboarding] = useState(false);
+  // Concept thumbnails (loaded from admin settings)
+  const [conceptThumbs, setConceptThumbs] = useState({});
+  // Auto-detect product
+  const [detecting, setDetecting] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
     fetch('/api/generations').then(r => r.json()).then(d => { if (d.success) setHistory(d.generations || []); }).catch(() => {});
+    fetch('/api/admin/concepts').then(r => r.json()).then(d => { if (d.thumbnails) setConceptThumbs(d.thumbnails); }).catch(() => {});
     const saved = localStorage.getItem('adgena-theme');
     if (saved) { setTheme(saved); document.documentElement.setAttribute('data-theme', saved); }
     // Restore workspace
@@ -269,6 +274,22 @@ export default function DashboardPage() {
     const reader = new FileReader();
     reader.onload = (ev) => setImagePreview(ev.target.result);
     reader.readAsDataURL(file);
+    // Auto-detect product name + category
+    if (!productName.trim()) {
+      setDetecting(true);
+      const fd = new FormData();
+      fd.append('image', file);
+      fetch('/api/detect-product', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            if (d.name) setProductName(d.name);
+            if (d.category) { setCategory(d.category); setSelectedConcept(null); }
+          }
+        })
+        .catch(() => {})
+        .finally(() => setDetecting(false));
+    }
   };
 
   const handleFileUpload = useCallback((e) => {
@@ -524,13 +545,17 @@ export default function DashboardPage() {
           )}
 
           {/* Name */}
-          <input
-            type="text"
-            className={styles.input}
-            placeholder="Название товара"
-            value={productName}
-            onChange={(e) => setProductName(e.target.value)}
-          />
+          <div style={{position: 'relative'}}>
+            <input
+              type="text"
+              className={styles.input}
+              placeholder={detecting ? 'Определяю товар...' : 'Название товара'}
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
+              disabled={detecting}
+            />
+            {detecting && <span style={{position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', fontSize:12, color:'var(--text-muted,#888)'}}>⏳</span>}
+          </div>
 
           {/* Category */}
           <select
@@ -570,19 +595,27 @@ export default function DashboardPage() {
             <>
               <label className={styles.label} style={{marginTop: 16}}>Как показать товар?</label>
               <div className={styles.conceptList}>
-                {concepts.map(c => (
-                  <div
-                    key={c.id}
-                    className={`${styles.conceptItem} ${selectedConcept === c.id ? styles.conceptItemActive : ''}`}
-                    onClick={() => setSelectedConcept(c.id)}
-                  >
-                    <span className={styles.conceptIcon}>{c.icon}</span>
-                    <div className={styles.conceptText}>
-                      <span className={styles.conceptName}>{c.name}</span>
-                      <span className={styles.conceptDesc}>{c.desc}</span>
+                {concepts.map(c => {
+                  const thumbKey = `${category}__${c.id}`;
+                  const thumbUrl = conceptThumbs[thumbKey];
+                  return (
+                    <div
+                      key={c.id}
+                      className={`${styles.conceptItem} ${selectedConcept === c.id ? styles.conceptItemActive : ''}`}
+                      onClick={() => setSelectedConcept(c.id)}
+                    >
+                      {thumbUrl ? (
+                        <img src={thumbUrl} alt={c.name} className={styles.conceptThumb} />
+                      ) : (
+                        <span className={styles.conceptIcon}>{c.icon}</span>
+                      )}
+                      <div className={styles.conceptText}>
+                        <span className={styles.conceptName}>{c.name}</span>
+                        <span className={styles.conceptDesc}>{c.desc}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
