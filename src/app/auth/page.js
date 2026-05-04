@@ -128,7 +128,7 @@ function AuthForm() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, verified: true }),
+        body: JSON.stringify({ email, password, name, verified: true, ref: searchParams.get('ref') }),
       });
       const data = await res.json();
 

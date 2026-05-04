@@ -16,6 +16,10 @@ export default function ProfilePage() {
   const [ticketMessage, setTicketMessage] = useState('');
   const [ticketSending, setTicketSending] = useState(false);
   const [ticketSuccess, setTicketSuccess] = useState('');
+  const [referral, setReferral] = useState(null);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawCard, setWithdrawCard] = useState('');
+  const [withdrawMsg, setWithdrawMsg] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(data => {
@@ -25,6 +29,9 @@ export default function ProfilePage() {
     });
     fetch('/api/tickets').then(r => r.json()).then(data => {
       if (data.tickets) setTickets(data.tickets);
+    });
+    fetch('/api/referral').then(r => r.json()).then(data => {
+      if (data.referral) setReferral(data.referral);
     });
   }, [router]);
 
@@ -249,6 +256,98 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Referral Program */}
+        {referral && (
+          <div className={styles.upgradeSection}>
+            <h3>Реферальная программа</h3>
+            <p className={styles.upgradeDesc}>Приглашайте друзей и получайте 15% от каждого их платежа.</p>
+
+            <div className={styles.referralStats}>
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{referral.referralsCount}</span>
+                <span className={styles.statLabel}>Приглашённых</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{referral.totalEarned.toFixed(0)} ₽</span>
+                <span className={styles.statLabel}>Всего заработано</span>
+              </div>
+              <div className={`${styles.statCard} ${styles.statCardAccent}`}>
+                <span className={styles.statValue}>{referral.balance.toFixed(0)} ₽</span>
+                <span className={styles.statLabel}>Доступно к выводу</span>
+              </div>
+            </div>
+
+            <div className={styles.referralLinkBox}>
+              <label className={styles.referralLabel}>Ваша реферальная ссылка:</label>
+              <div className={styles.referralLinkRow}>
+                <input type="text" readOnly value={referral.link} className={styles.referralInput} />
+                <button
+                  className={styles.referralCopyBtn}
+                  onClick={() => { navigator.clipboard.writeText(referral.link); }}
+                >
+                  Копировать
+                </button>
+              </div>
+            </div>
+
+            {referral.balance >= 100 && (
+              <div className={styles.withdrawBox}>
+                <h4 style={{margin: '0 0 12px'}}>Вывод средств</h4>
+                <input
+                  type="number"
+                  placeholder="Сумма (мин. 100 ₽)"
+                  value={withdrawAmount}
+                  onChange={e => setWithdrawAmount(e.target.value)}
+                  className={styles.input}
+                  min={100}
+                  max={referral.balance}
+                />
+                <input
+                  type="text"
+                  placeholder="Номер карты"
+                  value={withdrawCard}
+                  onChange={e => setWithdrawCard(e.target.value)}
+                  className={styles.input}
+                />
+                {withdrawMsg && <p className={styles.withdrawMsg}>{withdrawMsg}</p>}
+                <button
+                  className={styles.upgradeBtn}
+                  style={{marginTop: 8}}
+                  onClick={async () => {
+                    const res = await fetch('/api/referral', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ amount: parseFloat(withdrawAmount), cardInfo: withdrawCard }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setWithdrawMsg(data.message);
+                      setWithdrawAmount(''); setWithdrawCard('');
+                      fetch('/api/referral').then(r => r.json()).then(d => { if (d.referral) setReferral(d.referral); });
+                    } else {
+                      setWithdrawMsg(data.error || 'Ошибка');
+                    }
+                  }}
+                >
+                  Запросить вывод
+                </button>
+              </div>
+            )}
+
+            {referral.rewards?.length > 0 && (
+              <div className={styles.referralHistory}>
+                <h4 style={{margin: '16px 0 8px'}}>Последние начисления</h4>
+                {referral.rewards.map((r, i) => (
+                  <div key={i} className={styles.referralRow}>
+                    <span>{r.referred_email}</span>
+                    <span style={{color: '#22c55e', fontWeight: 700}}>+{r.amount.toFixed(0)} ₽</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Logout */}
         <button className={styles.logoutBtn} onClick={handleLogout}>

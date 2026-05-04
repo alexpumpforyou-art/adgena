@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createUser, createSession } from '@/lib/db';
+import { createUser, createSession, getUserByReferralCode, setReferredBy } from '@/lib/db';
 import { signToken, buildSessionCookie } from '@/lib/auth';
 
 // Disposable/temporary email domains — block registration
@@ -80,7 +80,7 @@ export async function POST(request) {
       );
     }
 
-    const { email, password, name } = await request.json();
+    const { email, password, name, ref } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json({ success: false, error: 'Email и пароль обязательны' }, { status: 400 });
@@ -97,6 +97,20 @@ export async function POST(request) {
     }
 
     const user = createUser({ email: validation.email, password, name });
+
+    // Apply referral if provided
+    if (ref) {
+      try {
+        const referrer = getUserByReferralCode(ref);
+        if (referrer && referrer.id !== user.id) {
+          setReferredBy(user.id, referrer.id);
+          console.log(`[Referral] User ${user.email} referred by ${referrer.email} (code: ${ref})`);
+        }
+      } catch (refErr) {
+        console.error('[Referral] Error applying ref code:', refErr.message);
+      }
+    }
+
     const session = createSession(user.id);
     const token = signToken({ userId: user.id, email: user.email });
 

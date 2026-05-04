@@ -155,6 +155,32 @@ function initTables() {
       created_at TEXT DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_email_log_created ON email_log(created_at);
+
+    CREATE TABLE IF NOT EXISTS referral_rewards (
+      id TEXT PRIMARY KEY,
+      referrer_id TEXT NOT NULL,
+      referred_id TEXT NOT NULL,
+      payment_id TEXT,
+      amount REAL NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (referrer_id) REFERENCES users(id),
+      FOREIGN KEY (referred_id) REFERENCES users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_referral_rewards_referrer ON referral_rewards(referrer_id);
+
+    CREATE TABLE IF NOT EXISTS referral_withdrawals (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      status TEXT DEFAULT 'pending',
+      card_info TEXT,
+      admin_note TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      processed_at TEXT,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_referral_withdrawals_user ON referral_withdrawals(user_id);
+    CREATE INDEX IF NOT EXISTS idx_referral_withdrawals_status ON referral_withdrawals(status);
   `);
 
   // Migrate: add role column if missing
@@ -177,6 +203,14 @@ function initTables() {
   // Migrate: add onboarded column if missing
   try { d.prepare("SELECT onboarded FROM users LIMIT 1").get(); }
   catch { d.exec("ALTER TABLE users ADD COLUMN onboarded INTEGER DEFAULT 0"); }
+
+  // Migrate: add referral columns
+  try { d.prepare("SELECT referral_code FROM users LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE users ADD COLUMN referral_code TEXT"); }
+  try { d.prepare("SELECT referred_by FROM users LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE users ADD COLUMN referred_by TEXT"); }
+  try { d.prepare("SELECT referral_balance FROM users LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE users ADD COLUMN referral_balance REAL DEFAULT 0"); }
 }
 
 // ========================================
@@ -250,6 +284,84 @@ export function setUserRole(userId, role) {
 export function setOnboarded(userId) {
   const d = getDb();
   d.prepare("UPDATE users SET onboarded = 1, updated_at = datetime('now') WHERE id = ?").run(userId);
+}
+
+// ========================================
+// REFERRALS
+// ========================================
+
+export function generateReferralCode(userId) {
+  const d = getDb();
+  const code = crypto.randomBytes(4).toString('hex'); // 8-char unique code
+  d.prepare("UPDATE users SET referral_code = ?, updated_at = datetime('now') WHERE id = ?").run(code, userId);
+  return code;
+}
+
+export function getUserByReferralCode(code) {
+  const d = getDb();
+  return d.prepare('SELECT id, email, name FROM users WHERE referral_code = ?').get(code);
+}
+
+export function setReferredBy(userId, referrerId) {
+  const d = getDb();
+  d.prepare("UPDATE users SET referred_by = ?, updated_at = datetime('now') WHERE id = ?").run(referrerId, userId);
+}
+
+export function creditReferralReward(referrerId, referredId, paymentId, amount) {
+  const d = getDb();
+  const reward = Math.round(amount * 0.15 * 100) / 100; // 15%
+  d.prepare(`
+    INSERT INTO referral_rewards (id, referrer_id, referred_id, payment_id, amount)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(crypto.randomUUID(), referrerId, referredId, paymentId, reward);
+  d.prepare("UPDATE users SET referral_balance = referral_balance + ?, updated_at = datetime('now') WHERE id = ?")
+    .run(reward, referrerId);
+  return reward;
+}
+
+export function getReferralStats(userId) {
+  const d = getDb();
+  const user = d.prepare('SELECT referral_code, referral_balance FROM users WHERE id = ?').get(userId);
+  const referrals = d.prepare('SELECT COUNT(*) as count FROM users WHERE referred_by = ?').get(userId);
+  const totalEarned = d.prepare('SELECT COALESCE(SUM(amount), 0) as total FROM referral_rewards WHERE referrer_id = ?').get(userId);
+  const rewards = d.prepare('SELECT rr.amount, rr.created_at, u.email as referred_email FROM referral_rewards rr JOIN users u ON u.id = rr.referred_id WHERE rr.referrer_id = ? ORDER BY rr.created_at DESC LIMIT 20').all(userId);
+  const withdrawals = d.prepare('SELECT * FROM referral_withdrawals WHERE user_id = ? ORDER BY created_at DESC LIMIT 10').all(userId);
+  return {
+    code: user?.referral_code,
+    balance: user?.referral_balance || 0,
+    referralsCount: referrals?.count || 0,
+    totalEarned: totalEarned?.total || 0,
+    rewards,
+    withdrawals,
+  };
+}
+
+export function createWithdrawal(userId, amount, cardInfo) {
+  const d = getDb();
+  const user = d.prepare('SELECT referral_balance FROM users WHERE id = ?').get(userId);
+  if (!user || user.referral_balance < amount) return null;
+  const id = crypto.randomUUID();
+  d.prepare(`
+    INSERT INTO referral_withdrawals (id, user_id, amount, card_info)
+    VALUES (?, ?, ?, ?)
+  `).run(id, userId, amount, cardInfo);
+  d.prepare("UPDATE users SET referral_balance = referral_balance - ?, updated_at = datetime('now') WHERE id = ?")
+    .run(amount, userId);
+  return id;
+}
+
+export function processWithdrawal(withdrawalId, status, adminNote) {
+  const d = getDb();
+  if (status === 'rejected') {
+    // Return funds
+    const w = d.prepare('SELECT user_id, amount FROM referral_withdrawals WHERE id = ?').get(withdrawalId);
+    if (w) {
+      d.prepare("UPDATE users SET referral_balance = referral_balance + ?, updated_at = datetime('now') WHERE id = ?")
+        .run(w.amount, w.user_id);
+    }
+  }
+  d.prepare("UPDATE referral_withdrawals SET status = ?, admin_note = ?, processed_at = datetime('now') WHERE id = ?")
+    .run(status, adminNote || '', withdrawalId);
 }
 
 // ========================================

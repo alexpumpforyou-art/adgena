@@ -121,6 +121,19 @@ async function processResult(params) {
       console.error('[Robokassa Result] Payment log error:', logErr.message);
     }
 
+    // Credit referrer 15% if this user was referred
+    try {
+      const userRow = d.prepare('SELECT referred_by FROM users WHERE id = ?').get(userId);
+      if (userRow?.referred_by) {
+        const { creditReferralReward } = require('@/lib/db');
+        const paymentIdRef = `${invId}_${planId}`;
+        const reward = creditReferralReward(userRow.referred_by, userId, paymentIdRef, parseFloat(outSum));
+        console.log(`[Robokassa Result] Referral reward: ${reward}₽ credited to ${userRow.referred_by}`);
+      }
+    } catch (refErr) {
+      console.error('[Robokassa Result] Referral credit error:', refErr.message);
+    }
+
     console.log(`[Robokassa Result] SUCCESS — User ${userId} ${isRecurring ? 'renewed' : 'upgraded to'} ${planId}, next charge in 30 days`);
   } catch (dbErr) {
     console.error('[Robokassa Result] DB error:', dbErr.message);
