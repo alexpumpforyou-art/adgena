@@ -1,23 +1,20 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { uploadFile } from '@/lib/storage';
-import fs from 'fs';
-import path from 'path';
+import { getSetting, setSetting } from '@/lib/db';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
-const DATA_PATH = path.join(process.cwd(), 'data', 'concept-thumbnails.json');
+const SETTING_KEY = 'concept_thumbnails';
 
 function loadThumbnails() {
   try {
-    if (fs.existsSync(DATA_PATH)) return JSON.parse(fs.readFileSync(DATA_PATH, 'utf-8'));
-  } catch { /* ignore */ }
-  return {};
+    const raw = getSetting(SETTING_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
 }
 
 function saveThumbnails(data) {
-  const dir = path.dirname(DATA_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  setSetting(SETTING_KEY, JSON.stringify(data));
 }
 
 // GET — return all concept thumbnails (public)

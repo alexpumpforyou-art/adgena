@@ -217,6 +217,43 @@ function initTables() {
   for (const [plan, limit] of Object.entries(planLimits)) {
     d.prepare("UPDATE users SET generations_limit = ? WHERE plan = ? AND generations_limit < ?").run(limit, plan, limit);
   }
+
+  // Settings table — persistent key-value store (survives redeploy)
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Migrate concept-thumbnails.json → DB (one-time)
+  try {
+    const existing = d.prepare("SELECT value FROM settings WHERE key = 'concept_thumbnails'").get();
+    if (!existing) {
+      const fsp = require('fs');
+      const pathMod = require('path');
+      const jsonPath = pathMod.join(process.cwd(), 'data', 'concept-thumbnails.json');
+      if (fsp.existsSync(jsonPath)) {
+        const data = fsp.readFileSync(jsonPath, 'utf-8');
+        d.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)").run('concept_thumbnails', data);
+        console.log('[DB] Migrated concept-thumbnails.json → settings table');
+      }
+    }
+  } catch { /* ignore */ }
+}
+
+// ========================================
+// SETTINGS (persistent key-value)
+// ========================================
+
+export function getSetting(key) {
+  const row = getDb().prepare("SELECT value FROM settings WHERE key = ?").get(key);
+  return row ? row.value : null;
+}
+
+export function setSetting(key, value) {
+  getDb().prepare("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))").run(key, value);
 }
 
 // ========================================
