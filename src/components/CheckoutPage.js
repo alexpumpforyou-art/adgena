@@ -129,7 +129,7 @@ function CheckoutForm({ locale = 'ru' }) {
           <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={pageStyles.checkbox} />
           <span style={pageStyles.checkboxText}>
             {isEn ? (
-              <>I agree to automatic charges per the <Link href="/terms" target="_blank" style={pageStyles.link}>terms of service</Link>. ${plan.price} will be charged every 30 days.</>
+              <>I agree to automatic charges per the <Link href="/en/terms" target="_blank" style={pageStyles.link}>terms of service</Link>. ${plan.price} will be charged every 30 days.</>
             ) : (
               <>Я согласен на автоматические списания согласно условиям <Link href="/terms" target="_blank" style={pageStyles.link}>оферты</Link>. Списание {plan.price.toLocaleString()} ₽ будет производиться каждые 30 дней.</>
             )}
@@ -151,9 +151,9 @@ function CheckoutForm({ locale = 'ru' }) {
         </button>
 
         <div style={pageStyles.links}>
-          <Link href="/terms" target="_blank" style={pageStyles.footerLink}>{isEn ? 'Terms' : 'Оферта'}</Link>
+          <Link href={isEn ? '/en/terms' : '/terms'} target="_blank" style={pageStyles.footerLink}>{isEn ? 'Terms' : 'Оферта'}</Link>
           <span style={pageStyles.linkSep}>•</span>
-          <Link href="/privacy" target="_blank" style={pageStyles.footerLink}>{isEn ? 'Privacy' : 'Конфиденциальность'}</Link>
+          <Link href={isEn ? '/en/privacy' : '/privacy'} target="_blank" style={pageStyles.footerLink}>{isEn ? 'Privacy' : 'Конфиденциальность'}</Link>
           <span style={pageStyles.linkSep}>•</span>
           <Link href={homeUrl} style={pageStyles.footerLink}>{isEn ? 'Home' : 'На главную'}</Link>
         </div>

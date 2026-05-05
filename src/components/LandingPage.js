@@ -470,8 +470,8 @@ function Pricing({ t, locale }) {
 // FOOTER
 // ========================================
 function Footer({ t, locale }) {
-  const privacyHref = locale === 'en' ? '/privacy' : '/privacy';
-  const termsHref = locale === 'en' ? '/terms' : '/terms';
+  const privacyHref = locale === 'en' ? '/en/privacy' : '/privacy';
+  const termsHref = locale === 'en' ? '/en/terms' : '/terms';
 
   return (
     <footer className={styles.footer}>

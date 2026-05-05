@@ -309,9 +309,9 @@ function AuthForm({ locale = 'ru' }) {
 
           <p className={styles.terms}>
             {isEn ? 'By continuing, you agree to the ' : 'Продолжая, вы соглашаетесь с '}
-            <a href="/terms" className={styles.link}>{isEn ? 'Terms of Service' : 'Условиями использования'}</a>
+            <a href={isEn ? '/en/terms' : '/terms'} className={styles.link}>{isEn ? 'Terms of Service' : 'Условиями использования'}</a>
             {isEn ? ' and ' : ' и '}
-            <a href="/privacy" className={styles.link}>{isEn ? 'Privacy Policy' : 'Политикой конфиденциальности'}</a>
+            <a href={isEn ? '/en/privacy' : '/privacy'} className={styles.link}>{isEn ? 'Privacy Policy' : 'Политикой конфиденциальности'}</a>
           </p>
 
           <div className={styles.toggle}>
@@ -341,9 +341,9 @@ function AuthForm({ locale = 'ru' }) {
       <footer className={styles.footer}>
         <span>© 2026 Adgena</span>
         <div className={styles.footerLinks}>
-          <a href="/privacy">{isEn ? 'Privacy' : 'Конфиденциальность'}</a>
-          <a href="/terms">{isEn ? 'Terms' : 'Условия'}</a>
-          <a href="/offer">{isEn ? 'Agreement' : 'Оферта'}</a>
+          <a href={isEn ? '/en/privacy' : '/privacy'}>{isEn ? 'Privacy' : 'Конфиденциальность'}</a>
+          <a href={isEn ? '/en/terms' : '/terms'}>{isEn ? 'Terms' : 'Условия'}</a>
+          <a href={isEn ? '/en/offer' : '/offer'}>{isEn ? 'Agreement' : 'Оферта'}</a>
         </div>
       </footer>
     </div>
