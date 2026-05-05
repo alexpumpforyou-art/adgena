@@ -204,12 +204,12 @@ export const LANGS = {
     pricingTitle: 'Transparent pricing',
     pricingMarquee: '1 free generation on signup',
     pricingMarquee2: 'Try AI product card generation for free',
-    currency: '₽',
+    currency: '$',
     plans: [
-      { id: 'lite', name: 'Lite', price: 390, desc: 'Try the service', feat: ['10 generations', 'All concepts', 'All formats'], cta: 'Choose' },
-      { id: 'standard', name: 'Standard', price: 990, desc: 'For a product line', feat: ['30 generations', 'All features', 'Ad formats', 'Improvements'], cta: 'Choose', hl: true, badge: 'Popular' },
-      { id: 'pro', name: 'Pro', price: 2490, desc: 'Optimal choice', feat: ['80 generations', 'Everything included', 'Version history', 'Priority'], cta: 'Choose' },
-      { id: 'business', name: 'Business', price: 4990, desc: 'Maximum power', feat: ['200 generations', 'API access', 'Multi-users', 'Brand Kit'], cta: 'Choose' },
+      { id: 'lite', name: 'Lite', price: 4.5, desc: 'Try the service', feat: ['10 generations', 'All concepts', 'All formats'], cta: 'Choose' },
+      { id: 'standard', name: 'Standard', price: 11.5, desc: 'For a product line', feat: ['30 generations', 'All features', 'Ad formats', 'Improvements'], cta: 'Choose', hl: true, badge: 'Popular' },
+      { id: 'pro', name: 'Pro', price: 29, desc: 'Optimal choice', feat: ['80 generations', 'Everything included', 'Version history', 'Priority'], cta: 'Choose' },
+      { id: 'business', name: 'Business', price: 58, desc: 'Maximum power', feat: ['200 generations', 'API access', 'Multi-users', 'Brand Kit'], cta: 'Choose' },
     ],
 
     // Footer

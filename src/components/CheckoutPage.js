@@ -12,10 +12,10 @@ const PLANS_RU = {
 };
 
 const PLANS_EN = {
-  lite:     { name: 'Lite', price: 390, gens: 10 },
-  standard: { name: 'Standard', price: 990, gens: 30 },
-  pro:      { name: 'Pro', price: 2490, gens: 80 },
-  business: { name: 'Business', price: 4990, gens: 200 },
+  lite:     { name: 'Lite', price: 4.5, gens: 10 },
+  standard: { name: 'Standard', price: 11.5, gens: 30 },
+  pro:      { name: 'Pro', price: 29, gens: 80 },
+  business: { name: 'Business', price: 58, gens: 200 },
 };
 
 function CheckoutForm({ locale = 'ru' }) {
@@ -102,7 +102,7 @@ function CheckoutForm({ locale = 'ru' }) {
         <div style={pageStyles.planBox}>
           <div style={pageStyles.planRow}>
             <span style={pageStyles.planName}>{plan.name}</span>
-            <span style={pageStyles.planPrice}>{plan.price.toLocaleString()} ₽<span style={pageStyles.perMonth}>{isEn ? '/mo' : '/мес'}</span></span>
+            <span style={pageStyles.planPrice}>{isEn ? `$${plan.price}` : `${plan.price.toLocaleString()} ₽`}<span style={pageStyles.perMonth}>{isEn ? '/mo' : '/мес'}</span></span>
           </div>
           <div style={pageStyles.planDetails}>
             <span>{plan.gens} {isEn ? 'generations per month' : 'генераций в месяц'}</span>
@@ -129,7 +129,7 @@ function CheckoutForm({ locale = 'ru' }) {
           <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={pageStyles.checkbox} />
           <span style={pageStyles.checkboxText}>
             {isEn ? (
-              <>I agree to automatic charges per the <Link href="/terms" target="_blank" style={pageStyles.link}>terms of service</Link>. {plan.price.toLocaleString()} ₽ will be charged every 30 days.</>
+              <>I agree to automatic charges per the <Link href="/terms" target="_blank" style={pageStyles.link}>terms of service</Link>. ${plan.price} will be charged every 30 days.</>
             ) : (
               <>Я согласен на автоматические списания согласно условиям <Link href="/terms" target="_blank" style={pageStyles.link}>оферты</Link>. Списание {plan.price.toLocaleString()} ₽ будет производиться каждые 30 дней.</>
             )}
@@ -147,7 +147,7 @@ function CheckoutForm({ locale = 'ru' }) {
         >
           {loading
             ? (isEn ? 'Redirecting to payment...' : 'Переход к оплате...')
-            : (isEn ? `Pay ${plan.price.toLocaleString()} ₽` : `Оплатить ${plan.price.toLocaleString()} ₽`)}
+            : (isEn ? `Pay $${plan.price}` : `Оплатить ${plan.price.toLocaleString()} ₽`)}
         </button>
 
         <div style={pageStyles.links}>

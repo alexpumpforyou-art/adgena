@@ -454,7 +454,7 @@ function Pricing({ t, locale }) {
               <h3 className={styles.priceName}>{p.name}</h3>
               <p className={styles.priceDesc}>{p.desc}</p>
               <div className={styles.priceAmount}>
-                {`${p.price.toLocaleString()} ${t.currency}`}
+                {t.currency === '$' ? `$${p.price}` : `${p.price.toLocaleString()} ${t.currency}`}
               </div>
               <ul className={styles.priceFeats}>{p.feat.map((f, i) => <li key={i}>{f}</li>)}</ul>
               <Link href={`${checkoutBase}?plan=${p.id}`} className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}>{p.cta}</Link>

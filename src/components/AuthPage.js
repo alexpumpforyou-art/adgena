@@ -288,12 +288,14 @@ function AuthForm({ locale = 'ru' }) {
           <div className={styles.divider}><span>{isEn ? 'or' : 'или'}</span></div>
 
           <div className={styles.oauthRow}>
-            <button className={`${styles.oauthBtn} ${styles.oauthYandex}`} onClick={() => handleOAuth('yandex')}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                <path d="M13.32 7.67h-.94c-1.75 0-2.67.98-2.67 2.41 0 1.56.68 2.35 2.1 3.39l1.17.82-3.36 5.27H7.23l3.05-4.6c-1.81-1.36-2.82-2.63-2.82-4.78 0-2.76 1.88-4.51 5.13-4.51h2.87V19.6h-2.14V7.67z"/>
-              </svg>
-              <span>{isEn ? 'Yandex ID' : 'Яндекс ID'}</span>
-            </button>
+            {!isEn && (
+              <button className={`${styles.oauthBtn} ${styles.oauthYandex}`} onClick={() => handleOAuth('yandex')}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M13.32 7.67h-.94c-1.75 0-2.67.98-2.67 2.41 0 1.56.68 2.35 2.1 3.39l1.17.82-3.36 5.27H7.23l3.05-4.6c-1.81-1.36-2.82-2.63-2.82-4.78 0-2.76 1.88-4.51 5.13-4.51h2.87V19.6h-2.14V7.67z"/>
+                </svg>
+                <span>Яндекс ID</span>
+              </button>
+            )}
             <button className={`${styles.oauthBtn} ${styles.oauthGoogle}`} onClick={() => handleOAuth('google')}>
               <svg viewBox="0 0 24 24" width="18" height="18">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
