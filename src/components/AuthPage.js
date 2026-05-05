@@ -140,6 +140,7 @@ function AuthForm({ locale = 'ru' }) {
       });
       const data = await res.json();
       if (data.success) {
+        if (typeof window !== 'undefined' && window.ym) window.ym(109048904, 'reachGoal', 'registration');
         const redirectUrl = searchParams.get('redirect');
         window.location.href = redirectUrl || '/dashboard';
       } else {

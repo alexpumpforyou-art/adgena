@@ -1,8 +1,13 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function PaymentSuccessPage() {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.ym) window.ym(109048904, 'reachGoal', 'payment');
+  }, []);
+
   return (
     <div style={{
       minHeight: '100vh',
