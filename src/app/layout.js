@@ -32,7 +32,8 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
-        <link rel="apple-touch-icon" href="/logo-icon.webp" />
+        <link rel="icon" href="/favicon-180.png" type="image/png" sizes="180x180" />
+        <link rel="apple-touch-icon" href="/favicon-180.png" />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
           m[i].l=1*new Date();
