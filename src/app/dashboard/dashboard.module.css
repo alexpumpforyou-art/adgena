@@ -760,6 +760,8 @@
     padding: 20px 16px;
   }
   .rightPanel { min-height: 60vh; padding: 24px 16px; }
+  /* On mobile, do NOT stick generate button — it overlaps the gallery/result below */
+  .generateBtn { position: static; box-shadow: none; }
   .resultModalContent { grid-template-columns: 1fr; max-height: 95vh; overflow-y: auto; }
   .modalLeft { max-height: 55vh; }
   .modalImage { max-height: 50vh; }
