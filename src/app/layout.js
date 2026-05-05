@@ -30,6 +30,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ru" className={`${manrope.variable} ${unbounded.variable}`}>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
         <link rel="apple-touch-icon" href="/logo-icon.webp" />
         <script dangerouslySetInnerHTML={{ __html: `
