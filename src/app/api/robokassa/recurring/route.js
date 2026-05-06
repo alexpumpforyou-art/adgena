@@ -36,12 +36,21 @@ export async function GET(request) {
     const db = require('@/lib/db').default;
     const d = db();
 
+    d.prepare(`
+      UPDATE subscriptions
+      SET billing_status = 'idle', updated_at = datetime('now')
+      WHERE billing_status = 'processing'
+        AND last_charge_attempt_at <= datetime('now', '-3 hours')
+    `).run();
+
     // Find subscriptions due for charge
     const dueSubscriptions = d.prepare(`
       SELECT s.*, u.email, u.name
       FROM subscriptions s
       JOIN users u ON u.id = s.user_id
-      WHERE s.status = 'active' AND s.next_charge_at <= datetime('now')
+      WHERE s.status = 'active'
+        AND s.next_charge_at <= datetime('now')
+        AND COALESCE(s.billing_status, 'idle') != 'processing'
     `).all();
 
     console.log(`[Recurring] Found ${dueSubscriptions.length} subscriptions to charge`);
@@ -105,6 +114,14 @@ export async function GET(request) {
       try {
         console.log(`[Recurring] Charging user ${sub.user_id} (${sub.email}): plan=${sub.plan}, sum=${outSum}, prevInvId=${sub.initial_inv_id}`);
 
+        d.prepare(`
+          UPDATE subscriptions
+          SET billing_status = 'processing',
+              last_charge_attempt_at = datetime('now'),
+              updated_at = datetime('now')
+          WHERE id = ? AND COALESCE(billing_status, 'idle') != 'processing'
+        `).run(sub.id);
+
         const res = await fetch(recurringUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -127,9 +144,19 @@ export async function GET(request) {
 
         if (!res.ok) {
           console.error(`[Recurring] Robokassa rejected charge for ${sub.user_id}: ${res.status}`);
+          d.prepare(`
+            UPDATE subscriptions
+            SET billing_status = 'idle', updated_at = datetime('now')
+            WHERE id = ?
+          `).run(sub.id);
         }
       } catch (reqErr) {
         console.error(`[Recurring] Request error for ${sub.user_id}:`, reqErr.message);
+        d.prepare(`
+          UPDATE subscriptions
+          SET billing_status = 'idle', updated_at = datetime('now')
+          WHERE id = ?
+        `).run(sub.id);
         results.push({
           userId: sub.user_id,
           email: sub.email,

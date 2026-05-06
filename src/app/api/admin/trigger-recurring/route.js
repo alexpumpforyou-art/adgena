@@ -26,12 +26,21 @@ export async function POST() {
     const db = require('@/lib/db').default;
     const d = db();
 
+    d.prepare(`
+      UPDATE subscriptions
+      SET billing_status = 'idle', updated_at = datetime('now')
+      WHERE billing_status = 'processing'
+        AND last_charge_attempt_at <= datetime('now', '-3 hours')
+    `).run();
+
     // Find all active subscriptions due for charge
     const dueSubscriptions = d.prepare(`
       SELECT s.*, u.email, u.name
       FROM subscriptions s
       JOIN users u ON u.id = s.user_id
-      WHERE s.status = 'active' AND s.next_charge_at <= datetime('now')
+      WHERE s.status = 'active'
+        AND s.next_charge_at <= datetime('now')
+        AND COALESCE(s.billing_status, 'idle') != 'processing'
     `).all();
 
     console.log(`[Admin Recurring] Found ${dueSubscriptions.length} subscriptions to charge`);
@@ -88,6 +97,14 @@ export async function POST() {
       }
 
       try {
+        d.prepare(`
+          UPDATE subscriptions
+          SET billing_status = 'processing',
+              last_charge_attempt_at = datetime('now'),
+              updated_at = datetime('now')
+          WHERE id = ? AND COALESCE(billing_status, 'idle') != 'processing'
+        `).run(sub.id);
+
         const res = await fetch('https://auth.robokassa.ru/Merchant/Recurring', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -107,7 +124,20 @@ export async function POST() {
           httpStatus: res.status,
           response: responseText.slice(0, 300),
         });
+
+        if (!res.ok) {
+          d.prepare(`
+            UPDATE subscriptions
+            SET billing_status = 'idle', updated_at = datetime('now')
+            WHERE id = ?
+          `).run(sub.id);
+        }
       } catch (reqErr) {
+        d.prepare(`
+          UPDATE subscriptions
+          SET billing_status = 'idle', updated_at = datetime('now')
+          WHERE id = ?
+        `).run(sub.id);
         results.push({
           email: sub.email,
           plan: sub.plan,

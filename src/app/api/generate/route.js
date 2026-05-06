@@ -204,6 +204,9 @@ export async function POST(request) {
       });
 
       if (user) updateGeneration(generationId, { status: 'failed' });
+      if (generationConsumed && currentUserId) {
+        try { refundGeneration(currentUserId); generationConsumed = false; } catch {}
+      }
 
       return NextResponse.json({
         success: false,

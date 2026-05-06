@@ -111,6 +111,8 @@ function initTables() {
       initial_inv_id TEXT NOT NULL,
       status TEXT DEFAULT 'active',
       next_charge_at TEXT,
+      billing_status TEXT DEFAULT 'idle',
+      last_charge_attempt_at TEXT DEFAULT NULL,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id)
@@ -118,6 +120,7 @@ function initTables() {
 
     CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
+    CREATE INDEX IF NOT EXISTS idx_subscriptions_next_charge ON subscriptions(status, next_charge_at);
 
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY,
@@ -144,6 +147,7 @@ function initTables() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
+    CREATE INDEX IF NOT EXISTS idx_payments_created ON payments(created_at);
     CREATE INDEX IF NOT EXISTS idx_consents_user ON consents(user_id);
 
     CREATE TABLE IF NOT EXISTS email_log (
@@ -211,6 +215,11 @@ function initTables() {
   catch { d.exec("ALTER TABLE users ADD COLUMN referred_by TEXT"); }
   try { d.prepare("SELECT referral_balance FROM users LIMIT 1").get(); }
   catch { d.exec("ALTER TABLE users ADD COLUMN referral_balance REAL DEFAULT 0"); }
+
+  try { d.prepare("SELECT billing_status FROM subscriptions LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE subscriptions ADD COLUMN billing_status TEXT DEFAULT 'idle'"); }
+  try { d.prepare("SELECT last_charge_attempt_at FROM subscriptions LIMIT 1").get(); }
+  catch { d.exec("ALTER TABLE subscriptions ADD COLUMN last_charge_attempt_at TEXT DEFAULT NULL"); }
 
   // Data fix: sync generations_limit for paid plans that still have limit=1
   const planLimits = { lite: 10, standard: 30, pro: 80, business: 200 };

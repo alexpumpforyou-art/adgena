@@ -84,6 +84,11 @@ async function processResult(params) {
     const d = db();
 
     const plan = PLANS[planId];
+    const existingPayment = d.prepare('SELECT id FROM payments WHERE inv_id = ?').get(invId);
+    if (existingPayment) {
+      console.log(`[Robokassa Result] Duplicate callback ignored: InvId=${invId}`);
+      return new NextResponse(`OK${invId}`, { status: 200 });
+    }
 
     // Update user plan + reset generations counter
     d.prepare(`
@@ -107,7 +112,11 @@ async function processResult(params) {
       // Recurring charge — update next_charge_at and refresh the inv_id
       d.prepare(`
         UPDATE subscriptions 
-        SET next_charge_at = datetime('now', ?), initial_inv_id = ?, updated_at = datetime('now')
+        SET next_charge_at = datetime('now', ?),
+            initial_inv_id = ?,
+            billing_status = 'idle',
+            last_charge_attempt_at = NULL,
+            updated_at = datetime('now')
         WHERE id = ?
       `).run(recurringInterval, invId, existingSub.id);
     } else {
@@ -141,7 +150,7 @@ async function processResult(params) {
       console.error('[Robokassa Result] Referral credit error:', refErr.message);
     }
 
-    console.log(`[Robokassa Result] SUCCESS — User ${userId} ${isRecurring ? 'renewed' : 'upgraded to'} ${planId}, next charge in 30 days`);
+    console.log(`[Robokassa Result] SUCCESS — User ${userId} ${isRecurring ? 'renewed' : 'upgraded to'} ${planId}, next charge: ${recurringInterval}`);
   } catch (dbErr) {
     console.error('[Robokassa Result] DB error:', dbErr.message);
   }

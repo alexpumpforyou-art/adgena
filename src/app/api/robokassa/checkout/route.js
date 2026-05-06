@@ -21,6 +21,10 @@ export async function GET(request) {
       return NextResponse.redirect(new URL('/?error=invalid_plan#pricing', request.url));
     }
 
+    if (planId === 'test' && user.role !== 'admin') {
+      return NextResponse.redirect(new URL('/?error=invalid_plan#pricing', request.url));
+    }
+
     const plan = PLANS[planId];
     const merchantLogin = process.env.ROBOKASSA_MERCHANT_LOGIN;
     const password1 = process.env.ROBOKASSA_PASSWORD1;

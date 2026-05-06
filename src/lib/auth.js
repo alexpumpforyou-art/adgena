@@ -2,7 +2,11 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { getUserById, getSessionByToken, setUserRole } from './db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET is required in production');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 const COOKIE_NAME = 'adgena_session';
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
   .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
