@@ -58,7 +58,7 @@ export async function PUT(request) {
     if (plan) {
       const limits = { free: 1, lite: 10, standard: 30, pro: 80, business: 200, unlimited: 99999 };
       d.prepare('UPDATE users SET plan = ?, generations_limit = ?, updated_at = datetime(\'now\') WHERE id = ?')
-        .run(plan, generationsLimit || limits[plan] || 5, userId);
+        .run(plan, generationsLimit || limits[plan] || 1, userId);
     }
 
     if (resetGenerations) {

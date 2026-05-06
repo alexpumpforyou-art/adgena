@@ -218,6 +218,9 @@ function initTables() {
     d.prepare("UPDATE users SET generations_limit = ? WHERE plan = ? AND generations_limit < ?").run(limit, plan, limit);
   }
 
+  // Data fix: free plan users must have generations_limit = 1
+  d.prepare("UPDATE users SET generations_limit = 1 WHERE plan = 'free' AND generations_limit != 1").run();
+
   // Settings table — persistent key-value store (survives redeploy)
   d.exec(`
     CREATE TABLE IF NOT EXISTS settings (
