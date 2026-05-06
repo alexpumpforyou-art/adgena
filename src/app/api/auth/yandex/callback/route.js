@@ -104,8 +104,8 @@ export async function GET(request) {
       const displayName = yandexUser.display_name || yandexUser.real_name || email.split('@')[0];
 
       d.prepare(`
-        INSERT INTO users (id, email, password_hash, name)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO users (id, email, password_hash, name, generations_limit)
+        VALUES (?, ?, ?, ?, 1)
       `).run(id, email.toLowerCase().trim(), passwordHash, displayName);
 
       user = { id, email, name: displayName };

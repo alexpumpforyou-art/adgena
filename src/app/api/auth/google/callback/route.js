@@ -70,8 +70,8 @@ export async function GET(request) {
       const passwordHash = bcryptjs.hashSync(crypto.randomBytes(32).toString('hex'), 10);
 
       d.prepare(`
-        INSERT INTO users (id, email, password_hash, name)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO users (id, email, password_hash, name, generations_limit)
+        VALUES (?, ?, ?, ?, 1)
       `).run(id, googleUser.email.toLowerCase().trim(), passwordHash, googleUser.name || '');
 
       user = { id, email: googleUser.email, name: googleUser.name || '' };

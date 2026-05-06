@@ -269,8 +269,8 @@ export function createUser({ email, password, name }) {
   const passwordHash = bcryptjs.hashSync(password, 10);
 
   const stmt = d.prepare(`
-    INSERT INTO users (id, email, password_hash, name)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO users (id, email, password_hash, name, generations_limit)
+    VALUES (?, ?, ?, ?, 1)
   `);
 
   try {
