@@ -728,7 +728,7 @@ export default function DashboardPage() {
               />
 
               <label className={styles.label} style={{marginTop: 16}}>Стиль карточки</label>
-              <div className={styles.tabRow}>
+              <div className={`${styles.tabRow} ${styles.cardStyleRow}`}>
                 {CARD_STYLES.map(style => (
                   <button
                     key={style.id}

@@ -336,6 +336,11 @@
    ======================================== */
 .tabRow { display: flex; gap: 4px; }
 
+.cardStyleRow {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .tabBtn {
   flex: 1;
   padding: 8px 12px;
@@ -350,6 +355,12 @@
   font-family: inherit;
   white-space: nowrap;
 }
+
+.cardStyleRow .tabBtn {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
 .tabBtnActive {
   background: var(--text-primary);
   color: var(--bg-primary);
