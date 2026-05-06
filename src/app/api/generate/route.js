@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { canGenerate, incrementGenerations, createGeneration, updateGeneration } from '@/lib/db';
+import { tryConsumeGeneration, refundGeneration, createGeneration, updateGeneration } from '@/lib/db';
 import { generateProductCard } from '@/lib/apiyi';
 import { consumeToken, tryAcquireSlot, releaseSlot, getClientIp } from '@/lib/ratelimit';
 import sharp from 'sharp';
@@ -29,8 +29,12 @@ const ASPECT_TO_SIZE = {
 };
 
 export async function POST(request) {
-  let rlKey = null;
   let slotAcquired = false;
+  let rlKey = null;
+  let generationConsumed = false;
+  let generationCompleted = false;
+  let currentUserId = null;
+
   try {
     const formData = await request.formData();
     const image = formData.get('image');
@@ -80,13 +84,7 @@ export async function POST(request) {
 
     // Auth check (optional — allow anonymous with demo limits)
     const user = await getCurrentUser();
-
-    if (user && !canGenerate(user.id)) {
-      return NextResponse.json(
-        { success: false, error: 'Лимит генераций исчерпан. Обновите тариф.' },
-        { status: 403 }
-      );
-    }
+    currentUserId = user?.id || null;
 
     // === RATE LIMIT ===
     // Key: user id if authenticated, else client IP.
@@ -108,6 +106,14 @@ export async function POST(request) {
       );
     }
     slotAcquired = true;
+
+    if (user && !tryConsumeGeneration(user.id)) {
+      return NextResponse.json(
+        { success: false, error: 'Лимит генераций исчерпан. Обновите тариф.' },
+        { status: 403 }
+      );
+    }
+    generationConsumed = !!user;
 
     // Parse AI-generated text
     let parsedText = {};
@@ -264,7 +270,7 @@ export async function POST(request) {
         model: result.model,
         costUsd: result.costUsd || 0,
       });
-      incrementGenerations(user.id);
+      generationCompleted = true;
     }
 
     console.log(`[Generate] Done: ${generationId} (${(finalBuffer?.length / 1024).toFixed(0) || '?'}KB)${s3Url ? ' → S3' : ''}`);
@@ -281,6 +287,9 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('[Generate] Error:', error.message);
+    if (generationConsumed && !generationCompleted && currentUserId) {
+      try { refundGeneration(currentUserId); } catch {}
+    }
     return NextResponse.json(
       { success: false, error: error.message || 'Ошибка генерации' },
       { status: 500 }

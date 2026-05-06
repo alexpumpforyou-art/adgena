@@ -220,6 +220,7 @@ function initTables() {
 
   // Data fix: free plan users must have generations_limit = 1
   d.prepare("UPDATE users SET generations_limit = 1 WHERE plan = 'free' AND generations_limit != 1").run();
+  d.prepare("UPDATE users SET generations_used = 1 WHERE plan = 'free' AND generations_used > 1").run();
 
   // Settings table — persistent key-value store (survives redeploy)
   d.exec(`
@@ -309,6 +310,25 @@ export function incrementGenerations(userId) {
   const d = getDb();
   d.prepare('UPDATE users SET generations_used = generations_used + 1, updated_at = datetime(\'now\') WHERE id = ?')
     .run(userId);
+}
+
+export function tryConsumeGeneration(userId) {
+  const d = getDb();
+  const result = d.prepare(`
+    UPDATE users
+    SET generations_used = generations_used + 1, updated_at = datetime('now')
+    WHERE id = ? AND generations_used < generations_limit
+  `).run(userId);
+  return result.changes > 0;
+}
+
+export function refundGeneration(userId) {
+  const d = getDb();
+  d.prepare(`
+    UPDATE users
+    SET generations_used = MAX(generations_used - 1, 0), updated_at = datetime('now')
+    WHERE id = ?
+  `).run(userId);
 }
 
 export function resetMonthlyGenerations() {
