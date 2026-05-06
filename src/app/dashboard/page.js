@@ -90,11 +90,11 @@ const AD_CONCEPTS = [
 ];
 
 const CARD_STYLES = [
-  { id: 'classic', name: 'Классический' },
-  { id: 'premium', name: 'Премиум' },
-  { id: 'infographic', name: 'Инфографика' },
-  { id: 'typography', name: 'Типографика' },
-  { id: 'lifestyle', name: 'Lifestyle' },
+  { id: 'classic', name: 'Классический', desc: 'Чистая WB/Ozon карточка' },
+  { id: 'premium', name: 'Премиум', desc: 'Сдержанный брендовый стиль' },
+  { id: 'infographic', name: 'Инфографика', desc: 'Выноски и детали товара' },
+  { id: 'typography', name: 'Типографика', desc: 'Крупный текст на фоне' },
+  { id: 'lifestyle', name: 'Lifestyle', desc: 'Эмоциональный фон и свет' },
 ];
 
 const ASPECT_RATIOS = [
@@ -728,14 +728,23 @@ export default function DashboardPage() {
               />
 
               <label className={styles.label} style={{marginTop: 16}}>Стиль карточки</label>
-              <div className={`${styles.tabRow} ${styles.cardStyleRow}`}>
+              <div className={styles.cardStyleGrid}>
                 {CARD_STYLES.map(style => (
                   <button
                     key={style.id}
-                    className={`${styles.tabBtn} ${cardStyle === style.id ? styles.tabBtnActive : ''}`}
+                    className={`${styles.cardStyleBtn} ${cardStyle === style.id ? styles.cardStyleBtnActive : ''}`}
                     onClick={() => setCardStyle(style.id)}
                   >
-                    {style.name}
+                    <span className={`${styles.cardStylePreview} ${styles[`cardStylePreview_${style.id}`]}`}>
+                      <span className={styles.previewProduct} />
+                      <span className={styles.previewLine1} />
+                      <span className={styles.previewLine2} />
+                      <span className={styles.previewDot1} />
+                      <span className={styles.previewDot2} />
+                      <span className={styles.previewBadge} />
+                    </span>
+                    <span className={styles.cardStyleName}>{style.name}</span>
+                    <span className={styles.cardStyleDesc}>{style.desc}</span>
                   </button>
                 ))}
               </div>
