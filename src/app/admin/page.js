@@ -51,12 +51,16 @@ export default function AdminPage() {
   const [testRecurringLoading, setTestRecurringLoading] = useState(false);
   const [testPaymentResult, setTestPaymentResult] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
+  const [payments, setPayments] = useState([]);
 
   const loadSubscriptions = async () => {
     try {
       const res = await fetch('/api/admin/subscriptions');
       const data = await res.json();
-      if (data.success) setSubscriptions(data.subscriptions || []);
+      if (data.success) {
+        setSubscriptions(data.subscriptions || []);
+        setPayments(data.payments || []);
+      }
     } catch { /* ignore */ }
   };
 
@@ -834,9 +838,9 @@ export default function AdminPage() {
           )}
 
           {/* Subscriptions Table */}
-          <h3 style={{ color: 'var(--text-primary)', marginBottom: 12, fontSize: 16 }}>Активные подписки</h3>
+          <h3 style={{ color: 'var(--text-primary)', marginBottom: 12, fontSize: 16 }}>Подписки пользователей</h3>
           {subscriptions.length === 0 ? (
-            <p style={{ color: '#6b7280', fontSize: 13 }}>Нет активных подписок</p>
+            <p style={{ color: '#6b7280', fontSize: 13 }}>Нет подписок</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table className={styles.table}>
@@ -846,6 +850,10 @@ export default function AdminPage() {
                     <th>План</th>
                     <th>Сумма</th>
                     <th>Статус</th>
+                    <th>Платежи</th>
+                    <th>Ребилы</th>
+                    <th>Всего</th>
+                    <th>Последнее списание</th>
                     <th>След. списание</th>
                     <th>InvID</th>
                     <th>Действия</th>
@@ -858,6 +866,17 @@ export default function AdminPage() {
                       <td><span style={{ background: planColors[sub.plan] || '#6b7280', padding: '2px 8px', borderRadius: 4, fontSize: 11, color: '#fff' }}>{sub.plan}</span></td>
                       <td>{sub.amount}₽</td>
                       <td><span style={{ color: sub.status === 'active' ? '#22c55e' : '#ef4444' }}>{sub.status}</span></td>
+                      <td>{sub.total_payments || 0}</td>
+                      <td style={{ color: (sub.recurring_payments || 0) > 0 ? '#22c55e' : '#9ca3af' }}>{sub.recurring_payments || 0}</td>
+                      <td>{Number(sub.total_amount || 0).toLocaleString('ru-RU')}₽</td>
+                      <td style={{ fontSize: 12 }}>
+                        {sub.last_payment_at ? (
+                          <>
+                            <div>{new Date(sub.last_payment_at + 'Z').toLocaleString('ru-RU')}</div>
+                            <div style={{ color: '#9ca3af' }}>{sub.last_payment_amount}₽ · #{sub.last_payment_inv_id}</div>
+                          </>
+                        ) : '—'}
+                      </td>
                       <td style={{ fontSize: 12 }}>{sub.next_charge_at ? new Date(sub.next_charge_at + 'Z').toLocaleString('ru-RU') : '—'}</td>
                       <td style={{ fontSize: 11, fontFamily: 'monospace' }}>{sub.initial_inv_id}</td>
                       <td>
@@ -870,6 +889,44 @@ export default function AdminPage() {
                           </button>
                         )}
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <h3 style={{ color: 'var(--text-primary)', marginTop: 28, marginBottom: 12, fontSize: 16 }}>История списаний</h3>
+          {payments.length === 0 ? (
+            <p style={{ color: '#6b7280', fontSize: 13 }}>Платежей пока нет</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Дата</th>
+                    <th>Email</th>
+                    <th>План</th>
+                    <th>Сумма</th>
+                    <th>Тип</th>
+                    <th>Статус</th>
+                    <th>InvID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map(payment => (
+                    <tr key={payment.id}>
+                      <td style={{ fontSize: 12 }}>{payment.created_at ? new Date(payment.created_at + 'Z').toLocaleString('ru-RU') : '—'}</td>
+                      <td style={{ fontSize: 12 }}>{payment.email || payment.user_id?.slice(0, 8)}</td>
+                      <td><span style={{ background: planColors[payment.plan] || '#6b7280', padding: '2px 8px', borderRadius: 4, fontSize: 11, color: '#fff' }}>{payment.plan || '—'}</span></td>
+                      <td>{payment.amount}₽</td>
+                      <td>
+                        <span style={{ color: payment.is_recurring ? '#22c55e' : '#60a5fa' }}>
+                          {payment.is_recurring ? 'ребил' : 'первая оплата'}
+                        </span>
+                      </td>
+                      <td><span style={{ color: payment.status === 'completed' ? '#22c55e' : '#f59e0b' }}>{payment.status || 'completed'}</span></td>
+                      <td style={{ fontSize: 11, fontFamily: 'monospace' }}>{payment.inv_id || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
