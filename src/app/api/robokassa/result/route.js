@@ -98,19 +98,24 @@ async function processResult(params) {
     const existingSub = d.prepare('SELECT id FROM subscriptions WHERE user_id = ? AND status = ?').get(userId, 'active');
     const isRecurring = !!existingSub;
 
+    // Determine recurring interval: test plan = 1 hour, others = 30 days
+    const recurringInterval = plan.recurringHours
+      ? `+${plan.recurringHours} hours`
+      : '+30 days';
+
     if (existingSub) {
       // Recurring charge — update next_charge_at and refresh the inv_id
       d.prepare(`
         UPDATE subscriptions 
-        SET next_charge_at = datetime('now', '+30 days'), initial_inv_id = ?, updated_at = datetime('now')
+        SET next_charge_at = datetime('now', ?), initial_inv_id = ?, updated_at = datetime('now')
         WHERE id = ?
-      `).run(invId, existingSub.id);
+      `).run(recurringInterval, invId, existingSub.id);
     } else {
-      // First payment — create new subscription (next charge in 30 days)
+      // First payment — create new subscription
       d.prepare(`
         INSERT INTO subscriptions (id, user_id, plan, amount, initial_inv_id, status, next_charge_at)
-        VALUES (?, ?, ?, ?, ?, 'active', datetime('now', '+30 days'))
-      `).run(crypto.randomUUID(), userId, planId, parseFloat(outSum), invId);
+        VALUES (?, ?, ?, ?, ?, 'active', datetime('now', ?))
+      `).run(crypto.randomUUID(), userId, planId, parseFloat(outSum), invId, recurringInterval);
     }
 
     // Log payment

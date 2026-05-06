@@ -46,6 +46,51 @@ export default function AdminPage() {
   const [conceptThumbs, setConceptThumbs] = useState({});
   const [conceptUploading, setConceptUploading] = useState(null);
 
+  // Test payments
+  const [testPaymentLoading, setTestPaymentLoading] = useState(false);
+  const [testRecurringLoading, setTestRecurringLoading] = useState(false);
+  const [testPaymentResult, setTestPaymentResult] = useState(null);
+  const [subscriptions, setSubscriptions] = useState([]);
+
+  const loadSubscriptions = async () => {
+    try {
+      const res = await fetch('/api/admin/subscriptions');
+      const data = await res.json();
+      if (data.success) setSubscriptions(data.subscriptions || []);
+    } catch { /* ignore */ }
+  };
+
+  const handleTestPayment = () => {
+    window.open('/api/robokassa/checkout?plan=test', '_blank');
+  };
+
+  const handleTriggerRecurring = async () => {
+    if (!confirm('Запустить обработку рекуррентных платежей прямо сейчас?')) return;
+    setTestRecurringLoading(true);
+    setTestPaymentResult(null);
+    try {
+      const res = await fetch('/api/admin/trigger-recurring', { method: 'POST' });
+      const data = await res.json();
+      setTestPaymentResult(data);
+    } catch (err) {
+      setTestPaymentResult({ error: err.message });
+    }
+    setTestRecurringLoading(false);
+    loadSubscriptions();
+  };
+
+  const handleCancelSubscription = async (subId) => {
+    if (!confirm('Отменить эту подписку?')) return;
+    try {
+      await fetch('/api/admin/subscriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel', subscriptionId: subId }),
+      });
+      loadSubscriptions();
+    } catch { /* ignore */ }
+  };
+
   const loadQuotas = async () => {
     setQuotasLoading(true);
     try {
@@ -152,6 +197,7 @@ export default function AdminPage() {
     if (activeTab === 'quotas' && !quotas) loadQuotas();
     if (activeTab === 'withdrawals' && withdrawals.length === 0) loadWithdrawals();
     if (activeTab === 'concepts' && Object.keys(conceptThumbs).length === 0) loadConcepts();
+    if (activeTab === 'payments') loadSubscriptions();
   }, [activeTab]);
 
   const handleUpdateUser = async (userId) => {
@@ -258,7 +304,7 @@ export default function AdminPage() {
   );
 
   const planColors = {
-    free: '#6b7280', lite: '#38bdf8', standard: '#3b82f6', pro: '#f59e0b',
+    free: '#6b7280', test: '#ef4444', lite: '#38bdf8', standard: '#3b82f6', pro: '#f59e0b',
     business: '#8b5cf6', unlimited: '#10b981',
   };
 
@@ -297,6 +343,9 @@ export default function AdminPage() {
         </button>
         <button className={`${styles.tab} ${activeTab === 'concepts' ? styles.tabActive : ''}`} onClick={() => setActiveTab('concepts')}>
           🖼️ Примеры
+        </button>
+        <button className={`${styles.tab} ${activeTab === 'payments' ? styles.tabActive : ''}`} onClick={() => setActiveTab('payments')}>
+          💰 Оплата
         </button>
         <button className={`${styles.tab} ${activeTab === 'infra' ? styles.tabActive : ''}`} onClick={() => setActiveTab('infra')}>
           🏗️ Инфраструктура
@@ -745,6 +794,91 @@ export default function AdminPage() {
         );
       })()}
 
+      {/* ===== TAB: PAYMENTS ===== */}
+      {activeTab === 'payments' && (
+        <div className={styles.promptsSection}>
+          <h2 className={styles.sectionTitle}>💰 Тестовая оплата и подписки</h2>
+
+          {/* Test Actions */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+            <button
+              onClick={handleTestPayment}
+              style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 14 }}
+            >
+              🧪 Тестовая оплата (1₽)
+            </button>
+            <button
+              onClick={handleTriggerRecurring}
+              disabled={testRecurringLoading}
+              style={{ padding: '10px 20px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 14, opacity: testRecurringLoading ? 0.6 : 1 }}
+            >
+              {testRecurringLoading ? '⏳ Обработка...' : '🔄 Запустить ребил сейчас'}
+            </button>
+            <button
+              onClick={loadSubscriptions}
+              style={{ padding: '10px 20px', background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', borderRadius: 8, fontWeight: 600, cursor: 'pointer', fontSize: 14 }}
+            >
+              🔃 Обновить
+            </button>
+          </div>
+
+          <p style={{ color: '#9ca3af', fontSize: 13, marginBottom: 16 }}>
+            Тестовый план: <strong style={{ color: '#ef4444' }}>1₽</strong>, ребил через <strong>1 час</strong>. Robokassa должна быть в тестовом режиме (ROBOKASSA_TEST_MODE=true).
+          </p>
+
+          {/* Recurring result */}
+          {testPaymentResult && (
+            <div style={{ background: testPaymentResult.error ? '#7f1d1d' : '#14532d', border: '1px solid', borderColor: testPaymentResult.error ? '#991b1b' : '#166534', borderRadius: 8, padding: 16, marginBottom: 20, fontSize: 13 }}>
+              <pre style={{ whiteSpace: 'pre-wrap', color: '#e5e7eb', margin: 0 }}>{JSON.stringify(testPaymentResult, null, 2)}</pre>
+            </div>
+          )}
+
+          {/* Subscriptions Table */}
+          <h3 style={{ color: 'var(--text-primary)', marginBottom: 12, fontSize: 16 }}>Активные подписки</h3>
+          {subscriptions.length === 0 ? (
+            <p style={{ color: '#6b7280', fontSize: 13 }}>Нет активных подписок</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>План</th>
+                    <th>Сумма</th>
+                    <th>Статус</th>
+                    <th>След. списание</th>
+                    <th>InvID</th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subscriptions.map(sub => (
+                    <tr key={sub.id}>
+                      <td style={{ fontSize: 12 }}>{sub.email || sub.user_id?.slice(0, 8)}</td>
+                      <td><span style={{ background: planColors[sub.plan] || '#6b7280', padding: '2px 8px', borderRadius: 4, fontSize: 11, color: '#fff' }}>{sub.plan}</span></td>
+                      <td>{sub.amount}₽</td>
+                      <td><span style={{ color: sub.status === 'active' ? '#22c55e' : '#ef4444' }}>{sub.status}</span></td>
+                      <td style={{ fontSize: 12 }}>{sub.next_charge_at ? new Date(sub.next_charge_at + 'Z').toLocaleString('ru-RU') : '—'}</td>
+                      <td style={{ fontSize: 11, fontFamily: 'monospace' }}>{sub.initial_inv_id}</td>
+                      <td>
+                        {sub.status === 'active' && (
+                          <button
+                            onClick={() => handleCancelSubscription(sub.id)}
+                            style={{ padding: '4px 10px', background: '#7f1d1d', color: '#fca5a5', border: '1px solid #991b1b', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}
+                          >
+                            Отменить
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ===== TAB: INFRASTRUCTURE ===== */}
       {activeTab === 'infra' && (
         <div className={styles.promptsSection}>
@@ -899,10 +1033,11 @@ curl -I https://adgena.pro`}</pre>
             <select className={styles.modalSelect} value={editPlan} onChange={(e) => {
               const p = e.target.value;
               setEditPlan(p);
-              const autoLimits = { free: 1, lite: 10, standard: 30, pro: 80, business: 200, unlimited: 99999 };
+              const autoLimits = { free: 1, test: 1, lite: 10, standard: 30, pro: 80, business: 200, unlimited: 99999 };
               setEditLimit(autoLimits[p] || 1);
             }}>
               <option value="free">Free</option>
+              <option value="test">Тест (1₽)</option>
               <option value="lite">Лайт (10)</option>
               <option value="standard">Стандарт (30)</option>
               <option value="pro">Про (80)</option>
@@ -935,16 +1070,33 @@ curl -I https://adgena.pro`}</pre>
             ) : userHistory.length === 0 ? (
               <p style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>У пользователя нет генераций</p>
             ) : (
-              <div className={styles.historyGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '16px', maxHeight: '60vh', overflowY: 'auto', padding: '10px' }}>
+              <div className={styles.historyGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', maxHeight: '60vh', overflowY: 'auto', padding: '10px' }}>
                 {userHistory.map(gen => (
                   <div key={gen.id} style={{ background: 'var(--bg-secondary)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
-                    {gen.image_output_path ? (
-                      <a href={gen.image_output_path} target="_blank" rel="noreferrer">
-                        <img src={gen.image_output_path} alt="gen" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
-                      </a>
-                    ) : (
-                      <div style={{ width: '100%', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1f2937', color: '#9ca3af', fontSize: '12px' }}>Нет фото</div>
-                    )}
+                    <div style={{ display: 'flex', gap: 0 }}>
+                      {/* Input image */}
+                      <div style={{ flex: '0 0 50%', position: 'relative' }}>
+                        {gen.image_input_path ? (
+                          <a href={gen.image_input_path} target="_blank" rel="noreferrer">
+                            <img src={gen.image_input_path} alt="input" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                          </a>
+                        ) : (
+                          <div style={{ width: '100%', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1f2937', color: '#6b7280', fontSize: '11px' }}>Нет исходника</div>
+                        )}
+                        <span style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.7)', color: '#9ca3af', fontSize: '9px', padding: '2px 5px', borderRadius: 4 }}>INPUT</span>
+                      </div>
+                      {/* Output image */}
+                      <div style={{ flex: '0 0 50%', position: 'relative' }}>
+                        {gen.image_output_path ? (
+                          <a href={gen.image_output_path} target="_blank" rel="noreferrer">
+                            <img src={gen.image_output_path} alt="output" style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
+                          </a>
+                        ) : (
+                          <div style={{ width: '100%', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1f2937', color: '#6b7280', fontSize: '11px' }}>Нет результата</div>
+                        )}
+                        <span style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(0,0,0,0.7)', color: '#22c55e', fontSize: '9px', padding: '2px 5px', borderRadius: 4 }}>OUTPUT</span>
+                      </div>
+                    </div>
                     <div style={{ padding: '8px', fontSize: '11px', color: 'var(--text-secondary)' }}>
                       <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{gen.product_name || 'Без названия'}</div>
                       <div>{gen.type} • {gen.template_id}</div>
