@@ -241,37 +241,37 @@ ${NEGATIVES}`,
 
 function getCardStyleHint(cardStyle, category, isRu) {
   const categoryHintsRu = {
-    clothing: 'Категория одежда/обувь: сохрани фасон, длину, посадку, принт, цвет, ткань, ремешки, швы и пропорции. Подходящие блоки: силуэт, ткань, сезон, размерный ряд, цвет, материал.',
-    accessories: 'Категория аксессуары: сохрани форму, материал, фурнитуру, камни, застёжки, логотипы и масштаб. Подходящие блоки: материал, стиль, размер, комплектность, сценарий носки.',
-    food: 'Категория еда/напитки: сохрани упаковку, этикетку, форму продукта и бренд. Подходящие блоки: вкус, состав, вес/объём, способ подачи, свежесть. Не выдумывай состав.',
-    beauty: 'Категория косметика/уход: сохрани упаковку, этикетку, дозатор, цвет и форму флакона. Подходящие блоки: эффект, тип кожи/волос, активный компонент, объём, способ применения. Не обещай медицинский эффект.',
-    gadgets: 'Категория гаджеты/техника: сохрани форму устройства, экран, кнопки, порты и материалы. Подходящие блоки: функция, совместимость, ёмкость/мощность только если указана, сценарий использования. Не выдумывай характеристики.',
-    home: 'Категория дом/сад: сохрани цвет, материал, фактуру и размер товара. Подходящие блоки: материал, размер, назначение, стиль интерьера, уход.',
-    kids: 'Категория детские товары: мягкий дружелюбный дизайн, пастельные цвета, округлые формы. Подходящие блоки: возраст, материал, комфорт, безопасность только если указана, размер.',
-    other: 'Универсальная категория: товар главный, 3-5 коротких преимуществ, один блок характеристик, без выдуманных параметров.',
+    clothing: 'Категория одежда/обувь: сохрани фасон, длину, посадку, принт, цвет, ремешки, швы и пропорции. Используй нейтральные подписи к видимым деталям: крой, воротник, рукав, принт, фактура, посадка. Не указывай размерный ряд, материал, сезон, состав ткани или свойства ткани, если пользователь явно не написал это в тексте.',
+    accessories: 'Категория аксессуары: сохрани форму, фурнитуру, камни, застёжки, логотипы и масштаб. Используй нейтральные подписи к видимым деталям. Не указывай материал, размер, комплектность или покрытие, если пользователь явно не написал это в тексте.',
+    food: 'Категория еда/напитки: сохрани упаковку, этикетку, форму продукта и бренд. Используй только видимые детали и текст пользователя. Не указывай состав, вкус, вес, объём, калорийность или натуральность, если пользователь явно не написал это в тексте.',
+    beauty: 'Категория косметика/уход: сохрани упаковку, этикетку, дозатор, цвет и форму флакона. Используй только видимые детали и текст пользователя. Не указывай эффект, тип кожи/волос, активный компонент, объём или способ применения, если пользователь явно не написал это в тексте.',
+    gadgets: 'Категория гаджеты/техника: сохрани форму устройства, экран, кнопки, порты и материалы. Используй только видимые детали и текст пользователя. Не указывай мощность, ёмкость, совместимость, гарантию или технические характеристики, если пользователь явно не написал это в тексте.',
+    home: 'Категория дом/сад: сохрани цвет, форму, фактуру и масштаб товара. Используй только видимые детали и текст пользователя. Не указывай материал, размер, назначение, стиль интерьера или уход, если пользователь явно не написал это в тексте.',
+    kids: 'Категория детские товары: мягкий дружелюбный дизайн, пастельные цвета, округлые формы. Используй только видимые детали и текст пользователя. Не указывай возраст, материал, безопасность, размер или сертификацию, если пользователь явно не написал это в тексте.',
+    other: 'Универсальная категория: товар главный, подписи только к видимым деталям и данным пользователя, без выдуманных параметров.',
   };
   const categoryHintsEn = {
-    clothing: 'Clothing/footwear category: preserve cut, length, fit, print, color, fabric, straps, seams and proportions. Suitable blocks: silhouette, fabric, season, size range, color, material.',
-    accessories: 'Accessories category: preserve shape, material, hardware, stones, clasp, logos and scale. Suitable blocks: material, style, size, set contents, wearing scenario.',
-    food: 'Food/drinks category: preserve packaging, label, product shape and brand. Suitable blocks: taste, ingredients, weight/volume, serving idea, freshness. Do not invent ingredients.',
-    beauty: 'Beauty category: preserve packaging, label, pump, bottle shape and color. Suitable blocks: effect, skin/hair type, active ingredient, volume, usage. Do not promise medical effects.',
-    gadgets: 'Gadgets/electronics category: preserve device shape, screen, buttons, ports and materials. Suitable blocks: function, compatibility, capacity/power only if provided, usage scenario. Do not invent specs.',
-    home: 'Home/garden category: preserve color, material, texture and scale. Suitable blocks: material, size, purpose, interior style, care.',
-    kids: 'Kids category: soft friendly design, pastel colors, rounded shapes. Suitable blocks: age, material, comfort, safety only if provided, size.',
-    other: 'Universal category: product is the hero, 3-5 short benefits, one specs block, no invented parameters.',
+    clothing: 'Clothing/footwear category: preserve cut, length, fit, print, color, straps, seams and proportions. Use neutral labels for visible details: cut, collar, sleeve, print, texture, fit. Do not mention size range, material, season, fabric composition or fabric properties unless the user explicitly wrote them.',
+    accessories: 'Accessories category: preserve shape, hardware, stones, clasp, logos and scale. Use neutral labels for visible details. Do not mention material, size, set contents or coating unless the user explicitly wrote them.',
+    food: 'Food/drinks category: preserve packaging, label, product shape and brand. Use only visible details and user text. Do not mention ingredients, taste, weight, volume, calories or naturalness unless the user explicitly wrote them.',
+    beauty: 'Beauty category: preserve packaging, label, pump, bottle shape and color. Use only visible details and user text. Do not mention effect, skin/hair type, active ingredient, volume or usage unless the user explicitly wrote them.',
+    gadgets: 'Gadgets/electronics category: preserve device shape, screen, buttons, ports and materials. Use only visible details and user text. Do not mention power, capacity, compatibility, warranty or specs unless the user explicitly wrote them.',
+    home: 'Home/garden category: preserve color, shape, texture and scale. Use only visible details and user text. Do not mention material, size, purpose, interior style or care unless the user explicitly wrote them.',
+    kids: 'Kids category: soft friendly design, pastel colors, rounded shapes. Use only visible details and user text. Do not mention age, material, safety, size or certification unless the user explicitly wrote them.',
+    other: 'Universal category: product is the hero, labels only for visible details and user-provided data, no invented parameters.',
   };
   const styleHintsRu = {
     classic: 'Классическая карточка маркетплейса: светлый фон, чистая типографика, товар по центру или слева, 3-5 инфографических выносок с иконками.',
     premium: 'Премиальная карточка: дорогой editorial-дизайн, сдержанная палитра, много воздуха, аккуратные акценты, минимум визуального шума.',
-    infographic: 'Инфографичная карточка как в fashion-примере: серый/нейтральный фон, товар крупно по центру, 3-4 круглые zoom-выноски деталей, блок характеристик сбоку/снизу, размерный ряд или параметры, маленький CTA-бейдж.',
-    typography: 'Типографичная карточка: огромная полупрозрачная фоновая типографика за товаром, товар поверх букв, сверху 2-3 сценария использования, один контрастный бейдж с ключевым параметром, минимум мелкого текста.',
+    infographic: 'Инфографичная карточка как в fashion-примере: серый/нейтральный фон, товар крупно по центру, 3-4 круглые zoom-выноски видимых деталей, аккуратные подписи сбоку/снизу. Не добавляй блоки размеров, материала, сезона или характеристик без явного текста пользователя.',
+    typography: 'Типографичная карточка: огромная полупрозрачная фоновая типографика за товаром, товар поверх букв, сверху 2-3 короткие нейтральные фразы только на основе текста пользователя или визуально очевидного назначения, минимум мелкого текста.',
     lifestyle: 'Lifestyle-карточка: тёплый естественный фон, мягкие солнечные тени, эмоциональный крупный заголовок, товар по центру, минимум инфографики, ощущение бренда и желания купить.',
   };
   const styleHintsEn = {
     classic: 'Classic marketplace card: light background, clean typography, product centered or left, 3-5 infographic callouts with icons.',
     premium: 'Premium card: expensive editorial design, restrained palette, generous whitespace, refined accents, minimal visual noise.',
-    infographic: 'Infographic card like a fashion example: gray/neutral background, large centered product, 3-4 circular zoom detail callouts, specs block on side/bottom, size range or parameters, small CTA badge.',
-    typography: 'Typography card: huge translucent background typography behind the product, product over the letters, 2-3 usage scenarios at the top, one contrast badge with key parameter, minimal small text.',
+    infographic: 'Infographic card like a fashion example: gray/neutral background, large centered product, 3-4 circular zoom callouts for visible details, clean labels on side/bottom. Do not add size, material, season or specs blocks without explicit user text.',
+    typography: 'Typography card: huge translucent background typography behind the product, product over the letters, 2-3 short neutral phrases only based on user text or visually obvious purpose, minimal small text.',
     lifestyle: 'Lifestyle card: warm natural background, soft sunlight shadows, emotional large headline, product centered, minimal infographics, branded desirable mood.',
   };
   const categoryHint = isRu
@@ -297,45 +297,44 @@ export function getCardPrompt({ productName, bullets, lang, cardText, cardStyle,
       ? (isRu ? 'Строго следуй стандартному маркетплейс-дизайну, минимум вольностей.' : 'Strictly follow standard marketplace design, minimal creative liberties.')
       : '';
 
-  const userText = cardText || (isRu
-    ? (bullets?.length ? bullets.join(', ') : 'основные преимущества товара')
-    : (bullets?.length ? bullets.join(', ') : 'key product benefits'));
+  const hasUserText = Boolean(cardText?.trim() || bullets?.length);
+  const userText = cardText || (bullets?.length ? bullets.join(', ') : '');
 
   const wishBlock = wishes ? `\n\nДополнительно: ${wishes}` : '';
 
   return isRu
     ? `Создай профессиональную карточку товара для маркетплейса. На основе товара с референсного изображения. ${p}
 
-Текст для карточки: "${userText}"
+Текст пользователя для карточки: "${userText || 'не указан'}"
 
 ${fidelity}
 
 ${styleHint}
 
-КОМПОНОВКА: Товар должен быть главным героем карточки. Все тексты короткие, крупные и читаемые. Используй только данные из текста пользователя и очевидные визуальные свойства товара. Если характеристика не указана и не видна на референсе — не выдумывай её.
+КОМПОНОВКА: Товар должен быть главным героем карточки. Все тексты короткие, крупные и читаемые. Используй только данные из текста пользователя и очевидные визуальные свойства товара. Если текст пользователя не указан — не добавляй конкретные размеры, размерный ряд, материал, состав, сезон, цену, скидку, свойства ткани/состава, технические характеристики, гарантии или сертификаты. Если характеристика не указана пользователем и не написана на самом товаре/упаковке — не выдумывай её. Лучше используй нейтральные подписи к видимым деталям.
 
 ${marketplaceSafe}
 ${safeZone}
 
 ${creativityHint}
-${PHOTO_TECH}. Текст на РУССКОМ.${wishBlock}
+${PHOTO_TECH}. Текст на РУССКОМ.${hasUserText ? '' : ' Не добавляй неподтверждённые преимущества.'}${wishBlock}
 
 ${NEGATIVES}`
     : `Create a professional product card for marketplace. Based on product from reference image. ${p}
 
-Card text: "${userText}"
+User card text: "${userText || 'not provided'}"
 
 ${fidelity}
 
 ${styleHint}
 
-LAYOUT: The product must be the hero of the card. All text must be short, large and readable. Use only user-provided data and obvious visual properties of the product. If a specification is not provided and not visible in the reference — do not invent it.
+LAYOUT: The product must be the hero of the card. All text must be short, large and readable. Use only user-provided data and obvious visual properties of the product. If user text is not provided — do not add specific sizes, size ranges, material, composition, season, price, discount, fabric/composition properties, technical specs, warranties or certificates. If a specification is not provided by the user and not written on the product/packaging itself — do not invent it. Prefer neutral labels for visible details.
 
 ${marketplaceSafe}
 ${safeZone}
 
 ${creativityHint}
-${PHOTO_TECH}.${wishBlock}
+${PHOTO_TECH}.${hasUserText ? '' : ' Do not add unverified benefits.'}${wishBlock}
 
 ${NEGATIVES}`;
 }
