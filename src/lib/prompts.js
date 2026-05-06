@@ -239,15 +239,57 @@ ${NEGATIVES}`,
 // CARD PROMPTS (infographic with style)
 // ========================================
 
-export function getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes }) {
+function getCardStyleHint(cardStyle, category, isRu) {
+  const categoryHintsRu = {
+    clothing: 'Категория одежда/обувь: сохрани фасон, длину, посадку, принт, цвет, ткань, ремешки, швы и пропорции. Подходящие блоки: силуэт, ткань, сезон, размерный ряд, цвет, материал.',
+    accessories: 'Категория аксессуары: сохрани форму, материал, фурнитуру, камни, застёжки, логотипы и масштаб. Подходящие блоки: материал, стиль, размер, комплектность, сценарий носки.',
+    food: 'Категория еда/напитки: сохрани упаковку, этикетку, форму продукта и бренд. Подходящие блоки: вкус, состав, вес/объём, способ подачи, свежесть. Не выдумывай состав.',
+    beauty: 'Категория косметика/уход: сохрани упаковку, этикетку, дозатор, цвет и форму флакона. Подходящие блоки: эффект, тип кожи/волос, активный компонент, объём, способ применения. Не обещай медицинский эффект.',
+    gadgets: 'Категория гаджеты/техника: сохрани форму устройства, экран, кнопки, порты и материалы. Подходящие блоки: функция, совместимость, ёмкость/мощность только если указана, сценарий использования. Не выдумывай характеристики.',
+    home: 'Категория дом/сад: сохрани цвет, материал, фактуру и размер товара. Подходящие блоки: материал, размер, назначение, стиль интерьера, уход.',
+    kids: 'Категория детские товары: мягкий дружелюбный дизайн, пастельные цвета, округлые формы. Подходящие блоки: возраст, материал, комфорт, безопасность только если указана, размер.',
+    other: 'Универсальная категория: товар главный, 3-5 коротких преимуществ, один блок характеристик, без выдуманных параметров.',
+  };
+  const categoryHintsEn = {
+    clothing: 'Clothing/footwear category: preserve cut, length, fit, print, color, fabric, straps, seams and proportions. Suitable blocks: silhouette, fabric, season, size range, color, material.',
+    accessories: 'Accessories category: preserve shape, material, hardware, stones, clasp, logos and scale. Suitable blocks: material, style, size, set contents, wearing scenario.',
+    food: 'Food/drinks category: preserve packaging, label, product shape and brand. Suitable blocks: taste, ingredients, weight/volume, serving idea, freshness. Do not invent ingredients.',
+    beauty: 'Beauty category: preserve packaging, label, pump, bottle shape and color. Suitable blocks: effect, skin/hair type, active ingredient, volume, usage. Do not promise medical effects.',
+    gadgets: 'Gadgets/electronics category: preserve device shape, screen, buttons, ports and materials. Suitable blocks: function, compatibility, capacity/power only if provided, usage scenario. Do not invent specs.',
+    home: 'Home/garden category: preserve color, material, texture and scale. Suitable blocks: material, size, purpose, interior style, care.',
+    kids: 'Kids category: soft friendly design, pastel colors, rounded shapes. Suitable blocks: age, material, comfort, safety only if provided, size.',
+    other: 'Universal category: product is the hero, 3-5 short benefits, one specs block, no invented parameters.',
+  };
+  const styleHintsRu = {
+    classic: 'Классическая карточка маркетплейса: светлый фон, чистая типографика, товар по центру или слева, 3-5 инфографических выносок с иконками.',
+    premium: 'Премиальная карточка: дорогой editorial-дизайн, сдержанная палитра, много воздуха, аккуратные акценты, минимум визуального шума.',
+    infographic: 'Инфографичная карточка как в fashion-примере: серый/нейтральный фон, товар крупно по центру, 3-4 круглые zoom-выноски деталей, блок характеристик сбоку/снизу, размерный ряд или параметры, маленький CTA-бейдж.',
+    typography: 'Типографичная карточка: огромная полупрозрачная фоновая типографика за товаром, товар поверх букв, сверху 2-3 сценария использования, один контрастный бейдж с ключевым параметром, минимум мелкого текста.',
+    lifestyle: 'Lifestyle-карточка: тёплый естественный фон, мягкие солнечные тени, эмоциональный крупный заголовок, товар по центру, минимум инфографики, ощущение бренда и желания купить.',
+  };
+  const styleHintsEn = {
+    classic: 'Classic marketplace card: light background, clean typography, product centered or left, 3-5 infographic callouts with icons.',
+    premium: 'Premium card: expensive editorial design, restrained palette, generous whitespace, refined accents, minimal visual noise.',
+    infographic: 'Infographic card like a fashion example: gray/neutral background, large centered product, 3-4 circular zoom detail callouts, specs block on side/bottom, size range or parameters, small CTA badge.',
+    typography: 'Typography card: huge translucent background typography behind the product, product over the letters, 2-3 usage scenarios at the top, one contrast badge with key parameter, minimal small text.',
+    lifestyle: 'Lifestyle card: warm natural background, soft sunlight shadows, emotional large headline, product centered, minimal infographics, branded desirable mood.',
+  };
+  const categoryHint = isRu
+    ? (categoryHintsRu[category] || categoryHintsRu.other)
+    : (categoryHintsEn[category] || categoryHintsEn.other);
+  const styleHint = isRu
+    ? (styleHintsRu[cardStyle] || styleHintsRu.classic)
+    : (styleHintsEn[cardStyle] || styleHintsEn.classic);
+  return `${styleHint}\n\n${categoryHint}`;
+}
+
+export function getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes, category = 'other' }) {
   const p = fmt(productName, bullets);
   const isRu = lang !== 'en';
   const fidelity = isRu ? PRODUCT_FIDELITY_RU : PRODUCT_FIDELITY_EN;
   const marketplaceSafe = isRu ? MARKETPLACE_SAFE_RU : MARKETPLACE_SAFE_EN;
   const safeZone = isRu ? SAFE_ZONE_RU : SAFE_ZONE_EN;
-  const styleHint = cardStyle === 'premium'
-    ? (isRu ? 'Премиальный стиль: тёмный фон, золотые акценты, элегантная типографика.' : 'Premium style: dark background, gold accents, elegant typography.')
-    : (isRu ? 'Классический стиль: светлый/белый фон, чистая типографика, яркие акценты.' : 'Classic style: light/white background, clean typography, bright accents.');
+  const styleHint = getCardStyleHint(cardStyle, category, isRu);
 
   const creativityHint = creativity > 0.7
     ? (isRu ? 'Будь креативным и экспериментируй с дизайном.' : 'Be creative and experiment with design.')
@@ -270,7 +312,7 @@ ${fidelity}
 
 ${styleHint}
 
-КОМПОНОВКА: Товар по центру или слева (40% ширины), чисто вырезан с тенью. Вокруг — 3-5 инфографических выносок с иконками и коротким текстом. Заголовок — крупный жирный шрифт сверху. Внизу — pill-бейджи с характеристиками.
+КОМПОНОВКА: Товар должен быть главным героем карточки. Все тексты короткие, крупные и читаемые. Используй только данные из текста пользователя и очевидные визуальные свойства товара. Если характеристика не указана и не видна на референсе — не выдумывай её.
 
 ${marketplaceSafe}
 ${safeZone}
@@ -287,7 +329,7 @@ ${fidelity}
 
 ${styleHint}
 
-LAYOUT: Product centered or left (40% width), cleanly cut out with shadow. Around it: 3-5 infographic callouts with icons and short text. Title: large bold font at top. Bottom: pill badges with specs.
+LAYOUT: The product must be the hero of the card. All text must be short, large and readable. Use only user-provided data and obvious visual properties of the product. If a specification is not provided and not visible in the reference — do not invent it.
 
 ${marketplaceSafe}
 ${safeZone}

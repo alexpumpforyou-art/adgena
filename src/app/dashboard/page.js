@@ -89,6 +89,14 @@ const AD_CONCEPTS = [
   { id: 'ad-story',   name: 'Stories / Reels', desc: 'Вертикальный 9:16', icon: <IconPhone size={22} /> },
 ];
 
+const CARD_STYLES = [
+  { id: 'classic', name: 'Классический' },
+  { id: 'premium', name: 'Премиум' },
+  { id: 'infographic', name: 'Инфографика' },
+  { id: 'typography', name: 'Типографика' },
+  { id: 'lifestyle', name: 'Lifestyle' },
+];
+
 const ASPECT_RATIOS = [
   { id: '9:16', label: '9:16', hint: 'Stories / Reels', platform: 'stories' },
   { id: '3:4',  label: '3:4',  hint: 'WB / Ozon',       platform: 'marketplace' },
@@ -721,8 +729,15 @@ export default function DashboardPage() {
 
               <label className={styles.label} style={{marginTop: 16}}>Стиль карточки</label>
               <div className={styles.tabRow}>
-                <button className={`${styles.tabBtn} ${cardStyle === 'classic' ? styles.tabBtnActive : ''}`} onClick={() => setCardStyle('classic')}>Классический</button>
-                <button className={`${styles.tabBtn} ${cardStyle === 'premium' ? styles.tabBtnActive : ''}`} onClick={() => setCardStyle('premium')}>Премиум</button>
+                {CARD_STYLES.map(style => (
+                  <button
+                    key={style.id}
+                    className={`${styles.tabBtn} ${cardStyle === style.id ? styles.tabBtnActive : ''}`}
+                    onClick={() => setCardStyle(style.id)}
+                  >
+                    {style.name}
+                  </button>
+                ))}
               </div>
 
               <label className={styles.label} style={{marginTop: 16}}>Креативность</label>

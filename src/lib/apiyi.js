@@ -152,7 +152,7 @@ export async function generateProductCard({
     prompt += `\n\n${lang === 'en' ? PRODUCT_FIDELITY_EN : PRODUCT_FIDELITY_RU}\n${lang === 'en' ? AD_SAFE_ZONE_EN : AD_SAFE_ZONE_RU}`;
   } else if (type === 'card') {
     prompt = getPromptOverride(`card.${cardStyle}`)
-      || getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes });
+      || getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes, category });
   } else {
     // 'photo' — category-aware
     prompt = getPromptOverride(`photo.${templateId}`)
