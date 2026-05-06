@@ -131,6 +131,22 @@ export async function POST(request) {
     if (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) mimeType = 'image/jpeg';
     else if (imageBuffer[0] === 0x52 && imageBuffer[1] === 0x49) mimeType = 'image/webp';
 
+    let inputImageUrl = null;
+    try {
+      const { uploadFile } = await import('@/lib/storage');
+      const inputBuffer = await sharp(imageBuffer)
+        .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 92, effort: 4 })
+        .toBuffer();
+      const inputUpload = await uploadFile(inputBuffer, 'image/webp', 'inputs', 'webp');
+      if (inputUpload) {
+        inputImageUrl = inputUpload.url;
+        console.log(`[Generate] Input uploaded: ${inputImageUrl}`);
+      }
+    } catch (inputUploadErr) {
+      console.error('[Generate] Input upload error (non-fatal):', inputUploadErr.message);
+    }
+
     // Extract text fields
     const bullets = parsedText.bullets || [];
     const rawHeadline = formData.get('headline') || '';
@@ -163,7 +179,7 @@ export async function POST(request) {
         productName: productName || '',
         productDesc: productDesc || '',
         generatedText: parsedText,
-        imageInputPath: null,
+        imageInputPath: inputImageUrl,
       });
     } else {
       generationId = `gen_${Date.now()}`;
