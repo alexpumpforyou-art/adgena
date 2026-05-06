@@ -7,12 +7,17 @@
  */
 
 import OpenAI from 'openai';
-import { getPhotoPrompt, getCardPrompt, AD_PROMPTS } from './prompts.js';
+import { getPhotoPrompt, getCardPrompt, AD_PROMPTS, getPromptOverride } from './prompts.js';
 
 const client = new OpenAI({
   apiKey: process.env.APIYI_API_KEY,
   baseURL: process.env.APIYI_BASE_URL || 'https://api.apiyi.com/v1',
 });
+
+const PRODUCT_FIDELITY_RU = `Сохрани точную идентичность товара с референса: форму, пропорции, цвет, материал, упаковку, расположение этикетки/логотипа и узнаваемые детали. Не редизайни товар, не меняй цвет и не добавляй несуществующие элементы.`;
+const PRODUCT_FIDELITY_EN = `Preserve the exact product identity from the reference image: shape, proportions, color, material, packaging, label placement, logo position and distinctive details. Do not redesign the product, change its color, or add non-existing elements.`;
+const AD_SAFE_ZONE_RU = `Держи весь текст, цену и CTA внутри безопасных полей минимум 8% от краёв. Не обрезай текст, товар, ценник или кнопку.`;
+const AD_SAFE_ZONE_EN = `Keep all text, price and CTA inside a safe margin of at least 8% from all edges. Do not crop text, product, price badge or CTA.`;
 
 // Size map: aspect ratio → gpt-image-2 size
 const RATIO_TO_SIZE = {
@@ -135,15 +140,23 @@ export async function generateProductCard({
   let prompt;
 
   if (type === 'ads') {
-    const promptFn = AD_PROMPTS[templateId] || AD_PROMPTS['ad-minimal'];
-    prompt = typeof promptFn === 'function'
-      ? promptFn(productName, headline, cta, lang, { price, showButton, category })
-      : promptFn;
+    const override = getPromptOverride(`ads.${templateId}`);
+    if (override) {
+      prompt = override;
+    } else {
+      const promptFn = AD_PROMPTS[templateId] || AD_PROMPTS['ad-minimal'];
+      prompt = typeof promptFn === 'function'
+        ? promptFn(productName, headline, cta, lang, { price, showButton, category })
+        : promptFn;
+    }
+    prompt += `\n\n${lang === 'en' ? PRODUCT_FIDELITY_EN : PRODUCT_FIDELITY_RU}\n${lang === 'en' ? AD_SAFE_ZONE_EN : AD_SAFE_ZONE_RU}`;
   } else if (type === 'card') {
-    prompt = getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes });
+    prompt = getPromptOverride(`card.${cardStyle}`)
+      || getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes });
   } else {
     // 'photo' — category-aware
-    prompt = getPhotoPrompt({ conceptId: templateId, category, productName, bullets, lang, wishes });
+    prompt = getPromptOverride(`photo.${templateId}`)
+      || getPhotoPrompt({ conceptId: templateId, category, productName, bullets, lang, wishes });
   }
 
   // Inject aspect ratio

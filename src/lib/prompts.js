@@ -1,10 +1,26 @@
-/**
- * AI Prompts — Category-aware, Aidentika-style
- * Each concept has category-specific context injected
- */
+import fs from 'fs';
+import path from 'path';
 
-const NEGATIVES = `Avoid: distorted shapes, warped text, blurry edges, low resolution, cartoon style, watermarks, AI artifacts, gibberish text, extra fingers, deformed products.`;
+const OVERRIDES_PATH = path.join(process.cwd(), 'data', 'prompt-overrides.json');
+const PRODUCT_FIDELITY_RU = `Сохрани точную идентичность товара с референса: форму, пропорции, цвет, материал, упаковку, расположение этикетки/логотипа и узнаваемые детали. Не редизайни товар, не меняй цвет и не добавляй несуществующие элементы.`;
+const PRODUCT_FIDELITY_EN = `Preserve the exact product identity from the reference image: shape, proportions, color, material, packaging, label placement, logo position and distinctive details. Do not redesign the product, change its color, or add non-existing elements.`;
+const MARKETPLACE_SAFE_RU = `ВАЖНО ДЛЯ МАРКЕТПЛЕЙСА: товар должен быть главным объектом и занимать 55-70% кадра. Используй максимум 3-5 коротких преимуществ, не больше 2-4 слов каждое. Не добавляй мелкий нечитаемый текст, случайные цифры, выдуманные сертификаты или характеристики. Оставь безопасные поля 5-7% от краёв, чтобы текст не обрезался. Дизайн должен выглядеть как готовая карточка для Wildberries/Ozon: чисто, контрастно, продающе.`;
+const MARKETPLACE_SAFE_EN = `MARKETPLACE REQUIREMENTS: the product must be the main object and occupy 55-70% of the frame. Use up to 3-5 short benefits, 2-4 words each. Do not add tiny unreadable text, random numbers, fake certifications, or invented specs. Keep a safe margin of 5-7% from all edges so text is not cropped. The design must look like a finished marketplace card: clean, high-contrast, conversion-focused.`;
+const SAFE_ZONE_RU = `Держи весь текст, цену и CTA внутри безопасных полей минимум 8% от краёв. Не обрезай текст, товар, ценник или кнопку.`;
+const SAFE_ZONE_EN = `Keep all text, price and CTA inside a safe margin of at least 8% from all edges. Do not crop text, product, price badge or CTA.`;
+const NEGATIVES = `Avoid: distorted shapes, wrong product color, changed packaging, incorrect logo, extra labels, fake certifications, warped text, unreadable small text, misspelled text, blurry edges, low resolution, cartoon style, watermarks, AI artifacts, gibberish text, cropped product, cropped text, cluttered composition, duplicated products unless requested, extra fingers, deformed products.`;
 const PHOTO_TECH = `photorealistic, ultra-sharp focus, 8k resolution, high-end commercial photography, professional color grading, shot on Canon EOS R5 with 85mm lens`;
+
+export function getPromptOverride(key) {
+  try {
+    if (!fs.existsSync(OVERRIDES_PATH)) return null;
+    const overrides = JSON.parse(fs.readFileSync(OVERRIDES_PATH, 'utf-8'));
+    const value = overrides?.[key];
+    return typeof value === 'string' && value.trim() ? value : null;
+  } catch {
+    return null;
+  }
+}
 
 // Category-specific scene hints
 const CATEGORY_CONTEXT = {
@@ -37,6 +53,7 @@ export function getPhotoPrompt({ conceptId, category, productName, bullets, lang
   const c = ctx(category);
   const wishBlock = wishes ? `\n\nAdditional requirements from user: ${wishes}` : '';
   const isRu = lang !== 'en';
+  const fidelity = isRu ? PRODUCT_FIDELITY_RU : PRODUCT_FIDELITY_EN;
 
   const prompts = {
 
@@ -44,12 +61,16 @@ export function getPhotoPrompt({ conceptId, category, productName, bullets, lang
     'on-model': isRu
       ? `Профессиональная fashion-фотография. ${p}
 
+${fidelity}
+
 Покажи модель (мужчину или женщину — выбери подходящий пол) в этом товаре. Модель стоит или идёт в ${c.scene}. Акцент на посадке и фактуре ткани. Естественная поза, не постановочная.
 
 Освещение: мягкий студийный или естественный свет. Малая глубина резкости — товар и модель резкие, фон размыт. ${PHOTO_TECH}.${wishBlock}
 
 ${NEGATIVES}`
       : `Professional fashion photography. ${p}
+
+${fidelity}
 
 Show a model (choose appropriate gender) wearing this product. Model standing or walking in ${c.scene}. Focus on fit and fabric texture. Natural, not overly posed.
 
@@ -61,10 +82,14 @@ ${NEGATIVES}`,
     'in-store': isRu
       ? `Профессиональная фотография товара как в магазине. ${p}
 
+${fidelity}
+
 Товар аккуратно висит на вешалке или расположен на подставке/манекене в стильном бутике. Фон — магазинный интерьер, слегка размытый. Аккуратная выкладка. ${PHOTO_TECH}.${wishBlock}
 
 ${NEGATIVES}`
       : `Professional in-store product photography. ${p}
+
+${fidelity}
 
 Product neatly displayed on a hanger or mannequin in a stylish boutique setting. Blurred store interior background. Neat presentation. ${PHOTO_TECH}.${wishBlock}
 
@@ -74,10 +99,14 @@ ${NEGATIVES}`,
     'flat-lay': isRu
       ? `Профессиональная flat lay фотография строго сверху. ${p}
 
+${fidelity}
+
 Товар разложен на ${c.surface}, снято строго сверху (вид сверху, 90°). Вокруг — 2-3 подходящих дополняющих предмета. Аккуратная симметричная композиция. Равномерное мягкое освещение без резких теней. ${PHOTO_TECH}.${wishBlock}
 
 ${NEGATIVES}`
       : `Professional flat lay photography, strictly top-down. ${p}
+
+${fidelity}
 
 Product laid out on ${c.surface}, shot from directly above (90° overhead). Surrounded by 2-3 complementary props. Neat, symmetrical composition. Even, soft lighting. ${PHOTO_TECH}.${wishBlock}
 
@@ -87,10 +116,14 @@ ${NEGATIVES}`,
     'studio': isRu
       ? `Профессиональная студийная каталожная фотография. ${p}
 
+${fidelity}
+
 Товар на чисто белом или светло-сером бесшовном фоне. Трёхточечный студийный свет: ключевой сверху-слева, заполняющий справа, контровой для отделения от фона. Контактная тень. Товар по центру, занимает 80-85% кадра. Резкий фокус. Без текста, без реквизита. ${PHOTO_TECH}.${wishBlock}
 
 ${NEGATIVES}`
       : `Professional studio catalog photography. ${p}
+
+${fidelity}
 
 Product on pure white or light gray seamless background. Three-point studio lighting. Contact shadow. Centered, filling 80-85% of frame. Tack-sharp focus. No text, no props. ${PHOTO_TECH}.${wishBlock}
 
@@ -100,10 +133,14 @@ ${NEGATIVES}`,
     'in-use': isRu
       ? `Профессиональная lifestyle-фотография. ${p}
 
+${fidelity}
+
 ${c.person} в ${c.scene}. Человек выглядит естественно, не постановочно. Товар — главный фокус. Тёплый естественный свет. Малая глубина резкости (f/2.8). Средний план. ${PHOTO_TECH}.${wishBlock}
 
 ${NEGATIVES}`
       : `Professional lifestyle photography. ${p}
+
+${fidelity}
 
 ${c.person} in ${c.scene}. Person looks natural, not overly posed. Product is the clear focal point. Warm natural light. Shallow depth of field (f/2.8). Medium shot. ${PHOTO_TECH}.${wishBlock}
 
@@ -113,10 +150,14 @@ ${NEGATIVES}`,
     'in-context': isRu
       ? `Профессиональная стилизованная фотография товара. ${p}
 
+${fidelity}
+
 Товар размещён на ${c.surface} в ${c.scene}. Рядом 2-3 дополняющих предмета. Мягкий естественный свет. Тёплая уютная атмосфера, достойная журнала. Товар — главный фокус. ${PHOTO_TECH}.${wishBlock}
 
 ${NEGATIVES}`
       : `Professional styled product photography. ${p}
+
+${fidelity}
 
 Product placed on ${c.surface} in ${c.scene}. 2-3 complementary props nearby. Soft natural light. Warm, magazine-worthy atmosphere. Product is the focal point. ${PHOTO_TECH}.${wishBlock}
 
@@ -126,10 +167,14 @@ ${NEGATIVES}`,
     'close-up': isRu
       ? `Макро-фотография товара, крупный план. ${p}
 
+${fidelity}
+
 Снять одну ключевую деталь крупным планом: текстура, кнопки, экран, поверхность, швы, материал. Малая глубина резкости, размытый фон. Драматичное боковое освещение подчёркивает текстуру. ${PHOTO_TECH}, макро-объектив 100мм.${wishBlock}
 
 ${NEGATIVES}`
       : `Macro product photography, close-up. ${p}
+
+${fidelity}
 
 Capture one key detail: texture, buttons, screen, surface, stitching, material. Shallow DOF, blurred background. Dramatic side lighting to highlight texture. ${PHOTO_TECH}, 100mm macro lens.${wishBlock}
 
@@ -139,10 +184,14 @@ ${NEGATIVES}`,
     'in-interior': isRu
       ? `Интерьерная фотография товара. ${p}
 
+${fidelity}
+
 Товар естественно размещён в ${c.scene} — на своём месте, как будто это реальный интерьер. Мягкий свет из окна. Стильный современный интерьер. ${PHOTO_TECH}.${wishBlock}
 
 ${NEGATIVES}`
       : `Interior product photography. ${p}
+
+${fidelity}
 
 Product naturally placed in ${c.scene} — in its proper place, like a real interior. Soft window light. Modern stylish interior. ${PHOTO_TECH}.${wishBlock}
 
@@ -152,10 +201,14 @@ ${NEGATIVES}`,
     'plated': isRu
       ? `Профессиональная food-фотография. ${p}
 
+${fidelity}
+
 Товар красиво сервирован: на тарелке, в бокале, или готов к подаче на ${c.surface}. Свежие ингредиенты рядом. Тёплое аппетитное освещение. ${PHOTO_TECH}, food photography style.${wishBlock}
 
 ${NEGATIVES}`
       : `Professional food photography. ${p}
+
+${fidelity}
 
 Product beautifully plated or served on ${c.surface}. Fresh ingredients nearby. Warm appetizing lighting. ${PHOTO_TECH}, food photography style.${wishBlock}
 
@@ -165,10 +218,14 @@ ${NEGATIVES}`,
     'texture': isRu
       ? `Макро-фотография текстуры косметического средства. ${p}
 
+${fidelity}
+
 Крупный план текстуры: крем, масло, гель, или сыворотка. Мазок или капля на чистой поверхности. Видна консистенция и цвет. Мягкий рассеянный свет. ${PHOTO_TECH}, макро.${wishBlock}
 
 ${NEGATIVES}`
       : `Macro texture photography of beauty product. ${p}
+
+${fidelity}
 
 Close-up of texture: cream, oil, gel, or serum. Swatch or drop on clean surface. Showing consistency and color. Soft diffused light. ${PHOTO_TECH}, macro.${wishBlock}
 
@@ -185,6 +242,9 @@ ${NEGATIVES}`,
 export function getCardPrompt({ productName, bullets, lang, cardText, cardStyle, creativity, wishes }) {
   const p = fmt(productName, bullets);
   const isRu = lang !== 'en';
+  const fidelity = isRu ? PRODUCT_FIDELITY_RU : PRODUCT_FIDELITY_EN;
+  const marketplaceSafe = isRu ? MARKETPLACE_SAFE_RU : MARKETPLACE_SAFE_EN;
+  const safeZone = isRu ? SAFE_ZONE_RU : SAFE_ZONE_EN;
   const styleHint = cardStyle === 'premium'
     ? (isRu ? 'Премиальный стиль: тёмный фон, золотые акценты, элегантная типографика.' : 'Premium style: dark background, gold accents, elegant typography.')
     : (isRu ? 'Классический стиль: светлый/белый фон, чистая типографика, яркие акценты.' : 'Classic style: light/white background, clean typography, bright accents.');
@@ -206,9 +266,14 @@ export function getCardPrompt({ productName, bullets, lang, cardText, cardStyle,
 
 Текст для карточки: "${userText}"
 
+${fidelity}
+
 ${styleHint}
 
 КОМПОНОВКА: Товар по центру или слева (40% ширины), чисто вырезан с тенью. Вокруг — 3-5 инфографических выносок с иконками и коротким текстом. Заголовок — крупный жирный шрифт сверху. Внизу — pill-бейджи с характеристиками.
+
+${marketplaceSafe}
+${safeZone}
 
 ${creativityHint}
 ${PHOTO_TECH}. Текст на РУССКОМ.${wishBlock}
@@ -218,9 +283,14 @@ ${NEGATIVES}`
 
 Card text: "${userText}"
 
+${fidelity}
+
 ${styleHint}
 
 LAYOUT: Product centered or left (40% width), cleanly cut out with shadow. Around it: 3-5 infographic callouts with icons and short text. Title: large bold font at top. Bottom: pill badges with specs.
+
+${marketplaceSafe}
+${safeZone}
 
 ${creativityHint}
 ${PHOTO_TECH}.${wishBlock}
@@ -295,10 +365,14 @@ export const AD_PROMPTS = {
     const h = headline || (lang === 'en' ? 'SPECIAL OFFER' : 'ВЫГОДНОЕ ПРЕДЛОЖЕНИЕ');
     const { extras, forbid } = adExtras({ ...opts, cta }, lang);
     const palette = adPalette(opts.category, 'sale', lang);
+    const fidelity = lang === 'en' ? PRODUCT_FIDELITY_EN : PRODUCT_FIDELITY_RU;
+    const safeZone = lang === 'en' ? SAFE_ZONE_EN : SAFE_ZONE_RU;
     return lang === 'en'
       ? `Create a premium, visually rich high-conversion SALE advertising banner worthy of a major e-commerce brand. Use the product from the reference image.
 
 Product: "${name}"
+
+${fidelity}
 
 COMPOSITION (layered & dynamic):
 - Hero product on the left, ~45% of frame width, slightly tilted 5-10° for energy, floating above a circular soft contact shadow and a glowing radial halo behind it (like a spotlight).
@@ -321,11 +395,15 @@ LIGHTING & DEPTH:
 - Product: soft key light top-left, warm rim light on the right edge matching the gradient, sharp but soft contact shadow directly beneath, subtle reflection if the product has a glossy surface.
 - 2-3 levels of depth: background layer (gradient + glow), midground (rays, bokeh, particles), foreground (product + text + badges).
 
+Despite the energetic style, keep the layout clean and readable. Do not overcrowd the design. Maximum 6 decorative elements total.
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally kerned. ${NEGATIVES}`
       : `Создай премиальный, визуально насыщенный продающий рекламный баннер уровня крупного e-commerce бренда. Используй товар с референсного изображения.
 
 Товар: "${name}"
+
+${fidelity}
 
 КОМПОЗИЦИЯ (многослойная, динамичная):
 - Герой-товар слева, ~45% ширины кадра, с лёгким наклоном 5-10° для энергии, парит над круглой мягкой контактной тенью, а за ним — радиальное свечение-гало (как софитом подсвечен).
@@ -348,6 +426,8 @@ ${extras}
 - Товар: мягкий ключевой свет сверху-слева, тёплый контровой по правому краю в цвет градиента, чёткая но мягкая тень прямо под ним, лёгкое отражение если поверхность глянцевая.
 - 3 плана глубины: фон (градиент + свечение), средний (лучи, боке, частицы), передний (товар + текст + бейджи).
 
+Несмотря на энергичный стиль, сохраняй чистоту и читаемость. Не перегружай дизайн. Максимум 6 декоративных элементов всего.
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. Весь текст — острый, идеально читаемый, профессиональный кернинг, на РУССКОМ языке. ${NEGATIVES}`;
   },
@@ -356,6 +436,8 @@ ${PHOTO_TECH}. Весь текст — острый, идеально читае
     const h = headline || (lang === 'en' ? 'PREMIUM CHOICE' : 'ПРЕМИУМ ВЫБОР');
     const { extras, forbid } = adExtras({ ...opts, cta }, lang);
     const palette = adPalette(opts.category, 'premium', lang);
+    const fidelity = lang === 'en' ? PRODUCT_FIDELITY_EN : PRODUCT_FIDELITY_RU;
+    const safeZone = lang === 'en' ? SAFE_ZONE_EN : SAFE_ZONE_RU;
     return lang === 'en'
       ? `Create a premium luxury advertising banner for an e-commerce product. Use the product from the reference image.
 
@@ -378,6 +460,7 @@ BACKGROUND:
 LIGHTING:
 - Soft cinematic key light, elegant rim light, controlled shadows, premium studio/product photography mood.
 
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally kerned. ${NEGATIVES}`
       : `Создай премиальный люксовый рекламный баннер для e-commerce товара. Используй товар с референсного изображения.
@@ -401,6 +484,7 @@ ${extras}
 СВЕТ:
 - Мягкий кинематографичный ключевой свет, элегантный контровой, контролируемые тени, настроение премиальной предметной фотографии.
 
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. Весь текст — острый, идеально читаемый, профессиональный кернинг, на РУССКОМ языке. ${NEGATIVES}`;
   },
@@ -409,6 +493,8 @@ ${PHOTO_TECH}. Весь текст — острый, идеально читае
     const h = headline || (lang === 'en' ? 'FRESH PICK' : 'СВЕЖИЙ ВЫБОР');
     const { extras, forbid } = adExtras({ ...opts, cta }, lang);
     const palette = adPalette(opts.category, 'fresh', lang);
+    const fidelity = lang === 'en' ? PRODUCT_FIDELITY_EN : PRODUCT_FIDELITY_RU;
+    const safeZone = lang === 'en' ? SAFE_ZONE_EN : SAFE_ZONE_RU;
     return lang === 'en'
       ? `Create a fresh, airy lifestyle advertising banner. Use the product from the reference image.
 
@@ -431,6 +517,7 @@ BACKGROUND:
 LIGHTING:
 - Soft natural daylight, gentle shadow, clean commercial look, realistic product material.
 
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally kerned. ${NEGATIVES}`
       : `Создай свежий, воздушный lifestyle-рекламный баннер. Используй товар с референсного изображения.
@@ -454,6 +541,7 @@ ${extras}
 СВЕТ:
 - Мягкий естественный дневной свет, нежная тень, чистый коммерческий вид, реалистичные материалы товара.
 
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. Весь текст — острый, идеально читаемый, профессиональный кернинг, на РУССКОМ языке. ${NEGATIVES}`;
   },
@@ -461,39 +549,47 @@ ${PHOTO_TECH}. Весь текст — острый, идеально читае
   'ad-minimal': (name, headline, cta, lang, opts = {}) => {
     const h = headline || name;
     const { extras, forbid } = adExtras({ ...opts, cta }, lang);
+    const fidelity = lang === 'en' ? PRODUCT_FIDELITY_EN : PRODUCT_FIDELITY_RU;
+    const safeZone = lang === 'en' ? SAFE_ZONE_EN : SAFE_ZONE_RU;
     return lang === 'en'
       ? `Create a minimalist, premium advertising creative in Apple/MUJI style. Use the product from the reference image.
 
 Product: "${name}"
 
+${fidelity}
+
 COMPOSITION: Product perfectly centered, occupying ~60% of the frame height. Floating on pure white (#FFFFFF) background with a very subtle contact shadow beneath. Lots of negative space (whitespace).
 
 TYPOGRAPHY:
 - Product name "${h}" — thin, elegant sans-serif (like SF Pro Display Thin or Helvetica Neue Light), dark gray (#1A1A1A), centered above the product, modest size.
-- One line of subtle description or tagline below the product name in lighter gray.
+- One line of subtle description or tagline below the product name in lighter gray. If no tagline is provided, use a very generic neutral phrase or omit it. Do not invent specific claims.
 ${extras}
 
 BACKGROUND: Pure white, no gradients, no patterns. Absolute minimalism.
 
 LIGHTING: Even, diffused studio lighting. No dramatic shadows.
 
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. Ultra-clean, gallery-quality. ${NEGATIVES}`
       : `Создай минималистичный премиальный рекламный креатив в стиле Apple/MUJI. Используй товар с референсного изображения.
 
 Товар: "${name}"
 
+${fidelity}
+
 КОМПОЗИЦИЯ: Товар идеально по центру, ~60% высоты кадра. Парит на чисто белом фоне (#FFFFFF) с едва заметной контактной тенью.
 
 ТИПОГРАФИКА:
 - Название "${h}" — тонкий элегантный шрифт без засечек, тёмно-серый (#1A1A1A), по центру над товаром.
-- Одна строка лёгкого описания ниже — светло-серый.
+- Одна строка лёгкого описания ниже — светло-серый. Если описание не задано, используй очень нейтральную фразу или пропусти её. Не выдумывай конкретные обещания.
 ${extras}
 
 ФОН: Чисто белый. Никаких градиентов. Абсолютный минимализм.
 
 СВЕТ: Равномерный рассеянный студийный свет.
 
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. Галерейное качество. Текст на РУССКОМ. ${NEGATIVES}`;
   },
@@ -502,10 +598,14 @@ ${PHOTO_TECH}. Галерейное качество. Текст на РУССК
     const h = headline || name;
     const { extras, forbid } = adExtras({ ...opts, cta }, lang);
     const palette = adPalette(opts.category, 'fresh', lang);
+    const fidelity = lang === 'en' ? PRODUCT_FIDELITY_EN : PRODUCT_FIDELITY_RU;
+    const safeZone = lang === 'en' ? SAFE_ZONE_EN : SAFE_ZONE_RU;
     return lang === 'en'
       ? `Create a vertical STORY/REELS advertising creative (9:16 format). Use the product from the reference image.
 
 Product: "${name}"
+
+${fidelity}
 
 COMPOSITION: Vertical format. Product centered in the middle third of the frame, slightly enlarged, with a soft glow or light halo behind it. Top third: headline. Bottom third: optional CTA area.
 
@@ -517,11 +617,14 @@ BACKGROUND: Category-aware palette: ${palette}. Vibrant vertical gradient adapte
 
 LIGHTING: Strong rim light creating a glowing silhouette. Soft fill light from front.
 
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. Optimized for mobile viewing. ${NEGATIVES}`
       : `Создай вертикальный рекламный креатив для STORIES/REELS (формат 9:16). Используй товар с референсного изображения.
 
 Товар: "${name}"
+
+${fidelity}
 
 КОМПОЗИЦИЯ: Вертикальный формат. Товар по центру в средней трети кадра, слегка увеличен, мягкое свечение позади. Верхняя треть: заголовок. Нижняя треть: опциональная CTA-зона.
 
@@ -533,6 +636,7 @@ ${extras}
 
 СВЕТ: Драматичный контровой свет, мягкий заполняющий спереди.
 
+${safeZone}
 ${forbid}
 ${PHOTO_TECH}. Текст на РУССКОМ. ${NEGATIVES}`;
   },
