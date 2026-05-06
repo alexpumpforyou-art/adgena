@@ -265,14 +265,14 @@ function getCardStyleHint(cardStyle, category, isRu) {
     premium: 'Премиальная карточка: дорогой editorial-дизайн, сдержанная палитра, много воздуха, аккуратные акценты, минимум визуального шума.',
     infographic: 'Инфографичная карточка как в fashion-примере: серый/нейтральный фон, товар крупно по центру, 3-4 круглые zoom-выноски видимых деталей, аккуратные подписи сбоку/снизу. Не добавляй блоки размеров, материала, сезона или характеристик без явного текста пользователя.',
     typography: 'Типографичная карточка: огромная полупрозрачная фоновая типографика за товаром, товар поверх букв, сверху 2-3 короткие нейтральные фразы только на основе текста пользователя или визуально очевидного назначения, минимум мелкого текста.',
-    lifestyle: 'Lifestyle-карточка: тёплый естественный фон, мягкие солнечные тени, эмоциональный крупный заголовок, товар по центру, минимум инфографики, ощущение бренда и желания купить.',
+    lifestyle: 'Lifestyle-карточка: не просто добавляй текст поверх исходного фото. Пересобери товар в новую premium lifestyle/editorial сцену: красивый фон, естественный утренний или вечерний свет, мягкие тени, глубина, аккуратная композиция, ощущение дорогой брендовой съёмки. Для одежды и белья используй эстетичный fashion flat-lay или boutique mood без модели и без откровенности. Текст минимальный: крупный эмоциональный заголовок и максимум одна короткая фраза только из текста пользователя или очевидного назначения. Избегай простого tint/color overlay, рамки, банального затемнения сверху и ленивого text overlay.',
   };
   const styleHintsEn = {
     classic: 'Classic marketplace card: light background, clean typography, product centered or left, 3-5 infographic callouts with icons.',
     premium: 'Premium card: expensive editorial design, restrained palette, generous whitespace, refined accents, minimal visual noise.',
     infographic: 'Infographic card like a fashion example: gray/neutral background, large centered product, 3-4 circular zoom callouts for visible details, clean labels on side/bottom. Do not add size, material, season or specs blocks without explicit user text.',
     typography: 'Typography card: huge translucent background typography behind the product, product over the letters, 2-3 short neutral phrases only based on user text or visually obvious purpose, minimal small text.',
-    lifestyle: 'Lifestyle card: warm natural background, soft sunlight shadows, emotional large headline, product centered, minimal infographics, branded desirable mood.',
+    lifestyle: 'Lifestyle card: do not merely add text over the original photo. Recompose the product into a new premium lifestyle/editorial scene: beautiful background, natural morning or evening light, soft shadows, depth, refined composition, expensive branded photoshoot feel. For clothing and lingerie, use an aesthetic fashion flat-lay or boutique mood without a model and without explicitness. Minimal text: one large emotional headline and at most one short phrase based only on user text or visually obvious purpose. Avoid simple tint/color overlay, border, top darkening, and lazy text overlay.',
   };
   const categoryHint = isRu
     ? (categoryHintsRu[category] || categoryHintsRu.other)
