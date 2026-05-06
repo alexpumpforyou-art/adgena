@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { getGenerationsByUser } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'vt.0pe@yandex.ru')
   .split(',').map(e => e.trim().toLowerCase());
 

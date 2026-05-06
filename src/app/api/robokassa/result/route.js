@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { PLANS } from '@/lib/plans';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 function verifySignature(outSum, invId, password2, shpParams) {
   const shpStr = Object.keys(shpParams)
     .sort()

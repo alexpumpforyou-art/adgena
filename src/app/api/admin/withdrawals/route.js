@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { processWithdrawal } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
 
 // GET — list all pending withdrawals

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { generateReferralCode, getReferralStats, createWithdrawal } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/referral — get referral code + stats
 export async function GET() {
   try {

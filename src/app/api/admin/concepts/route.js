@@ -3,6 +3,8 @@ import { getCurrentUser } from '@/lib/auth';
 import { uploadFile } from '@/lib/storage';
 import { getSetting, setSetting } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
 const SETTING_KEY = 'concept_thumbnails';
 

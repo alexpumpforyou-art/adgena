@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import sharp from 'sharp';
 
+export const dynamic = 'force-dynamic';
+
 const ALLOWED_FORMATS = { png: 'image/png', jpeg: 'image/jpeg', jpg: 'image/jpeg', webp: 'image/webp' };
 
 export async function GET(request) {

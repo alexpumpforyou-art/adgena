@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // Admin emails from env (comma-separated), e.g. ADMIN_EMAILS=user@mail.com,admin@site.com
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'vt.0pe@yandex.ru')
   .split(',').map(e => e.trim().toLowerCase());

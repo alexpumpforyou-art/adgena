@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { getAllTickets, getTicketById, addTicketMessage, updateTicketStatus, isStaff, updateUserRole, updateUserCredits } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // GET — list all tickets (admin/support only)
 export async function GET(request) {
   const user = await getCurrentUser(request);

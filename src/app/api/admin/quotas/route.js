@@ -3,6 +3,8 @@ import { getCurrentUser } from '@/lib/auth';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'vt.0pe@yandex.ru')
   .split(',').map(e => e.trim().toLowerCase());
 

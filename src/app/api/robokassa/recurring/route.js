@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { PLANS } from '@/lib/plans';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * CRON endpoint — processes recurring (child) payments via Robokassa.
  * Call daily via external CRON (e.g., cron-job.org) with: GET /api/robokassa/recurring?secret=YOUR_SECRET

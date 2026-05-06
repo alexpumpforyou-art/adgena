@@ -3,6 +3,8 @@ import { getCurrentUser } from '@/lib/auth';
 import { PLANS } from '@/lib/plans';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const user = await getCurrentUser();

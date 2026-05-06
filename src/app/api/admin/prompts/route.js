@@ -5,6 +5,8 @@ import { getPhotoPrompt, getCardPrompt, AD_PROMPTS } from '@/lib/prompts';
 import fs from 'fs';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 const OVERRIDES_PATH = path.join(process.cwd(), 'data', 'prompt-overrides.json');
 
 function loadOverrides() {
