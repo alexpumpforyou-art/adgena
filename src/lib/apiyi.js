@@ -34,7 +34,7 @@ const RATIO_TO_SIZE = {
 
 async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRatio }) {
   const size = RATIO_TO_SIZE[aspectRatio] || '1024x1536';
-  const model = process.env.IMAGE_GEN_MODEL || 'gpt-image-2';
+  const model = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
 
   console.log(`[GPT-IMAGE-2] Model: ${model} | Size: ${size}`);
 
@@ -168,16 +168,16 @@ export async function generateProductCard({
   }
 
   // === MODEL ROUTING ===
-  // Rule: if output must contain text (card/ads) → OpenAI gpt-image-2 (better typography).
+  // Rule: card/ads → OpenAI gpt-image-2 (better typography and layouts).
   //       photo → Gemini (cheaper, better photorealism).
   // Env overrides:
   //   IMAGE_GEN_MODEL=gpt-image-2  → force OpenAI for everything
   //   IMAGE_GEN_MODEL=gemini       → force Gemini for everything
   const forced = (process.env.IMAGE_GEN_MODEL || '').toLowerCase();
-  const wantsText = (type === 'ads' || type === 'card') && !noText;
+  const needsLayout = type === 'ads' || type === 'card';
   const useGptImage = forced.startsWith('gpt-image') ? true
                     : forced.startsWith('gemini')    ? false
-                    : wantsText;
+                    : needsLayout;
 
   const GPT_IMAGE_MODEL = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
   const GEMINI_MODEL    = 'gemini-3-pro-image-preview';
