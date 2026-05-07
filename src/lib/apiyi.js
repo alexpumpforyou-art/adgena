@@ -38,39 +38,44 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
   }
 
   const size = RATIO_TO_SIZE[aspectRatio] || '1024x1536';
-  const requestedModel = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-1';
-  const model = requestedModel === 'gpt-image-2' ? 'gpt-image-1' : requestedModel;
+  const model = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
+  const responseModel = process.env.OPENAI_RESPONSES_MODEL || 'gpt-5.5';
   const openaiClient = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
     timeout: parseInt(process.env.OPENAI_IMAGE_TIMEOUT_MS || '240000', 10),
   });
 
-  console.log(`[OPENAI GPT-IMAGE] Model: ${model}${model !== requestedModel ? ` (mapped from ${requestedModel})` : ''} | Size: ${size}`);
+  console.log(`[OPENAI GPT-IMAGE] Model: ${model} via Responses ${responseModel} | Size: ${size}`);
 
-  // Convert base64 image to a File-like object for the SDK
-  const imageBuffer = Buffer.from(imageBase64, 'base64');
-
-  // Use direct OpenAI images.edit with the reference image
-  const response = await openaiClient.images.edit({
-    model,
-    prompt,
-    image: new File([imageBuffer], 'product.png', { type: mimeType || 'image/png' }),
-    n: 1,
-    size,
-    response_format: 'b64_json',
+  const response = await openaiClient.responses.create({
+    model: responseModel,
+    input: [
+      {
+        role: 'user',
+        content: [
+          { type: 'input_text', text: prompt },
+          { type: 'input_image', image_url: `data:${mimeType || 'image/png'};base64,${imageBase64}` },
+        ],
+      },
+    ],
+    tools: [
+      {
+        type: 'image_generation',
+        model,
+        size,
+        quality: process.env.OPENAI_IMAGE_QUALITY || 'high',
+      },
+    ],
   });
 
-  const item = response.data?.[0];
-  const b64 = item?.b64_json;
+  const imageCall = response.output?.find(output => output.type === 'image_generation_call');
+  const b64 = imageCall?.result;
   if (b64) {
     return `data:image/png;base64,${b64}`;
   }
-  if (item?.url) {
-    return item.url;
-  }
 
   console.error('[OPENAI GPT-IMAGE] No image in response', {
-    keys: item ? Object.keys(item) : [],
+    outputTypes: response.output?.map(output => output.type) || [],
     responseKeys: response ? Object.keys(response) : [],
   });
   return null;
@@ -200,8 +205,7 @@ export async function generateProductCard({
                     : forced.startsWith('gemini')    ? false
                     : needsLayout;
 
-  const requestedGptImageModel = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-1';
-  const GPT_IMAGE_MODEL = requestedGptImageModel === 'gpt-image-2' ? 'gpt-image-1' : requestedGptImageModel;
+  const GPT_IMAGE_MODEL = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
   const GEMINI_MODEL    = process.env.IMAGE_GEN_MODEL_GEMINI || process.env.IMAGE_GEN_MODEL || 'gemini-3-pro-image-preview';
 
   const COST_GPT_IMAGE = parseFloat(process.env.COST_GPT_IMAGE || '0.19');
