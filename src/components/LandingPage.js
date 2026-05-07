@@ -472,6 +472,13 @@ function Pricing({ t, locale }) {
 function Footer({ t, locale }) {
   const privacyHref = locale === 'en' ? '/en/privacy' : '/privacy';
   const termsHref = locale === 'en' ? '/en/terms' : '/terms';
+  const seoLinks = [
+    { href: '/generator-kartochek-tovara', label: 'Генератор карточек товара' },
+    { href: '/ai-kartochki-wildberries', label: 'Карточки для Wildberries' },
+    { href: '/ai-kartochki-ozon', label: 'Карточки для Ozon' },
+    { href: '/infografika-dlya-marketpleysov', label: 'Инфографика для маркетплейсов' },
+    { href: '/generator-reklamnyh-kreativov', label: 'Рекламные креативы' },
+  ];
 
   return (
     <footer className={styles.footer}>
@@ -483,7 +490,7 @@ function Footer({ t, locale }) {
             <p className={styles.footerContact}>{t.footerContact} <a href="mailto:info@adgena.pro">info@adgena.pro</a></p>
           </div>
           <div className={styles.footerLinks}>
-            <div><h4>{t.footerProduct}</h4><a href="#showcase">{t.nav.examples}</a><a href="#features">{t.nav.features}</a><a href="#pricing">{t.nav.pricing}</a></div>
+            <div><h4>{t.footerProduct}</h4><a href="#showcase">{t.nav.examples}</a><a href="#features">{t.nav.features}</a><a href="#pricing">{t.nav.pricing}</a>{locale !== 'en' && seoLinks.map((link) => <Link key={link.href} href={link.href}>{link.label}</Link>)}</div>
             <div><h4>{t.footerLegal}</h4><Link href={privacyHref}>{t.footerPrivacy}</Link><Link href={termsHref}>{t.footerTerms}</Link></div>
           </div>
         </div>
