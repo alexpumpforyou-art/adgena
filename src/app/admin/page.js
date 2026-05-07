@@ -1007,10 +1007,10 @@ export default function AdminPage() {
             {/* AI Generation */}
             <div className={styles.infraCard}>
               <h3 className={styles.infraTitle}>🤖 AI-генерация</h3>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Провайдер</span><span className={styles.infraVal}>APIYI (api.apiyi.com)</span></div>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Основная модель</span><span className={styles.infraVal}>gpt-image-2 (через images.edit API)</span></div>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Fallback</span><span className={styles.infraVal}>gemini-3-pro-image-preview</span></div>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Env</span><span className={styles.infraVal}>APIYI_API_KEY, APIYI_BASE_URL, IMAGE_GEN_MODEL</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Провайдеры</span><span className={styles.infraVal}>OpenAI напрямую + APIYI</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Карточки/реклама</span><span className={styles.infraVal}>gpt-image-2 через OpenAI images.edit</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Фото</span><span className={styles.infraVal}>gemini-3-pro-image-preview через APIYI</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Env</span><span className={styles.infraVal}>OPENAI_API_KEY, APIYI_API_KEY, IMAGE_GEN_MODEL_OPENAI</span></div>
               <div className={styles.infraNote}>💰 Оплата за генерацию. При &gt;1000 генераций/час — нужны несколько ключей или своя очередь</div>
             </div>
 

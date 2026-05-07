@@ -1,15 +1,15 @@
 /**
- * APIYI Client — AI Image & Text Generation
+ * AI Image & Text Generation
  * Supports:
- *   - gpt-image-2 via /images/edits (product image → styled output)
- *   - gemini-3-pro-image-preview via /chat/completions (fallback)
- *   - Text generation (GPT 5.4)
+ *   - gpt-image-2 via direct OpenAI /images/edits (product image → styled output)
+ *   - gemini-3-pro-image-preview via APIYI /chat/completions
+ *   - Text generation via APIYI
  */
 
 import OpenAI from 'openai';
 import { getPhotoPrompt, getCardPrompt, AD_PROMPTS, getPromptOverride } from './prompts.js';
 
-const client = new OpenAI({
+const apiyiClient = new OpenAI({
   apiKey: process.env.APIYI_API_KEY,
   baseURL: process.env.APIYI_BASE_URL || 'https://api.apiyi.com/v1',
 });
@@ -33,16 +33,24 @@ const RATIO_TO_SIZE = {
 // ========================================
 
 async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRatio }) {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured for direct GPT Image generation');
+  }
+
   const size = RATIO_TO_SIZE[aspectRatio] || '1024x1536';
   const model = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
+  const openaiClient = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    timeout: parseInt(process.env.OPENAI_IMAGE_TIMEOUT_MS || '240000', 10),
+  });
 
-  console.log(`[GPT-IMAGE-2] Model: ${model} | Size: ${size}`);
+  console.log(`[OPENAI GPT-IMAGE] Model: ${model} | Size: ${size}`);
 
   // Convert base64 image to a File-like object for the SDK
   const imageBuffer = Buffer.from(imageBase64, 'base64');
 
-  // Use images.edit with the reference image
-  const response = await client.images.edit({
+  // Use direct OpenAI images.edit with the reference image
+  const response = await openaiClient.images.edit({
     model,
     prompt,
     image: new File([imageBuffer], 'product.png', { type: mimeType || 'image/png' }),
@@ -59,7 +67,7 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
     return item.url;
   }
 
-  console.error('[GPT-IMAGE-2] No image in response', {
+  console.error('[OPENAI GPT-IMAGE] No image in response', {
     keys: item ? Object.keys(item) : [],
     responseKeys: response ? Object.keys(response) : [],
   });
@@ -73,7 +81,7 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
 async function generateWithGemini({ prompt, imageBase64, mimeType }) {
   const model = process.env.IMAGE_GEN_MODEL_GEMINI || process.env.IMAGE_GEN_MODEL || 'gemini-3-pro-image-preview';
 
-  const response = await client.chat.completions.create({
+  const response = await apiyiClient.chat.completions.create({
     model,
     messages: [
       {
@@ -196,7 +204,7 @@ export async function generateProductCard({
   const COST_GPT_IMAGE = parseFloat(process.env.COST_GPT_IMAGE || '0.19');
   const COST_GEMINI    = parseFloat(process.env.COST_GEMINI    || '0.09');
 
-  console.log(`[APIYI] ${type} | concept: ${templateId} | cat: ${category} | ratio: ${aspectRatio} | lang: ${lang} | forced: ${forced || 'auto'} | needsLayout: ${needsLayout} | route: ${useGptImage ? 'openai' : 'gemini'}`);
+  console.log(`[AI] ${type} | concept: ${templateId} | cat: ${category} | ratio: ${aspectRatio} | lang: ${lang} | forced: ${forced || 'auto'} | needsLayout: ${needsLayout} | route: ${useGptImage ? 'openai-direct' : 'apiyi-gemini'}`);
   console.log(`[APIYI] Product: ${productName}`);
 
   let imageData = null;
@@ -219,7 +227,7 @@ export async function generateProductCard({
           rawContent: `[GPT-IMAGE-2 failed] ${err.message}`,
         };
       }
-      console.log('[APIYI] Falling back to Gemini...');
+      console.log('[AI] Falling back to APIYI Gemini...');
       imageData = await generateWithGemini({ prompt, imageBase64, mimeType });
       modelUsed = GEMINI_MODEL;
       costUsd = imageData ? COST_GEMINI : 0;
@@ -254,7 +262,7 @@ export async function generateProductText({ productName, category, keywords, lan
     ? `Product: ${productName}\nCategory: ${category || 'N/A'}\nKeywords: ${keywords || 'N/A'}\n\nJSON format:\n{"title":"SEO title up to 100 chars","subtitle":"Short description up to 60 chars","bullets":["Benefit 1","Benefit 2","Benefit 3","Benefit 4","Benefit 5"],"description":"Selling description 2-3 sentences","cta":"Call to action"}`
     : `Товар: ${productName}\nКатегория: ${category || 'Не указана'}\nКлючевые слова: ${keywords || 'Не указаны'}\n\nJSON формат:\n{"title":"SEO-название до 100 символов","subtitle":"Короткое описание до 60 символов","bullets":["Преимущество 1","Преимущество 2","Преимущество 3","Преимущество 4","Преимущество 5"],"description":"Продающее описание 2-3 предложения","cta":"Призыв к действию"}`;
 
-  const response = await client.chat.completions.create({
+  const response = await apiyiClient.chat.completions.create({
     model: process.env.AI_TEXT_MODEL || 'gpt-5.4',
     messages: [
       { role: 'system', content: systemPrompt },
@@ -284,7 +292,7 @@ export async function generateAdCopy({ productName, targetAudience, platform, la
     ? `Product: ${productName}\nTarget: ${targetAudience || 'Broad'}\nPlatform: ${platform || 'Universal'}\n\nJSON:\n{"headline":"Headline up to 40 chars","subheadline":"Subheadline up to 60 chars","cta":"CTA button up to 20 chars","body":"Body text 1-2 sentences","hashtags":["#hashtag1","#hashtag2"]}`
     : `Товар: ${productName}\nЦА: ${targetAudience || 'Широкая'}\nПлатформа: ${platform || 'Универсальная'}\n\nJSON:\n{"headline":"Заголовок до 40 символов","subheadline":"Подзаголовок до 60 символов","cta":"Кнопка CTA до 20 символов","body":"Основной текст 1-2 предложения","hashtags":["#хештег1","#хештег2"]}`;
 
-  const response = await client.chat.completions.create({
+  const response = await apiyiClient.chat.completions.create({
     model: process.env.AI_TEXT_MODEL || 'gpt-5.4',
     messages: [
       { role: 'system', content: systemPrompt },
@@ -303,4 +311,5 @@ export async function generateAdCopy({ productName, targetAudience, platform, la
   }
 }
 
-export default client;
+export default apiyiClient;
+

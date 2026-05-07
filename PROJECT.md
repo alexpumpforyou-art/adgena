@@ -190,8 +190,11 @@ start.js                     — Точка входа (Next.js + встроен
 |-----------|----------|-------------|
 | `JWT_SECRET` | Секрет для JWT токенов | ✅ |
 | `ADMIN_EMAILS` | Email админов (через запятую) | ✅ |
-| `APIYI_API_KEY` | Ключ APIYI для AI-генерации | ✅ |
+| `OPENAI_API_KEY` | Ключ OpenAI для gpt-image-2 (карточки и реклама) | ✅ |
+| `APIYI_API_KEY` | Ключ APIYI для Gemini/текста | ✅ |
 | `APIYI_BASE_URL` | Base URL APIYI | нет (default: api.apiyi.com) |
+| `IMAGE_GEN_MODEL_OPENAI` | Модель OpenAI Images API | нет (default: gpt-image-2) |
+| `OPENAI_IMAGE_TIMEOUT_MS` | Таймаут прямого OpenAI image-запроса | нет (default: 240000) |
 | `S3_ACCESS_KEY_ID` | Yandex Object Storage key | ✅ |
 | `S3_SECRET_ACCESS_KEY` | Yandex Object Storage secret | ✅ |
 | `S3_BUCKET` | Название бакета | нет (default: adgena-files) |
