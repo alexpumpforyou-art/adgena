@@ -133,7 +133,7 @@ export async function generateProductCard({
   aspectRatio = '3:4',
   wishes = '',
   cardText = '',
-  cardStyle = 'classic',
+  cardStyle = 'infographic',
   creativity = 0.5,
   noText = false,
 }) {

@@ -48,7 +48,7 @@ export async function POST(request) {
     const textJson = formData.get('text');
     const wishes = formData.get('wishes') || '';
     const cardText = formData.get('cardText') || '';
-    const cardStyle = formData.get('cardStyle') || 'classic';
+    const cardStyle = formData.get('cardStyle') || 'infographic';
     const creativity = parseFloat(formData.get('creativity') || '0.5');
     const aspectRatioOverride = formData.get('aspectRatio') || '';
 

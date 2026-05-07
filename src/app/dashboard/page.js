@@ -90,8 +90,6 @@ const AD_CONCEPTS = [
 ];
 
 const CARD_STYLES = [
-  { id: 'classic', name: 'Классический', desc: 'Чистая WB/Ozon карточка' },
-  { id: 'premium', name: 'Премиум', desc: 'Сдержанный брендовый стиль' },
   { id: 'infographic', name: 'Инфографика', desc: 'Выноски и детали товара' },
   { id: 'typography', name: 'Типографика', desc: 'Крупный текст на фоне' },
   { id: 'lifestyle', name: 'Lifestyle', desc: 'Эмоциональный фон и свет' },
@@ -144,7 +142,7 @@ export default function DashboardPage() {
   const [wishes, setWishes] = useState('');
   // Card
   const [cardText, setCardText] = useState('');
-  const [cardStyle, setCardStyle] = useState('classic');
+  const [cardStyle, setCardStyle] = useState('infographic');
   const [creativity, setCreativity] = useState(0.5);
   // Shared
   const [aspectRatio, setAspectRatio] = useState('3:4');

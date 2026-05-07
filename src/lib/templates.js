@@ -77,8 +77,9 @@ export const PHOTO_CONCEPTS = {
 // ========================================
 
 export const CARD_STYLES = [
-  { id: 'classic', name: 'Классический', nameEn: 'Classic' },
-  { id: 'premium', name: 'Премиум',     nameEn: 'Premium' },
+  { id: 'infographic', name: 'Инфографика', nameEn: 'Infographic' },
+  { id: 'typography',  name: 'Типографика', nameEn: 'Typography' },
+  { id: 'lifestyle',   name: 'Lifestyle',   nameEn: 'Lifestyle' },
 ];
 
 // ========================================

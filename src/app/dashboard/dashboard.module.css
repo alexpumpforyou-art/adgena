@@ -464,16 +464,6 @@
   background: rgba(17,24,39,0.86);
 }
 
-.cardStylePreview_premium {
-  background: linear-gradient(135deg, #111827, #4b5563);
-}
-
-.cardStylePreview_premium .previewLine1,
-.cardStylePreview_premium .previewLine2,
-.cardStylePreview_premium .previewBadge {
-  background: #f7d774;
-}
-
 .cardStylePreview_infographic .previewDot1,
 .cardStylePreview_infographic .previewDot2 {
   width: 18px;

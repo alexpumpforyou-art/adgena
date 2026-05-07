@@ -36,7 +36,7 @@ export async function GET(request) {
 
   const photoConcepts = ['on-model', 'in-store', 'flat-lay', 'studio', 'in-use', 'in-context', 'close-up', 'in-interior', 'texture', 'plated'];
   const adConcepts = ['ad-sale', 'ad-premium', 'ad-fresh', 'ad-minimal', 'ad-story'];
-  const cardStyles = ['classic', 'premium', 'infographic', 'typography', 'lifestyle'];
+  const cardStyles = ['infographic', 'typography', 'lifestyle'];
 
   const prompts = {
     photo: {},
