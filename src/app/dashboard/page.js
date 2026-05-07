@@ -112,8 +112,8 @@ const MODEL_RATIOS = {
 };
 
 const MODEL_LABELS = {
-  'gpt-image-2': 'GPT Image',
-  'gemini':      'Gemini (nanobanana)',
+  'gpt-image-2': 'выбранного режима',
+  'gemini':      'выбранного режима',
 };
 
 // Mirror backend routing in src/lib/apiyi.js:
@@ -246,7 +246,7 @@ export default function DashboardPage() {
       if (fallback) {
         const prev = aspectRatio;
         setAspectRatio(fallback);
-        setToast(`Формат ${prev} недоступен для модели ${MODEL_LABELS[model]} — переключено на ${fallback}`);
+        setToast(`Формат ${prev} недоступен для ${MODEL_LABELS[model]} — переключено на ${fallback}`);
       }
     }
   }, [tab, aspectRatio]);
@@ -457,7 +457,7 @@ export default function DashboardPage() {
       }
       if (data.success) {
         if (data.pending && data.generationId) {
-          setGeneratedResult({ pending: true, generationId: data.generationId, message: 'Генерация запущена. Ждём результат...' });
+          setGeneratedResult({ pending: true, generationId: data.generationId, message: 'Генерация запущена. Обычно это занимает 3–4 минуты.' });
           setShowResult(false);
           let completed = null;
           for (let attempt = 0; attempt < 120; attempt += 1) {
@@ -481,7 +481,7 @@ export default function DashboardPage() {
             }
           }
           if (!completed) {
-            setGeneratedResult({ error: 'Генерация занимает больше обычного. Результат появится в истории после завершения.' });
+            setGeneratedResult({ error: 'Генерация занимает больше обычного. Обычно это 3–4 минуты; результат появится в истории после завершения.' });
             return;
           }
           addToWorkspace(completed);
@@ -962,6 +962,11 @@ export default function DashboardPage() {
             <>Сгенерировать</>
           )}
         </button>
+        {generating && (
+          <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>
+            Генерация в среднем занимает 3–4 минуты. Можно оставить страницу открытой — результат появится автоматически.
+          </div>
+        )}
         {(uploadedImage || productName || selectedConcept) && !generating && (
           <button
             type="button"
@@ -1085,9 +1090,9 @@ export default function DashboardPage() {
       <main className={styles.rightPanel}>
         {generating && (() => {
           const steps = [
-            { label: 'Отправляем в AI...', hint: 'Упаковываем ваше фото и передаём модели' },
-            { label: 'AI рисует...',       hint: 'Обычно это самый долгий шаг, 20-50 секунд' },
-            { label: 'Сохраняем...',       hint: 'Оптимизируем и загружаем в хранилище' },
+            { label: 'Подготавливаем фото...', hint: 'Упаковываем изображение и настройки генерации' },
+            { label: 'Создаём результат...',   hint: 'Обычно это самый долгий шаг' },
+            { label: 'Сохраняем...',           hint: 'Оптимизируем и загружаем готовое изображение' },
           ];
           return (
             <div className={styles.emptyState}>
@@ -1134,7 +1139,7 @@ export default function DashboardPage() {
                 ))}
               </div>
               <p style={{fontSize: 11, color: 'var(--text-muted, #888)', marginTop: 10}}>
-                Всё вместе обычно 30-60 секунд
+                Генерация в среднем занимает 3–4 минуты
               </p>
             </div>
           );

@@ -195,7 +195,7 @@ start.js                     — Точка входа (Next.js + встроен
 | `APIYI_BASE_URL` | Base URL APIYI | нет (default: api.apiyi.com) |
 | `IMAGE_GEN_MODEL_OPENAI` | Модель OpenAI image_generation tool | нет (default: gpt-image-2) |
 | `OPENAI_RESPONSES_MODEL` | Модель Responses API для вызова image_generation tool | нет (default: gpt-5.5) |
-| `OPENAI_IMAGE_QUALITY` | Качество GPT Image | нет (default: high) |
+| `OPENAI_IMAGE_QUALITY` | Качество OpenAI image generation | нет (default: medium) |
 | `OPENAI_IMAGE_TIMEOUT_MS` | Таймаут прямого OpenAI image-запроса | нет (default: 240000) |
 | `DISABLE_OPENAI_IMAGE_GENERATION` | Срочно отключить OpenAI image-запросы (`true`) | нет |
 | `S3_ACCESS_KEY_ID` | Yandex Object Storage key | ✅ |
