@@ -56,6 +56,7 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
     image: new File([imageBuffer], 'product.png', { type: mimeType || 'image/png' }),
     n: 1,
     size,
+    response_format: 'b64_json',
   });
 
   const item = response.data?.[0];

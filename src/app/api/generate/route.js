@@ -238,13 +238,24 @@ export async function POST(request) {
     } else if (result.imageData.startsWith('http')) {
       try {
         const imgRes = await fetch(result.imageData);
+        if (!imgRes.ok) {
+          throw new Error(`image download failed: ${imgRes.status}`);
+        }
+        const contentType = imgRes.headers.get('content-type') || '';
+        if (!contentType.startsWith('image/')) {
+          throw new Error(`unexpected image content-type: ${contentType || 'unknown'}`);
+        }
         rawBuffer = Buffer.from(await imgRes.arrayBuffer());
       } catch (dlErr) {
         console.error('[Generate] Download error:', dlErr.message);
       }
     }
 
-    let finalBuffer = rawBuffer;
+    if (!rawBuffer) {
+      throw new Error('AI вернул ссылку на изображение, но сервер не смог скачать картинку.');
+    }
+
+    let finalBuffer = null;
     if (rawBuffer) {
       try {
         // Resize and optimize to WebP (Quality 98 = visually lossless for advertising, but still lighter than PNG)
@@ -254,8 +265,8 @@ export async function POST(request) {
           .toBuffer();
         console.log(`[Generate] Resized & WebP: ${sizeConfig.w}x${sizeConfig.h} (${(finalBuffer.length / 1024).toFixed(0)}KB)`);
       } catch (sharpErr) {
-        console.error('[Generate] Sharp resize error (using original):', sharpErr.message);
-        finalBuffer = rawBuffer;
+        console.error('[Generate] Sharp resize error:', sharpErr.message);
+        throw new Error('AI вернул повреждённое изображение. Попробуйте ещё раз.');
       }
     }
 
@@ -263,7 +274,7 @@ export async function POST(request) {
     let s3Url = null;
     try {
       const { uploadFile } = await import('@/lib/storage');
-      const uploadBuffer = finalBuffer || rawBuffer;
+      const uploadBuffer = finalBuffer;
       if (uploadBuffer) {
         const s3Result = await uploadFile(uploadBuffer, 'image/webp', 'generations', 'webp');
         if (s3Result) {
