@@ -281,6 +281,10 @@ export async function POST(request) {
       ? `data:image/webp;base64,${finalBuffer.toString('base64')}`
       : result.imageData);
 
+    if (!s3Url && !imageDataUrl) {
+      throw new Error('AI вернул пустое изображение. Попробуйте ещё раз.');
+    }
+
     // Update generation record
     if (user) {
       updateGeneration(generationId, {

@@ -441,6 +441,11 @@ export default function DashboardPage() {
       const res = await fetch('/api/generate', { method: 'POST', body: buildFormData(noteTextOverride, formOverrides) });
       const data = await res.json();
       if (data.success) {
+        if (!data.imageUrl && !data.imageDataUrl) {
+          setGeneratedResult({ error: 'AI вернул пустое изображение. Попробуйте ещё раз.' });
+          setShowResult(false);
+          return;
+        }
         addToWorkspace(data);
         setGeneratedResult(data);
         setShowResult(true);

@@ -50,13 +50,20 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
     size,
   });
 
-  const b64 = response.data?.[0]?.b64_json;
-  if (!b64) {
-    console.error('[GPT-IMAGE-2] No b64_json in response');
-    return null;
+  const item = response.data?.[0];
+  const b64 = item?.b64_json;
+  if (b64) {
+    return `data:image/png;base64,${b64}`;
+  }
+  if (item?.url) {
+    return item.url;
   }
 
-  return `data:image/png;base64,${b64}`;
+  console.error('[GPT-IMAGE-2] No image in response', {
+    keys: item ? Object.keys(item) : [],
+    responseKeys: response ? Object.keys(response) : [],
+  });
+  return null;
 }
 
 // ========================================
