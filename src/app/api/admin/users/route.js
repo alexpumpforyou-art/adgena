@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, isAdminUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
-
-// Admin emails from env (comma-separated), e.g. ADMIN_EMAILS=user@mail.com,admin@site.com
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'vt.0pe@yandex.ru')
-  .split(',').map(e => e.trim().toLowerCase());
 
 export async function GET() {
   try {
     const user = await getCurrentUser();
-    if (!user || !ADMIN_EMAILS.includes(user.email)) {
+    if (!isAdminUser(user)) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
@@ -46,7 +42,7 @@ export async function GET() {
 export async function PUT(request) {
   try {
     const user = await getCurrentUser();
-    if (!user || !ADMIN_EMAILS.includes(user.email)) {
+    if (!isAdminUser(user)) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
@@ -76,7 +72,7 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     const user = await getCurrentUser();
-    if (!user || !ADMIN_EMAILS.includes(user.email)) {
+    if (!isAdminUser(user)) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 

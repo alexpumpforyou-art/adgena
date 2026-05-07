@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser, signToken, buildSessionCookie } from '@/lib/auth';
+import { getCurrentUser, isAdminUser, signToken, buildSessionCookie } from '@/lib/auth';
 import { getUserById } from '@/lib/db';
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'vt.0pe@yandex.ru')
-  .split(',').map(e => e.trim().toLowerCase());
 
 export async function POST(request) {
   try {
     const adminUser = await getCurrentUser();
-    if (!adminUser || (!ADMIN_EMAILS.includes(adminUser.email) && adminUser.role !== 'admin')) {
+    if (!isAdminUser(adminUser)) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 

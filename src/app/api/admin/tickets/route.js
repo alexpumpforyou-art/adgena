@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, isAdminUser } from '@/lib/auth';
 import { getAllTickets, getTicketById, addTicketMessage, updateTicketStatus, isStaff, updateUserRole, updateUserCredits } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -42,8 +42,7 @@ export async function POST(request) {
 
   // Set user role (admin only)
   if (action === 'setRole' && userId && role) {
-    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
-    if (!adminEmails.includes(user.email?.toLowerCase())) {
+    if (!isAdminUser(user)) {
       return NextResponse.json({ error: 'Only admins can set roles' }, { status: 403 });
     }
     updateUserRole(userId, role);

@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, isAdminUser } from '@/lib/auth';
 import { PLANS } from '@/lib/plans';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'vt.0pe@yandex.ru')
-  .split(',').map(e => e.trim().toLowerCase());
-
 export async function POST() {
   try {
     const user = await getCurrentUser();
-    if (!user || (!ADMIN_EMAILS.includes(user.email) && user.role !== 'admin')) {
+    if (!isAdminUser(user)) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
