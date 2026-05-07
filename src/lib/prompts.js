@@ -263,12 +263,12 @@ function getCardStyleHint(cardStyle, category, isRu) {
   const styleHintsRu = {
     infographic: 'Инфографичная карточка как в fashion-примере: серый/нейтральный фон, товар крупно по центру, 3-4 круглые zoom-выноски видимых деталей, аккуратные подписи сбоку/снизу. Не добавляй блоки размеров, материала, сезона или характеристик без явного текста пользователя.',
     typography: 'Типографичная карточка: огромная полупрозрачная фоновая типографика за товаром, товар поверх букв, сверху 2-3 короткие нейтральные фразы только на основе текста пользователя или визуально очевидного назначения, минимум мелкого текста.',
-    lifestyle: 'Lifestyle-карточка: не просто добавляй текст поверх исходного фото. Пересобери товар в новую premium lifestyle/editorial сцену: красивый фон, естественный утренний или вечерний свет, мягкие тени, глубина, аккуратная композиция, ощущение дорогой брендовой съёмки. Для одежды и белья используй эстетичный fashion flat-lay или boutique mood без модели и без откровенности. Текст минимальный: крупный эмоциональный заголовок и максимум одна короткая фраза только из текста пользователя или очевидного назначения. Для текста используй красивый экранный display-шрифт: выразительный, модный, с хорошим кернингом, похожий на современную рекламную типографику, а не стандартный системный sans-serif. Избегай простого tint/color overlay, рамки, банального затемнения сверху и ленивого text overlay.',
+    lifestyle: 'Lifestyle-карточка: создай реалистичную premium lifestyle/editorial сцену, как брендовая съёмка товара в естественном окружении. Это НЕ инфографика и НЕ typography-постер. Запрещены стрелки, линии-указатели, zoom-выноски, подписи деталей, технические callout-блоки, огромные слова на весь кадр и перечисление характеристик. Товар должен быть в красивом жизненном контексте: для обуви — на улице, в спортивной раздевалке, рядом с беговой дорожкой, на стильной поверхности или в динамичной fashion/editorial композиции; для других категорий — подходящее реальное окружение. Фон должен быть полноценной сценой с глубиной, естественным светом, мягкими тенями и атмосферой дорогой рекламной фотосъёмки. Текст лучше не добавлять; если очень нужен — максимум одна короткая аккуратная фраза мелко/средне, без доминирования над товаром.',
   };
   const styleHintsEn = {
     infographic: 'Infographic card like a fashion example: gray/neutral background, large centered product, 3-4 circular zoom callouts for visible details, clean labels on side/bottom. Do not add size, material, season or specs blocks without explicit user text.',
     typography: 'Typography card: huge translucent background typography behind the product, product over the letters, 2-3 short neutral phrases only based on user text or visually obvious purpose, minimal small text.',
-    lifestyle: 'Lifestyle card: do not merely add text over the original photo. Recompose the product into a new premium lifestyle/editorial scene: beautiful background, natural morning or evening light, soft shadows, depth, refined composition, expensive branded photoshoot feel. For clothing and lingerie, use an aesthetic fashion flat-lay or boutique mood without a model and without explicitness. Minimal text: one large emotional headline and at most one short phrase based only on user text or visually obvious purpose. Use a beautiful screen/display typeface for text: expressive, fashionable, well-kerned, like modern advertising typography, not a default system sans-serif. Avoid simple tint/color overlay, border, top darkening, and lazy text overlay.',
+    lifestyle: 'Lifestyle card: create a realistic premium lifestyle/editorial scene, like a branded product photoshoot in a natural environment. This is NOT an infographic and NOT a typography poster. No arrows, pointer lines, zoom callouts, detail labels, technical callout blocks, huge words across the image, or feature lists. Place the product in a beautiful real-life context: for shoes — outdoors, locker room, near a running track, on a stylish surface, or in a dynamic fashion/editorial composition; for other categories — use an appropriate real environment. The background must be a full scene with depth, natural light, soft shadows, and an expensive advertising photoshoot mood. Prefer no text; if text is necessary — at most one short subtle phrase, small/medium, never dominating the product.',
   };
   const categoryHint = isRu
     ? (categoryHintsRu[category] || categoryHintsRu.other)
@@ -295,6 +295,13 @@ export function getCardPrompt({ productName, bullets, lang, cardText, cardStyle,
 
   const hasUserText = Boolean(cardText?.trim() || bullets?.length);
   const userText = cardText || (bullets?.length ? bullets.join(', ') : '');
+  const layoutBlock = cardStyle === 'lifestyle'
+    ? (isRu
+      ? 'КОМПОНОВКА: Товар должен быть главным героем lifestyle-сцены. Не делай инфографику, не добавляй стрелки, подписи деталей, выноски, списки преимуществ или крупную типографику. Сохрани фокус на реалистичной рекламной фотографии и атмосфере.'
+      : 'LAYOUT: The product must be the hero of the lifestyle scene. Do not make an infographic, do not add arrows, detail labels, callouts, benefit lists, or large typography. Keep the focus on realistic advertising photography and mood.')
+    : (isRu
+      ? 'КОМПОНОВКА: Товар должен быть главным героем карточки. Все тексты короткие, крупные и читаемые. Используй только данные из текста пользователя и очевидные визуальные свойства товара. Если текст пользователя не указан — не добавляй конкретные размеры, размерный ряд, материал, состав, сезон, цену, скидку, свойства ткани/состава, технические характеристики, гарантии или сертификаты. Если характеристика не указана пользователем и не написана на самом товаре/упаковке — не выдумывай её. Лучше используй нейтральные подписи к видимым деталям.'
+      : 'LAYOUT: The product must be the hero of the card. All text must be short, large and readable. Use only user-provided data and obvious visual properties of the product. If user text is not provided — do not add specific sizes, size ranges, material, composition, season, price, discount, fabric/composition properties, technical specs, warranties or certificates. If a specification is not provided by the user and not written on the product/packaging itself — do not invent it. Prefer neutral labels for visible details.');
 
   const wishBlock = wishes ? `\n\nДополнительно: ${wishes}` : '';
 
@@ -307,7 +314,7 @@ ${fidelity}
 
 ${styleHint}
 
-КОМПОНОВКА: Товар должен быть главным героем карточки. Все тексты короткие, крупные и читаемые. Используй только данные из текста пользователя и очевидные визуальные свойства товара. Если текст пользователя не указан — не добавляй конкретные размеры, размерный ряд, материал, состав, сезон, цену, скидку, свойства ткани/состава, технические характеристики, гарантии или сертификаты. Если характеристика не указана пользователем и не написана на самом товаре/упаковке — не выдумывай её. Лучше используй нейтральные подписи к видимым деталям.
+${layoutBlock}
 
 ${marketplaceSafe}
 ${safeZone}
@@ -324,7 +331,7 @@ ${fidelity}
 
 ${styleHint}
 
-LAYOUT: The product must be the hero of the card. All text must be short, large and readable. Use only user-provided data and obvious visual properties of the product. If user text is not provided — do not add specific sizes, size ranges, material, composition, season, price, discount, fabric/composition properties, technical specs, warranties or certificates. If a specification is not provided by the user and not written on the product/packaging itself — do not invent it. Prefer neutral labels for visible details.
+${layoutBlock}
 
 ${marketplaceSafe}
 ${safeZone}

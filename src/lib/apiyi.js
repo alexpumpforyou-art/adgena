@@ -68,7 +68,7 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
         type: 'image_generation',
         model,
         size,
-        quality: process.env.OPENAI_IMAGE_QUALITY || 'medium',
+        quality: process.env.OPENAI_IMAGE_QUALITY || 'low',
       },
     ],
   });
