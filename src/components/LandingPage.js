@@ -7,7 +7,7 @@ import styles from '../app/page.module.css';
 // ========================================
 // SMART "Start" button
 // ========================================
-function SmartStartLink({ className, children, locale }) {
+function SmartStartLink({ className, children, locale, authedChildren }) {
   const [authed, setAuthed] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -18,7 +18,7 @@ function SmartStartLink({ className, children, locale }) {
     return () => { cancelled = true; };
   }, []);
   const href = authed ? '/dashboard' : (locale === 'en' ? '/en/auth' : '/auth');
-  return <Link href={href} className={className}>{children}</Link>;
+  return <Link href={href} className={className}>{authed ? authedChildren : children}</Link>;
 }
 
 // ========================================
@@ -97,7 +97,7 @@ function Header({ t, locale }) {
           <a href="#pricing">{t.nav.pricing}</a>
           <Link href={switchUrl} style={{fontSize: 13, opacity: 0.7, textDecoration: 'none', color: 'inherit'}}>{switchLabel}</Link>
         </nav>
-        <SmartStartLink className={styles.btnStart} locale={locale}>{t.startBtn}</SmartStartLink>
+        <SmartStartLink className={styles.btnStart} locale={locale} authedChildren={locale === 'en' ? 'Dashboard' : 'Личный кабинет'}>{t.startBtn}</SmartStartLink>
       </div>
     </header>
   );
@@ -249,7 +249,7 @@ function Hero({ t, locale }) {
           </h1>
           <p className={styles.heroDesc}>{t.heroDesc}</p>
           <div className={styles.heroCta}>
-            <SmartStartLink className={styles.btnPrimary} locale={locale}>{t.heroCta}</SmartStartLink>
+            <SmartStartLink className={styles.btnPrimary} locale={locale} authedChildren={locale === 'en' ? 'Go to dashboard' : 'Перейти в личный кабинет'}>{t.heroCta}</SmartStartLink>
             <a href="#showcase" className={styles.btnGhost}>{t.heroGhost}</a>
           </div>
         </div>
