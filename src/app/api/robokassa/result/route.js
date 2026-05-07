@@ -103,10 +103,11 @@ async function processResult(params) {
     const existingSub = d.prepare('SELECT id FROM subscriptions WHERE user_id = ? AND status = ?').get(userId, 'active');
     const isRecurring = !!existingSub;
 
-    // Determine recurring interval: test plan = 1 hour, others = 30 days
     const recurringInterval = plan.recurringHours
       ? `+${plan.recurringHours} hours`
-      : '+30 days';
+      : plan.recurringDays
+        ? `+${plan.recurringDays} days`
+        : '+30 days';
 
     if (existingSub) {
       // Recurring charge — update next_charge_at and refresh the inv_id

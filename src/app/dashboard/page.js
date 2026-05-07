@@ -487,7 +487,12 @@ export default function DashboardPage() {
           addToWorkspace(completed);
           setGeneratedResult(completed);
           setShowResult(true);
-          fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
+          fetch('/api/auth/me').then(r => r.json()).then(d => {
+            if (d.success) {
+              setUser(d.user);
+              if ((d.user.plan || 'free') === 'free' && d.user.generations_used >= d.user.generations_limit) setShowLimitModal(true);
+            }
+          }).catch(() => {});
           return;
         }
         if (!data.imageUrl && !data.imageDataUrl) {
@@ -499,7 +504,12 @@ export default function DashboardPage() {
         setGeneratedResult(data);
         setShowResult(true);
         // Refresh user counter (generations_used)
-        fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
+        fetch('/api/auth/me').then(r => r.json()).then(d => {
+          if (d.success) {
+            setUser(d.user);
+            if ((d.user.plan || 'free') === 'free' && d.user.generations_used >= d.user.generations_limit) setShowLimitModal(true);
+          }
+        }).catch(() => {});
       } else {
         if (/лимит|quota|403/i.test(data.error || '')) {
           setShowLimitModal(true);
@@ -1070,7 +1080,7 @@ export default function DashboardPage() {
             <div className={styles.limitIcon}>⚡</div>
             <h3 className={styles.limitTitle}>Генерации закончились</h3>
             <p className={styles.limitText}>
-              Вы использовали все доступные генерации на текущем тарифе. Выберите подходящий план, чтобы продолжить создавать карточки и рекламу.
+              Дарим 3 генерации по себестоимости — 90₽ за 3 карточки на 7 дней. Отличный способ попробовать ещё несколько вариантов без большого тарифа.
             </p>
             {user && (
               <div className={styles.limitStats}>
@@ -1079,7 +1089,7 @@ export default function DashboardPage() {
               </div>
             )}
             <div className={styles.limitActions}>
-              <a href="/profile#plans" className={styles.limitPrimary}>Выбрать тариф</a>
+              <a href="/checkout?plan=trial3" className={styles.limitPrimary}>Получить 3 генерации за 90₽</a>
               <a href="/profile" className={styles.limitSecondary}>Открыть профиль</a>
             </div>
           </div>

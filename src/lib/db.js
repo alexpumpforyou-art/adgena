@@ -222,7 +222,7 @@ function initTables() {
   catch { d.exec("ALTER TABLE subscriptions ADD COLUMN last_charge_attempt_at TEXT DEFAULT NULL"); }
 
   // Data fix: sync generations_limit for paid plans that still have limit=1
-  const planLimits = { lite: 10, standard: 30, pro: 80, business: 200 };
+  const planLimits = { trial3: 3, lite: 10, standard: 30, pro: 80, business: 200 };
   for (const [plan, limit] of Object.entries(planLimits)) {
     d.prepare("UPDATE users SET generations_limit = ? WHERE plan = ? AND generations_limit < ?").run(limit, plan, limit);
   }

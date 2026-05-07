@@ -198,6 +198,7 @@ start.js                     — Точка входа (Next.js + встроен
 | `OPENAI_IMAGE_QUALITY` | Качество OpenAI image generation | нет (default: low) |
 | `OPENAI_IMAGE_TIMEOUT_MS` | Таймаут прямого OpenAI image-запроса | нет (default: 240000) |
 | `DISABLE_OPENAI_IMAGE_GENERATION` | Срочно отключить OpenAI image-запросы (`true`) | нет |
+| `image_layout_provider` | DB setting из админки: `openai` или `gemini` для карточек/рекламы | нет |
 | `S3_ACCESS_KEY_ID` | Yandex Object Storage key | ✅ |
 | `S3_SECRET_ACCESS_KEY` | Yandex Object Storage secret | ✅ |
 | `S3_BUCKET` | Название бакета | нет (default: adgena-files) |

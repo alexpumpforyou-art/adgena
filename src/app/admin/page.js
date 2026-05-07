@@ -52,6 +52,8 @@ export default function AdminPage() {
   const [testPaymentResult, setTestPaymentResult] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [imageLayoutProvider, setImageLayoutProvider] = useState('openai');
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const loadSubscriptions = async () => {
     try {
@@ -62,6 +64,27 @@ export default function AdminPage() {
         setPayments(data.payments || []);
       }
     } catch { /* ignore */ }
+  };
+
+  const loadSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/settings');
+      const data = await res.json();
+      if (data.success) setImageLayoutProvider(data.settings?.image_layout_provider || 'openai');
+    } catch { /* ignore */ }
+  };
+
+  const saveImageLayoutProvider = async (value) => {
+    setImageLayoutProvider(value);
+    setSavingSettings(true);
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'image_layout_provider', value }),
+      });
+    } catch { /* ignore */ }
+    setSavingSettings(false);
   };
 
   const handleTestPayment = () => {
@@ -202,6 +225,7 @@ export default function AdminPage() {
     if (activeTab === 'withdrawals' && withdrawals.length === 0) loadWithdrawals();
     if (activeTab === 'concepts' && Object.keys(conceptThumbs).length === 0) loadConcepts();
     if (activeTab === 'payments') loadSubscriptions();
+    if (activeTab === 'infra') loadSettings();
   }, [activeTab]);
 
   const handleUpdateUser = async (userId) => {
@@ -1010,6 +1034,20 @@ export default function AdminPage() {
               <div className={styles.infraRow}><span className={styles.infraKey}>Провайдеры</span><span className={styles.infraVal}>OpenAI напрямую + APIYI</span></div>
               <div className={styles.infraRow}><span className={styles.infraKey}>Карточки/реклама</span><span className={styles.infraVal}>gpt-image-2 через OpenAI Responses image_generation</span></div>
               <div className={styles.infraRow}><span className={styles.infraKey}>Фото</span><span className={styles.infraVal}>gemini-3-pro-image-preview через APIYI</span></div>
+              <div className={styles.infraRow}>
+                <span className={styles.infraKey}>Card/Ads роутинг</span>
+                <span className={styles.infraVal}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={imageLayoutProvider === 'gemini'}
+                      disabled={savingSettings}
+                      onChange={(e) => saveImageLayoutProvider(e.target.checked ? 'gemini' : 'openai')}
+                    />
+                    {imageLayoutProvider === 'gemini' ? 'Gemini через APIYI' : 'OpenAI напрямую'}
+                  </label>
+                </span>
+              </div>
               <div className={styles.infraRow}><span className={styles.infraKey}>Env</span><span className={styles.infraVal}>OPENAI_API_KEY, APIYI_API_KEY, IMAGE_GEN_MODEL_OPENAI</span></div>
               <div className={styles.infraNote}>💰 Оплата за генерацию. При &gt;1000 генераций/час — нужны несколько ключей или своя очередь</div>
             </div>

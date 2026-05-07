@@ -72,7 +72,7 @@ export default function ProfilePage() {
   if (!user) return null;
 
   const initials = (user.name || user.email || '?').charAt(0).toUpperCase();
-  const planNames = { free: 'Бесплатный', lite: 'Лайт', standard: 'Стандарт', pro: 'Про', business: 'Бизнес' };
+  const planNames = { free: 'Бесплатный', trial3: 'Пробный', lite: 'Лайт', standard: 'Стандарт', pro: 'Про', business: 'Бизнес' };
   const usedPercent = user.generations_limit > 0
     ? Math.round((user.generations_used / user.generations_limit) * 100)
     : 0;
@@ -215,6 +215,7 @@ export default function ProfilePage() {
           <p className={styles.upgradeDesc}>Выберите тариф и получите генерации мгновенно. Подписка продлевается автоматически.</p>
           <div className={styles.upgradeGrid}>
             {[
+              { id: 'trial3', name: 'Пробный', price: 90, gens: 3, desc: '3 карточки / 7 дней' },
               { id: 'lite', name: 'Лайт', price: 390, gens: 10, desc: 'Для пробы' },
               { id: 'standard', name: 'Стандарт', price: 990, gens: 30, desc: 'Для серии товаров', hl: true },
               { id: 'pro', name: 'Про', price: 2490, gens: 80, desc: 'Оптимальный выбор' },
@@ -222,13 +223,13 @@ export default function ProfilePage() {
             ].map(p => (
               <div key={p.id} className={`${styles.upgradeCard} ${p.hl ? styles.upgradeCardHl : ''} ${user.plan === p.id ? styles.upgradeCardActive : ''}`}>
                 <span className={styles.upgradeName}>{p.name}</span>
-                <span className={styles.upgradePrice}>{p.price.toLocaleString()} ₽<small>/мес</small></span>
+                <span className={styles.upgradePrice}>{p.price.toLocaleString()} ₽<small>{p.id === 'trial3' ? '/7 дней' : '/мес'}</small></span>
                 <span className={styles.upgradeGens}>{p.gens} генераций</span>
                 {user.plan === p.id ? (
                   <span className={styles.upgradeCurrent}>Текущий</span>
                 ) : (
                   <a href={`/checkout?plan=${p.id}`} className={styles.upgradeBtn}>
-                    {['lite', 'standard', 'pro', 'business'].indexOf(p.id) > ['lite', 'standard', 'pro', 'business'].indexOf(user.plan) ? 'Улучшить' : 'Выбрать'}
+                    {['trial3', 'lite', 'standard', 'pro', 'business'].indexOf(p.id) > ['trial3', 'lite', 'standard', 'pro', 'business'].indexOf(user.plan) ? 'Улучшить' : 'Выбрать'}
                   </a>
                 )}
               </div>

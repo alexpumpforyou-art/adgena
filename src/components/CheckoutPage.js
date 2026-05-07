@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 const PLANS_RU = {
+  trial3:   { name: 'Пробный', price: 90, gens: 3, period: '7 дней', recurringText: '7 дней' },
   lite:     { name: 'Лайт', price: 390, gens: 10 },
   standard: { name: 'Стандарт', price: 990, gens: 30 },
   pro:      { name: 'Про', price: 2490, gens: 80 },
@@ -12,6 +13,7 @@ const PLANS_RU = {
 };
 
 const PLANS_EN = {
+  trial3:   { name: 'Trial', price: 1, gens: 3, period: '7 days', recurringText: '7 days' },
   lite:     { name: 'Lite', price: 4.5, gens: 10 },
   standard: { name: 'Standard', price: 11.5, gens: 30 },
   pro:      { name: 'Pro', price: 29, gens: 80 },
@@ -102,11 +104,11 @@ function CheckoutForm({ locale = 'ru' }) {
         <div style={pageStyles.planBox}>
           <div style={pageStyles.planRow}>
             <span style={pageStyles.planName}>{plan.name}</span>
-            <span style={pageStyles.planPrice}>{isEn ? `$${plan.price}` : `${plan.price.toLocaleString()} ₽`}<span style={pageStyles.perMonth}>{isEn ? '/mo' : '/мес'}</span></span>
+            <span style={pageStyles.planPrice}>{isEn ? `$${plan.price}` : `${plan.price.toLocaleString()} ₽`}<span style={pageStyles.perMonth}>{plan.period ? `/${plan.period}` : (isEn ? '/mo' : '/мес')}</span></span>
           </div>
           <div style={pageStyles.planDetails}>
-            <span>{plan.gens} {isEn ? 'generations per month' : 'генераций в месяц'}</span>
-            <span>{isEn ? 'Auto-renews every 30 days' : 'Автопродление каждые 30 дней'}</span>
+            <span>{plan.gens} {plan.period ? (isEn ? 'generations for the period' : 'генерации за период') : (isEn ? 'generations per month' : 'генераций в месяц')}</span>
+            <span>{isEn ? `Auto-renews every ${plan.recurringText || '30 days'}` : `Автопродление каждые ${plan.recurringText || '30 дней'}`}</span>
           </div>
         </div>
 
@@ -118,9 +120,9 @@ function CheckoutForm({ locale = 'ru' }) {
         <div style={pageStyles.infoBox}>
           <p style={pageStyles.infoText}>
             {isEn ? (
-              <>Payment is charged <strong>automatically every 30 days</strong> from your bank card. You will be notified 3 days before the charge. You can cancel anytime in your <Link href="/profile" style={pageStyles.link}>profile</Link>.</>
+              <>Payment is charged <strong>automatically every {plan.recurringText || '30 days'}</strong> from your bank card. You will be notified before the charge. You can cancel anytime in your <Link href="/profile" style={pageStyles.link}>profile</Link>.</>
             ) : (
-              <>Оплата списывается <strong>автоматически каждые 30 дней</strong> с банковской карты. Вы получите уведомление за 3 дня до списания. Отменить подписку можно в любой момент в <Link href="/profile" style={pageStyles.link}>профиле</Link>.</>
+              <>Оплата списывается <strong>автоматически каждые {plan.recurringText || '30 дней'}</strong> с банковской карты. Вы получите уведомление перед списанием. Отменить подписку можно в любой момент в <Link href="/profile" style={pageStyles.link}>профиле</Link>.</>
             )}
           </p>
         </div>
@@ -129,9 +131,9 @@ function CheckoutForm({ locale = 'ru' }) {
           <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={pageStyles.checkbox} />
           <span style={pageStyles.checkboxText}>
             {isEn ? (
-              <>I agree to automatic charges per the <Link href="/en/terms" target="_blank" style={pageStyles.link}>terms of service</Link>. ${plan.price} will be charged every 30 days.</>
+              <>I agree to automatic charges per the <Link href="/en/terms" target="_blank" style={pageStyles.link}>terms of service</Link>. ${plan.price} will be charged every {plan.recurringText || '30 days'}.</>
             ) : (
-              <>Я согласен на автоматические списания согласно условиям <Link href="/terms" target="_blank" style={pageStyles.link}>оферты</Link>. Списание {plan.price.toLocaleString()} ₽ будет производиться каждые 30 дней.</>
+              <>Я согласен на автоматические списания согласно условиям <Link href="/terms" target="_blank" style={pageStyles.link}>оферты</Link>. Списание {plan.price.toLocaleString()} ₽ будет производиться каждые {plan.recurringText || '30 дней'}.</>
             )}
           </span>
         </label>

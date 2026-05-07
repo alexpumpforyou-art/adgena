@@ -8,6 +8,7 @@
 
 import OpenAI from 'openai';
 import { getPhotoPrompt, getCardPrompt, AD_PROMPTS, getPromptOverride } from './prompts.js';
+import { getSetting } from './db.js';
 
 const apiyiClient = new OpenAI({
   apiKey: process.env.APIYI_API_KEY,
@@ -204,12 +205,13 @@ export async function generateProductCard({
   //   IMAGE_GEN_MODEL_FORCE=gpt-image → force OpenAI for everything
   //   IMAGE_GEN_MODEL_FORCE=gemini    → force Gemini for everything
   //   ALLOW_GPT_IMAGE_FALLBACK=true → allow fallback to Gemini after GPT Image failure
+  const adminProvider = getSetting('image_layout_provider') || 'openai';
   const forced = (process.env.IMAGE_GEN_MODEL_FORCE || '').toLowerCase();
   const needsLayout = type === 'ads' || type === 'card';
   const allowGptFallback = process.env.ALLOW_GPT_IMAGE_FALLBACK === 'true';
   const useGptImage = forced.startsWith('gpt-image') ? true
                     : forced.startsWith('gemini')    ? false
-                    : needsLayout;
+                    : needsLayout ? adminProvider !== 'gemini' : false;
 
   const GPT_IMAGE_MODEL = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
   const GEMINI_MODEL    = process.env.IMAGE_GEN_MODEL_GEMINI || process.env.IMAGE_GEN_MODEL || 'gemini-3-pro-image-preview';
@@ -217,7 +219,7 @@ export async function generateProductCard({
   const COST_GPT_IMAGE = parseFloat(process.env.COST_GPT_IMAGE || '0.19');
   const COST_GEMINI    = parseFloat(process.env.COST_GEMINI    || '0.09');
 
-  console.log(`[AI] ${type} | concept: ${templateId} | cat: ${category} | ratio: ${aspectRatio} | lang: ${lang} | forced: ${forced || 'auto'} | needsLayout: ${needsLayout} | route: ${useGptImage ? 'openai-direct' : 'apiyi-gemini'}`);
+  console.log(`[AI] ${type} | concept: ${templateId} | cat: ${category} | ratio: ${aspectRatio} | lang: ${lang} | forced: ${forced || 'auto'} | adminProvider: ${adminProvider} | needsLayout: ${needsLayout} | route: ${useGptImage ? 'openai-direct' : 'apiyi-gemini'}`);
   console.log(`[APIYI] Product: ${productName}`);
 
   let imageData = null;
