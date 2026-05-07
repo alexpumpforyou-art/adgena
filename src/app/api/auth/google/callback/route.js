@@ -64,8 +64,10 @@ export async function GET(request) {
     const db = require('@/lib/db').default;
     const d = db();
     let user = getUserByEmail(googleUser.email);
+    let isNewUser = false;
 
     if (!user) {
+      isNewUser = true;
       const id = crypto.randomUUID();
       const passwordHash = bcryptjs.hashSync(crypto.randomBytes(32).toString('hex'), 10);
 
@@ -81,7 +83,7 @@ export async function GET(request) {
     const session = createSession(user.id);
     const token = signToken({ userId: user.id, email: user.email });
 
-    const response = NextResponse.redirect(`${base}/dashboard`);
+    const response = NextResponse.redirect(`${base}/dashboard${isNewUser ? '?registered=1' : ''}`);
     response.cookies.set(buildSessionCookie(token));
     return response;
 

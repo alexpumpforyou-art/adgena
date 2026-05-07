@@ -140,9 +140,10 @@ function AuthForm({ locale = 'ru' }) {
       });
       const data = await res.json();
       if (data.success) {
-        if (typeof window !== 'undefined' && window.ym) window.ym(109048904, 'reachGoal', 'registration');
         const redirectUrl = searchParams.get('redirect');
-        window.location.href = redirectUrl || '/dashboard';
+        const targetUrl = redirectUrl || '/dashboard';
+        const separator = targetUrl.includes('?') ? '&' : '?';
+        window.location.href = `${targetUrl}${separator}registered=1`;
       } else {
         setError(data.error || (isEn ? 'Registration error' : 'Ошибка регистрации'));
       }

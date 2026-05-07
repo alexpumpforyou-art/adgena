@@ -182,6 +182,16 @@ export default function DashboardPage() {
   // Download menu state
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
 
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('registered') !== '1') return;
+    if (typeof window !== 'undefined' && window.ym) {
+      window.ym(109048904, 'reachGoal', 'registration');
+    }
+    url.searchParams.delete('registered');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
   // Universal download helper — converts image to chosen format on the fly via proxy
   const downloadImage = async (imageUrl, format = 'webp', filenameBase = 'adgena') => {
     if (!imageUrl) return;
