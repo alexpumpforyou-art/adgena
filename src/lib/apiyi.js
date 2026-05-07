@@ -33,6 +33,10 @@ const RATIO_TO_SIZE = {
 // ========================================
 
 async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRatio }) {
+  if (process.env.DISABLE_OPENAI_IMAGE_GENERATION === 'true') {
+    throw new Error('Генерация карточек и рекламы временно отключена. Мы настраиваем стабильную очередь генераций.');
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY is not configured for direct GPT Image generation');
   }
