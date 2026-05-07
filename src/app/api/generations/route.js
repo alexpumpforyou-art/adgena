@@ -22,6 +22,7 @@ export async function GET() {
         sizeId: g.size_id,
         productName: g.product_name,
         imageOutput: g.image_output_path,
+        imageUrl: g.image_output_path?.startsWith('http') ? g.image_output_path : null,
         status: g.status,
         createdAt: g.created_at,
       })),

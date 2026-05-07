@@ -456,6 +456,40 @@ export default function DashboardPage() {
         return;
       }
       if (data.success) {
+        if (data.pending && data.generationId) {
+          setGeneratedResult({ pending: true, generationId: data.generationId, message: 'Генерация запущена. Ждём результат...' });
+          setShowResult(false);
+          let completed = null;
+          for (let attempt = 0; attempt < 120; attempt += 1) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            const statusRes = await fetch('/api/generations');
+            const statusData = await statusRes.json().catch(() => null);
+            const item = statusData?.generations?.find(g => g.id === data.generationId);
+            if (item?.status === 'completed' && item.imageUrl) {
+              completed = {
+                success: true,
+                imageUrl: item.imageUrl,
+                generationId: item.id,
+                template: item.templateId,
+                size: item.sizeId,
+              };
+              break;
+            }
+            if (item?.status === 'failed') {
+              setGeneratedResult({ error: 'Генерация не удалась. Попробуйте другой стиль или повторите позже.' });
+              return;
+            }
+          }
+          if (!completed) {
+            setGeneratedResult({ error: 'Генерация занимает больше обычного. Результат появится в истории после завершения.' });
+            return;
+          }
+          addToWorkspace(completed);
+          setGeneratedResult(completed);
+          setShowResult(true);
+          fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
+          return;
+        }
         if (!data.imageUrl && !data.imageDataUrl) {
           setGeneratedResult({ error: 'AI вернул пустое изображение. Попробуйте ещё раз.' });
           setShowResult(false);

@@ -28,6 +28,121 @@ const ASPECT_TO_SIZE = {
   '16:9': { w: 1920, h: 1080, aspect: '16:9' },
 };
 
+async function runGenerationJob({
+  generationId,
+  currentUserId,
+  generationConsumed,
+  imageBase64,
+  mimeType,
+  templateId,
+  productName,
+  bullets,
+  type,
+  category,
+  headline,
+  cta,
+  price,
+  showButton,
+  lang,
+  aspectRatio,
+  wishes,
+  cardText,
+  cardStyle,
+  creativity,
+  noText,
+  sizeConfig,
+  sizeId,
+}) {
+  let generationCompleted = false;
+  try {
+    const result = await generateProductCard({
+      imageBase64,
+      mimeType,
+      templateId,
+      productName: productName || 'Product',
+      bullets,
+      type,
+      category,
+      headline,
+      cta,
+      price,
+      showButton,
+      lang,
+      aspectRatio,
+      wishes,
+      cardText: noText ? '' : cardText,
+      cardStyle,
+      creativity,
+      noText,
+    });
+
+    if (!result.success || !result.imageData) {
+      console.error('[Generate] AI returned no image.', {
+        model: result.model,
+        contentType: typeof result.rawContent,
+        contentLength: typeof result.rawContent === 'string' ? result.rawContent.length : 'N/A',
+      });
+      updateGeneration(generationId, { status: 'failed' });
+      if (generationConsumed && currentUserId) {
+        try { refundGeneration(currentUserId); } catch {}
+      }
+      return { success: false, error: 'AI не вернул изображение. Попробуйте ещё раз.' };
+    }
+
+    let rawBuffer;
+    if (result.imageData.startsWith('data:image')) {
+      const base64Match = result.imageData.match(/^data:image\/\w+;base64,(.+)$/);
+      rawBuffer = base64Match ? Buffer.from(base64Match[1], 'base64') : null;
+    } else if (result.imageData.startsWith('http')) {
+      const imgRes = await fetch(result.imageData);
+      if (!imgRes.ok) throw new Error(`image download failed: ${imgRes.status}`);
+      const contentType = imgRes.headers.get('content-type') || '';
+      if (!contentType.startsWith('image/')) throw new Error(`unexpected image content-type: ${contentType || 'unknown'}`);
+      rawBuffer = Buffer.from(await imgRes.arrayBuffer());
+    }
+
+    if (!rawBuffer) throw new Error('AI вернул изображение в неподдерживаемом формате.');
+
+    const finalBuffer = await sharp(rawBuffer)
+      .resize(sizeConfig.w, sizeConfig.h, { fit: 'cover', position: 'center' })
+      .webp({ quality: 98, effort: 6 })
+      .toBuffer();
+
+    let s3Url = null;
+    const { uploadFile } = await import('@/lib/storage');
+    const s3Result = await uploadFile(finalBuffer, 'image/webp', 'generations', 'webp');
+    if (s3Result) s3Url = s3Result.url;
+    if (!s3Url) throw new Error('Не удалось сохранить результат генерации.');
+
+    updateGeneration(generationId, {
+      status: 'completed',
+      imageOutputPath: s3Url,
+      model: result.model,
+      costUsd: result.costUsd || 0,
+    });
+    generationCompleted = true;
+
+    console.log(`[Generate] Done: ${generationId} (${(finalBuffer.length / 1024).toFixed(0)}KB) → S3`);
+    return {
+      success: true,
+      imageDataUrl: null,
+      imageUrl: s3Url,
+      generationId,
+      template: templateId,
+      size: sizeId,
+      dimensions: { w: sizeConfig.w, h: sizeConfig.h },
+      model: result.model,
+    };
+  } catch (error) {
+    console.error('[Generate] Job error:', error.message);
+    updateGeneration(generationId, { status: 'failed' });
+    if (generationConsumed && !generationCompleted && currentUserId) {
+      try { refundGeneration(currentUserId); } catch {}
+    }
+    return { success: false, error: error.message || 'Ошибка генерации' };
+  }
+}
+
 export async function POST(request) {
   let slotAcquired = false;
   let rlKey = null;
@@ -190,12 +305,14 @@ export async function POST(request) {
     // Override aspect ratio if explicitly set by user
     const finalAspectRatio = aspectRatioOverride || aspectRatio;
 
-    // === CORE: Generate via AI ===
-    const result = await generateProductCard({
+    const jobPayload = {
+      generationId,
+      currentUserId,
+      generationConsumed,
       imageBase64,
       mimeType,
       templateId,
-      productName: productName || 'Product',
+      productName,
       bullets,
       type,
       category,
@@ -206,126 +323,34 @@ export async function POST(request) {
       lang,
       aspectRatio: finalAspectRatio,
       wishes,
-      cardText: noText ? '' : cardText,
+      cardText,
       cardStyle,
       creativity,
       noText,
-    });
+      sizeConfig,
+      sizeId,
+    };
 
-    if (!result.success || !result.imageData) {
-      console.error('[Generate] AI returned no image.', {
-        model: result.model,
-        contentType: typeof result.rawContent,
-        contentLength: typeof result.rawContent === 'string' ? result.rawContent.length : 'N/A',
+    if (user && (type === 'card' || type === 'ads')) {
+      const releaseKey = rlKey;
+      runGenerationJob(jobPayload).finally(() => {
+        if (releaseKey) releaseSlot(releaseKey);
       });
-
-      if (user) updateGeneration(generationId, { status: 'failed' });
-      if (generationConsumed && currentUserId) {
-        try { refundGeneration(currentUserId); generationConsumed = false; } catch {}
-      }
-
-      const rawError = typeof result.rawContent === 'string' ? result.rawContent : '';
-      const userError = rawError.includes('Генерация карточек и рекламы временно отключена')
-        ? 'Генерация карточек и рекламы временно отключена. Мы настраиваем стабильную очередь генераций.'
-        : rawError.startsWith('[GPT-IMAGE-2 failed]')
-          ? rawError.replace('[GPT-IMAGE-2 failed]', '').trim() || 'GPT Image 2 не смог выполнить генерацию. Попробуйте позже.'
-          : 'AI не вернул изображение. Попробуйте ещё раз.';
-
-      return NextResponse.json({
-        success: false,
-        error: userError,
-      }, { status: rawError.includes('Генерация карточек и рекламы временно отключена') ? 503 : 500 });
-    }
-
-    // === POST-PROCESS: Extract buffer, resize with sharp ===
-    let rawBuffer;
-    if (result.imageData.startsWith('data:image')) {
-      const base64Match = result.imageData.match(/^data:image\/\w+;base64,(.+)$/);
-      rawBuffer = base64Match ? Buffer.from(base64Match[1], 'base64') : null;
-    } else if (result.imageData.startsWith('http')) {
-      try {
-        const imgRes = await fetch(result.imageData);
-        if (!imgRes.ok) {
-          throw new Error(`image download failed: ${imgRes.status}`);
-        }
-        const contentType = imgRes.headers.get('content-type') || '';
-        if (!contentType.startsWith('image/')) {
-          throw new Error(`unexpected image content-type: ${contentType || 'unknown'}`);
-        }
-        rawBuffer = Buffer.from(await imgRes.arrayBuffer());
-      } catch (dlErr) {
-        console.error('[Generate] Download error:', dlErr.message);
-      }
-    }
-
-    if (!rawBuffer) {
-      throw new Error('AI вернул ссылку на изображение, но сервер не смог скачать картинку.');
-    }
-
-    let finalBuffer = null;
-    if (rawBuffer) {
-      try {
-        // Resize and optimize to WebP (Quality 98 = visually lossless for advertising, but still lighter than PNG)
-        finalBuffer = await sharp(rawBuffer)
-          .resize(sizeConfig.w, sizeConfig.h, { fit: 'cover', position: 'center' })
-          .webp({ quality: 98, effort: 6 })
-          .toBuffer();
-        console.log(`[Generate] Resized & WebP: ${sizeConfig.w}x${sizeConfig.h} (${(finalBuffer.length / 1024).toFixed(0)}KB)`);
-      } catch (sharpErr) {
-        console.error('[Generate] Sharp resize error:', sharpErr.message);
-        throw new Error('AI вернул повреждённое изображение. Попробуйте ещё раз.');
-      }
-    }
-
-    // === UPLOAD TO S3 STORAGE (Yandex Object Storage) ===
-    let s3Url = null;
-    try {
-      const { uploadFile } = await import('@/lib/storage');
-      const uploadBuffer = finalBuffer;
-      if (uploadBuffer) {
-        const s3Result = await uploadFile(uploadBuffer, 'image/webp', 'generations', 'webp');
-        if (s3Result) {
-          s3Url = s3Result.url;
-          console.log(`[Generate] S3 uploaded: ${s3Url}`);
-        }
-      }
-    } catch (s3Err) {
-      console.error('[Generate] S3 upload error (non-fatal):', s3Err.message);
-    }
-
-    // Build transient data URL ONLY if S3 upload failed (fallback so client still renders something)
-    // Normal path: return only imageUrl to avoid shipping 3-5 MB base64 over the network.
-    const imageDataUrl = s3Url ? null : (finalBuffer
-      ? `data:image/webp;base64,${finalBuffer.toString('base64')}`
-      : result.imageData);
-
-    if (!s3Url && !imageDataUrl) {
-      throw new Error('AI вернул пустое изображение. Попробуйте ещё раз.');
-    }
-
-    // Update generation record
-    if (user) {
-      updateGeneration(generationId, {
-        status: 'completed',
-        imageOutputPath: s3Url || generationId,
-        model: result.model,
-        costUsd: result.costUsd || 0,
-      });
+      slotAcquired = false;
       generationCompleted = true;
+      return NextResponse.json({
+        success: true,
+        pending: true,
+        generationId,
+        status: 'processing',
+      }, { status: 202 });
     }
 
-    console.log(`[Generate] Done: ${generationId} (${(finalBuffer?.length / 1024).toFixed(0) || '?'}KB)${s3Url ? ' → S3' : ''}`);
+    // === CORE: Generate via AI ===
+    const jobResult = await runGenerationJob(jobPayload);
+    generationCompleted = jobResult.success;
 
-    return NextResponse.json({
-      success: true,
-      imageDataUrl,
-      imageUrl: s3Url,
-      generationId,
-      template: templateId,
-      size: sizeId,
-      dimensions: { w: sizeConfig.w, h: sizeConfig.h },
-      model: result.model,
-    });
+    return NextResponse.json(jobResult, { status: jobResult.success ? 200 : 500 });
   } catch (error) {
     console.error('[Generate] Error:', error.message);
     if (generationConsumed && !generationCompleted && currentUserId) {
