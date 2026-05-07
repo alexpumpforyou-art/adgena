@@ -177,6 +177,7 @@ export default function DashboardPage() {
   // Text preview dialog before generation
   const [showTextPreview, setShowTextPreview] = useState(false);
   const [previewTexts, setPreviewTexts] = useState({ headline: '', cta: '', price: '', cardText: '', noText: false });
+  const [showLimitModal, setShowLimitModal] = useState(false);
   // Download menu state
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
 
@@ -295,6 +296,7 @@ export default function DashboardPage() {
     return { ok: true, reason: null };
   })();
   const canGenerate = genReadiness.ok;
+  const quotaExceeded = Boolean(user && typeof user.generations_used === 'number' && typeof user.generations_limit === 'number' && user.generations_used >= user.generations_limit);
 
   // --- Handlers ---
 
@@ -393,7 +395,10 @@ export default function DashboardPage() {
   };
 
   const handleGenerateClick = () => {
-    if (!canGenerate) return;
+    if (!canGenerate) {
+      if (quotaExceeded) setShowLimitModal(true);
+      return;
+    }
     // For ads and cards — show text preview dialog
     if (tab === 'ads' || tab === 'card') {
       const defaults = {
@@ -442,6 +447,9 @@ export default function DashboardPage() {
         // Refresh user counter (generations_used)
         fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.success) setUser(d.user); }).catch(() => {});
       } else {
+        if (/лимит|quota|403/i.test(data.error || '')) {
+          setShowLimitModal(true);
+        }
         setGeneratedResult({ error: data.error || 'Ошибка генерации' });
         setShowResult(true);
       }
@@ -888,7 +896,7 @@ export default function DashboardPage() {
         {/* Generate Button */}
         <button
           className={styles.generateBtn}
-          disabled={!canGenerate}
+          disabled={!canGenerate && !quotaExceeded}
           onClick={handleGenerateClick}
           title={genReadiness.reason || ''}
         >
@@ -990,6 +998,30 @@ export default function DashboardPage() {
                 className={styles.generateBtn}
                 style={{flex:1, margin:0}}
               >Сгенерировать</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LIMIT MODAL */}
+      {showLimitModal && (
+        <div className={styles.resultModal} onClick={(e) => { if (e.target === e.currentTarget) setShowLimitModal(false); }}>
+          <div className={styles.limitModalContent}>
+            <button className={styles.modalClose} onClick={() => setShowLimitModal(false)} aria-label="Закрыть">✕</button>
+            <div className={styles.limitIcon}>⚡</div>
+            <h3 className={styles.limitTitle}>Генерации закончились</h3>
+            <p className={styles.limitText}>
+              Вы использовали все доступные генерации на текущем тарифе. Выберите подходящий план, чтобы продолжить создавать карточки и рекламу.
+            </p>
+            {user && (
+              <div className={styles.limitStats}>
+                <span>Текущий тариф: <strong>{user.plan || 'free'}</strong></span>
+                <span>Использовано: <strong>{user.generations_used || 0}/{user.generations_limit || 0}</strong></span>
+              </div>
+            )}
+            <div className={styles.limitActions}>
+              <a href="/profile#plans" className={styles.limitPrimary}>Выбрать тариф</a>
+              <a href="/profile" className={styles.limitSecondary}>Открыть профиль</a>
             </div>
           </div>
         </div>

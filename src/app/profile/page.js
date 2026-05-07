@@ -210,7 +210,7 @@ export default function ProfilePage() {
         )}
 
         {/* Upgrade Plans */}
-        <div className={styles.upgradeSection}>
+        <div id="plans" className={styles.upgradeSection}>
           <h3>Тарифные планы</h3>
           <p className={styles.upgradeDesc}>Выберите тариф и получите генерации мгновенно. Подписка продлевается автоматически.</p>
           <div className={styles.upgradeGrid}>
