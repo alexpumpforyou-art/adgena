@@ -47,6 +47,7 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
 
   console.log(`[OPENAI GPT-IMAGE] Model: ${model} via Responses ${responseModel} | Size: ${size}`);
 
+  const startedAt = Date.now();
   const response = await openaiClient.responses.create({
     model: responseModel,
     input: [
@@ -67,6 +68,7 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
       },
     ],
   });
+  console.log(`[OPENAI GPT-IMAGE] Responses completed in ${Date.now() - startedAt}ms`);
 
   const imageCall = response.output?.find(output => output.type === 'image_generation_call');
   const b64 = imageCall?.result;

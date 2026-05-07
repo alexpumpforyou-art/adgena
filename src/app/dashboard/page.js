@@ -439,7 +439,22 @@ export default function DashboardPage() {
     setGeneratedResult(null);
     try {
       const res = await fetch('/api/generate', { method: 'POST', body: buildFormData(noteTextOverride, formOverrides) });
-      const data = await res.json();
+      const responseText = await res.text();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        data = null;
+      }
+      if (!data) {
+        setGeneratedResult({
+          error: res.ok
+            ? 'Сервер вернул пустой ответ. Попробуйте ещё раз.'
+            : `Сервер прервал генерацию (${res.status}). Попробуйте ещё раз или выберите другой стиль.`,
+        });
+        setShowResult(false);
+        return;
+      }
       if (data.success) {
         if (!data.imageUrl && !data.imageDataUrl) {
           setGeneratedResult({ error: 'AI вернул пустое изображение. Попробуйте ещё раз.' });
