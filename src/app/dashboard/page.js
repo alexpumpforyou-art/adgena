@@ -456,11 +456,11 @@ export default function DashboardPage() {
           setShowLimitModal(true);
         }
         setGeneratedResult({ error: data.error || 'Ошибка генерации' });
-        setShowResult(true);
+        setShowResult(false);
       }
     } catch (err) {
       setGeneratedResult({ error: err.message });
-      setShowResult(true);
+      setShowResult(false);
     } finally {
       setGenerating(false);
     }

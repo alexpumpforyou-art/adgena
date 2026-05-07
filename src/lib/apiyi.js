@@ -1,7 +1,7 @@
 /**
  * AI Image & Text Generation
  * Supports:
- *   - gpt-image-2 via direct OpenAI /images/edits (product image → styled output)
+ *   - GPT Image via direct OpenAI /images/edits (product image → styled output)
  *   - gemini-3-pro-image-preview via APIYI /chat/completions
  *   - Text generation via APIYI
  */
@@ -38,13 +38,14 @@ async function generateWithGptImage2({ prompt, imageBase64, mimeType, aspectRati
   }
 
   const size = RATIO_TO_SIZE[aspectRatio] || '1024x1536';
-  const model = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
+  const requestedModel = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-1';
+  const model = requestedModel === 'gpt-image-2' ? 'gpt-image-1' : requestedModel;
   const openaiClient = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
     timeout: parseInt(process.env.OPENAI_IMAGE_TIMEOUT_MS || '240000', 10),
   });
 
-  console.log(`[OPENAI GPT-IMAGE] Model: ${model} | Size: ${size}`);
+  console.log(`[OPENAI GPT-IMAGE] Model: ${model}${model !== requestedModel ? ` (mapped from ${requestedModel})` : ''} | Size: ${size}`);
 
   // Convert base64 image to a File-like object for the SDK
   const imageBuffer = Buffer.from(imageBase64, 'base64');
@@ -199,7 +200,8 @@ export async function generateProductCard({
                     : forced.startsWith('gemini')    ? false
                     : needsLayout;
 
-  const GPT_IMAGE_MODEL = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-2';
+  const requestedGptImageModel = process.env.IMAGE_GEN_MODEL_OPENAI || 'gpt-image-1';
+  const GPT_IMAGE_MODEL = requestedGptImageModel === 'gpt-image-2' ? 'gpt-image-1' : requestedGptImageModel;
   const GEMINI_MODEL    = process.env.IMAGE_GEN_MODEL_GEMINI || process.env.IMAGE_GEN_MODEL || 'gemini-3-pro-image-preview';
 
   const COST_GPT_IMAGE = parseFloat(process.env.COST_GPT_IMAGE || '0.19');

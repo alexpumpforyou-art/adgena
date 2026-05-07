@@ -1008,7 +1008,7 @@ export default function AdminPage() {
             <div className={styles.infraCard}>
               <h3 className={styles.infraTitle}>🤖 AI-генерация</h3>
               <div className={styles.infraRow}><span className={styles.infraKey}>Провайдеры</span><span className={styles.infraVal}>OpenAI напрямую + APIYI</span></div>
-              <div className={styles.infraRow}><span className={styles.infraKey}>Карточки/реклама</span><span className={styles.infraVal}>gpt-image-2 через OpenAI images.edit</span></div>
+              <div className={styles.infraRow}><span className={styles.infraKey}>Карточки/реклама</span><span className={styles.infraVal}>gpt-image-1 через OpenAI images.edit</span></div>
               <div className={styles.infraRow}><span className={styles.infraKey}>Фото</span><span className={styles.infraVal}>gemini-3-pro-image-preview через APIYI</span></div>
               <div className={styles.infraRow}><span className={styles.infraKey}>Env</span><span className={styles.infraVal}>OPENAI_API_KEY, APIYI_API_KEY, IMAGE_GEN_MODEL_OPENAI</span></div>
               <div className={styles.infraNote}>💰 Оплата за генерацию. При &gt;1000 генераций/час — нужны несколько ключей или своя очередь</div>
