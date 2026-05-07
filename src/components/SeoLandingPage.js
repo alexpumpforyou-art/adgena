@@ -1,7 +1,19 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import styles from './SeoLandingPage.module.css';
 
 export default function SeoLandingPage({ page }) {
+  const [conceptThumbs, setConceptThumbs] = useState({});
+
+  useEffect(() => {
+    fetch('/api/admin/concepts')
+      .then((r) => r.json())
+      .then((d) => { if (d.thumbnails) setConceptThumbs(d.thumbnails); })
+      .catch(() => {});
+  }, []);
+
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -54,10 +66,12 @@ export default function SeoLandingPage({ page }) {
         <div className={styles.examples}>
           {page.examples.map((item) => (
             <article key={item.title} className={styles.exampleCard}>
-              <div className={styles.exampleImages}>
-                <img src={item.before} alt={`${item.title}: исходное фото`} loading="lazy" />
-                <img src={item.after} alt={`${item.title}: результат AdGena`} loading="lazy" />
-              </div>
+              <img
+                src={conceptThumbs[item.conceptKey] || item.fallback}
+                alt={`${item.title}: пример AdGena`}
+                loading="lazy"
+                className={styles.exampleImage}
+              />
               <h3>{item.title}</h3>
               <p>{item.text}</p>
             </article>

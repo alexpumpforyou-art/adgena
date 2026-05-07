@@ -155,15 +155,9 @@
   background: rgba(255, 255, 255, 0.045);
 }
 
-.exampleImages {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.exampleImages img {
+.exampleImage {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
