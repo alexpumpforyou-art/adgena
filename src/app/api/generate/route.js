@@ -224,10 +224,17 @@ export async function POST(request) {
         try { refundGeneration(currentUserId); generationConsumed = false; } catch {}
       }
 
+      const rawError = typeof result.rawContent === 'string' ? result.rawContent : '';
+      const userError = rawError.includes('Генерация карточек и рекламы временно отключена')
+        ? 'Генерация карточек и рекламы временно отключена. Мы настраиваем стабильную очередь генераций.'
+        : rawError.startsWith('[GPT-IMAGE-2 failed]')
+          ? rawError.replace('[GPT-IMAGE-2 failed]', '').trim() || 'GPT Image 2 не смог выполнить генерацию. Попробуйте позже.'
+          : 'AI не вернул изображение. Попробуйте ещё раз.';
+
       return NextResponse.json({
         success: false,
-        error: 'AI не вернул изображение. Попробуйте ещё раз.',
-      }, { status: 500 });
+        error: userError,
+      }, { status: rawError.includes('Генерация карточек и рекламы временно отключена') ? 503 : 500 });
     }
 
     // === POST-PROCESS: Extract buffer, resize with sharp ===
