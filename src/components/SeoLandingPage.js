@@ -19,7 +19,10 @@ export default function SeoLandingPage({ page }) {
     <main className={styles.page}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <section className={styles.hero}>
-        <Link href="/" className={styles.logo}>AdGena</Link>
+        <Link href="/" className={styles.logo}>
+          <img src="/logo-icon.webp" alt="AdGena" />
+          <span>AdGena</span>
+        </Link>
         <p className={styles.kicker}>{page.kicker}</p>
         <h1>{page.h1}</h1>
         <p className={styles.lead}>{page.lead}</p>
@@ -36,6 +39,30 @@ export default function SeoLandingPage({ page }) {
             <p>{item.text}</p>
           </article>
         ))}
+      </section>
+
+      <section className={styles.story}>
+        <div>
+          <p className={styles.kicker}>{page.storyKicker}</p>
+          <h2>{page.storyTitle}</h2>
+        </div>
+        <p>{page.storyText}</p>
+      </section>
+
+      <section className={styles.section}>
+        <h2>{page.examplesTitle}</h2>
+        <div className={styles.examples}>
+          {page.examples.map((item) => (
+            <article key={item.title} className={styles.exampleCard}>
+              <div className={styles.exampleImages}>
+                <img src={item.before} alt={`${item.title}: исходное фото`} loading="lazy" />
+                <img src={item.after} alt={`${item.title}: результат AdGena`} loading="lazy" />
+              </div>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className={styles.section}>
@@ -58,6 +85,18 @@ export default function SeoLandingPage({ page }) {
               <summary>{item.q}</summary>
               <p>{item.a}</p>
             </details>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2>Что ещё можно сделать в AdGena</h2>
+        <div className={styles.related}>
+          {page.related.map((item) => (
+            <Link key={item.href} href={item.href} className={styles.relatedCard}>
+              <span>{item.label}</span>
+              <small>{item.text}</small>
+            </Link>
           ))}
         </div>
       </section>
