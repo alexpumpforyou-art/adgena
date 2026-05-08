@@ -75,11 +75,11 @@ export const LANGS = {
     pricingMarquee2: 'Попробуйте AI-генерацию карточек бесплатно',
     currency: '₽',
     plans: [
-      { id: 'trial3', name: 'Пробный', price: 90, desc: '3 карточки по себестоимости', feat: ['3 генерации', '7 дней доступа', 'Все стили карточек'], cta: 'Попробовать', badge: 'Старт' },
-      { id: 'lite', name: 'Лайт', price: 390, desc: 'Для пробы сервиса', feat: ['10 генераций', 'Все концепции', 'Все форматы'], cta: 'Выбрать' },
-      { id: 'standard', name: 'Стандарт', price: 990, desc: 'Для серии товаров', feat: ['30 генераций', 'Все возможности', 'Рекламные форматы', 'Улучшения'], cta: 'Выбрать', hl: true, badge: 'Популярный' },
-      { id: 'pro', name: 'Про', price: 2490, desc: 'Оптимальный выбор', feat: ['80 генераций', 'Всё включено', 'История версий', 'Приоритет'], cta: 'Выбрать' },
-      { id: 'business', name: 'Бизнес', price: 4990, desc: 'Максимум возможностей', feat: ['200 генераций', 'API доступ', 'Мульти-юзеры', 'Brand Kit'], cta: 'Выбрать' },
+      { id: 'trial3', name: 'Пробный', price: 90, desc: 'Для короткого теста', feat: ['3 генерации', 'Доступ на 7 дней', 'Фото, карточки и рекламные креативы'], cta: 'Попробовать', badge: 'Старт' },
+      { id: 'lite', name: 'Лайт', price: 390, desc: 'Для первых товаров', feat: ['10 генераций в месяц', 'Фото, карточки и рекламные креативы', 'Сохранение результатов в истории'], cta: 'Выбрать' },
+      { id: 'standard', name: 'Стандарт', price: 990, desc: 'Для регулярной работы', feat: ['30 генераций в месяц', 'Фото, карточки и рекламные креативы', 'Сохранение результатов в истории'], cta: 'Выбрать', hl: true, badge: 'Популярный' },
+      { id: 'pro', name: 'Про', price: 2490, desc: 'Для большого числа товаров', feat: ['80 генераций в месяц', 'Фото, карточки и рекламные креативы', 'Сохранение результатов в истории'], cta: 'Выбрать' },
+      { id: 'business', name: 'Бизнес', price: 4990, desc: 'Для максимального объёма', feat: ['200 генераций в месяц', 'Фото, карточки и рекламные креативы', 'Сохранение результатов в истории'], cta: 'Выбрать' },
     ],
 
     // Footer
@@ -207,10 +207,10 @@ export const LANGS = {
     pricingMarquee2: 'Try AI product card generation for free',
     currency: '$',
     plans: [
-      { id: 'lite', name: 'Lite', price: 4.5, desc: 'Try the service', feat: ['10 generations', 'All concepts', 'All formats'], cta: 'Choose' },
-      { id: 'standard', name: 'Standard', price: 11.5, desc: 'For a product line', feat: ['30 generations', 'All features', 'Ad formats', 'Improvements'], cta: 'Choose', hl: true, badge: 'Popular' },
-      { id: 'pro', name: 'Pro', price: 29, desc: 'Optimal choice', feat: ['80 generations', 'Everything included', 'Version history', 'Priority'], cta: 'Choose' },
-      { id: 'business', name: 'Business', price: 58, desc: 'Maximum power', feat: ['200 generations', 'API access', 'Multi-users', 'Brand Kit'], cta: 'Choose' },
+      { id: 'lite', name: 'Lite', price: 4.5, desc: 'For first products', feat: ['10 generations per month', 'Product photos, cards and ad creatives', 'Saved results history'], cta: 'Choose' },
+      { id: 'standard', name: 'Standard', price: 11.5, desc: 'For regular work', feat: ['30 generations per month', 'Product photos, cards and ad creatives', 'Saved results history'], cta: 'Choose', hl: true, badge: 'Popular' },
+      { id: 'pro', name: 'Pro', price: 29, desc: 'For many products', feat: ['80 generations per month', 'Product photos, cards and ad creatives', 'Saved results history'], cta: 'Choose' },
+      { id: 'business', name: 'Business', price: 58, desc: 'For maximum volume', feat: ['200 generations per month', 'Product photos, cards and ad creatives', 'Saved results history'], cta: 'Choose' },
     ],
 
     // Footer

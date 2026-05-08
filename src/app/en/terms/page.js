@@ -52,11 +52,11 @@ export default function TermsPageEn() {
               <tr><th>Plan</th><th>Price</th><th>Generations</th><th>Includes</th></tr>
             </thead>
             <tbody>
-              <tr><td>Free</td><td>Free</td><td>1</td><td>Basic concepts, JPG export</td></tr>
-              <tr><td>Lite</td><td>$4.5</td><td>10</td><td>All concepts, all formats</td></tr>
-              <tr><td>Standard</td><td>$11.5</td><td>30</td><td>All features, ad formats, improvements</td></tr>
-              <tr><td>Pro</td><td>$29</td><td>80</td><td>Everything included, version history, priority</td></tr>
-              <tr><td>Business</td><td>$58</td><td>200</td><td>API access, multi-users, Brand Kit</td></tr>
+              <tr><td>Free</td><td>Free</td><td>1</td><td>Product photos, cards and ad creatives</td></tr>
+              <tr><td>Lite</td><td>$4.5</td><td>10</td><td>Product photos, cards and ad creatives, results history</td></tr>
+              <tr><td>Standard</td><td>$11.5</td><td>30</td><td>Product photos, cards and ad creatives, results history</td></tr>
+              <tr><td>Pro</td><td>$29</td><td>80</td><td>Product photos, cards and ad creatives, results history</td></tr>
+              <tr><td>Business</td><td>$58</td><td>200</td><td>Product photos, cards and ad creatives, results history</td></tr>
             </tbody>
           </table>
           <p>
