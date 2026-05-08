@@ -15,10 +15,10 @@ const apiyiClient = new OpenAI({
   baseURL: process.env.APIYI_BASE_URL || 'https://api.apiyi.com/v1',
 });
 
-const PRODUCT_FIDELITY_RU = `Сохрани точную идентичность товара с референса: форму, пропорции, цвет, материал, упаковку, расположение этикетки/логотипа и узнаваемые детали. Не редизайни товар, не меняй цвет и не добавляй несуществующие элементы.`;
-const PRODUCT_FIDELITY_EN = `Preserve the exact product identity from the reference image: shape, proportions, color, material, packaging, label placement, logo position and distinctive details. Do not redesign the product, change its color, or add non-existing elements.`;
-const AD_SAFE_ZONE_RU = `Держи весь текст, цену и CTA внутри безопасных полей минимум 8% от краёв. Не обрезай текст, товар, ценник или кнопку.`;
-const AD_SAFE_ZONE_EN = `Keep all text, price and CTA inside a safe margin of at least 8% from all edges. Do not crop text, product, price badge or CTA.`;
+const PRODUCT_FIDELITY_RU = `Сохрани точную идентичность товара с референса: форму, пропорции, цвет, материал, упаковку, расположение этикетки/логотипа и узнаваемые детали. Если на товаре или упаковке уже есть оригинальная этикетка, логотип, название бренда или мелкий заводской текст — не удаляй и не затирай его, сохрани как часть самого товара. Не редизайни товар, не меняй цвет и не добавляй несуществующие элементы.`;
+const PRODUCT_FIDELITY_EN = `Preserve the exact product identity from the reference image: shape, proportions, color, material, packaging, label placement, logo position and distinctive details. If the product or packaging already has an original label, logo, brand name or small factory text, do not remove or erase it; preserve it as part of the product itself. Do not redesign the product, change its color, or add non-existing elements.`;
+const AD_SAFE_ZONE_RU = `Держи весь добавленный текст, цену, иконки, бейджи и CTA внутри безопасных полей: минимум 16% сверху и минимум 12% слева, справа и снизу. Никакой добавленный текст не должен касаться края или выходить за кадр. Не размещай заголовок в верхних 16% кадра. Не обрезай текст, товар, ценник или кнопку.`;
+const AD_SAFE_ZONE_EN = `Keep all added text, price, icons, badges and CTA inside safe margins: at least 16% from the top and at least 12% from left, right and bottom edges. No added text may touch the edge or leave the frame. Do not place the headline in the top 16% of the frame. Do not crop text, product, price badge or CTA.`;
 
 // Size map: aspect ratio → gpt-image-2 size
 const RATIO_TO_SIZE = {
@@ -193,9 +193,11 @@ export async function generateProductCard({
   // Inject aspect ratio
   prompt += `\n\nIMPORTANT: Generate the image in ${aspectRatio} aspect ratio.`;
 
-  // No text mode: override to remove all text from the image
+  // No text mode: do not add marketing text, but preserve original packaging text
   if (noText) {
-    prompt += `\n\nCRITICAL OVERRIDE: Do NOT place ANY text, letters, words, numbers, headlines, labels, watermarks, or typography on the image. The image must be completely free of any written content. Only the product and visual design elements are allowed.`;
+    prompt += lang === 'en'
+      ? `\n\nCRITICAL OVERRIDE: Do NOT add any new marketing text, headlines, captions, badges, CTA buttons, prices, stickers, typography, watermarks, or decorative words outside the product. IMPORTANT: preserve any original label, logo, brand name, product name, packaging text, serial text, or factory printing that already exists on the product itself. "No text" means no newly added overlay text, not erasing the product's original label.`
+      : `\n\nКРИТИЧЕСКОЕ ПРАВИЛО: не добавляй новый маркетинговый текст, заголовки, подписи, бейджи, CTA-кнопки, цены, стикеры, типографику, водяные знаки или декоративные слова вне товара. ВАЖНО: сохрани оригинальную этикетку, логотип, название бренда, название продукта, текст упаковки, серийный/заводской текст, который уже есть на самом товаре. Режим «без текста» означает отсутствие нового наложенного текста, а не удаление оригинальной этикетки товара.`;
   }
 
   // === MODEL ROUTING ===

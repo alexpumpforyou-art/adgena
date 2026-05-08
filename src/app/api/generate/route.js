@@ -323,7 +323,7 @@ export async function POST(request) {
       lang,
       aspectRatio: finalAspectRatio,
       wishes,
-      cardText,
+      cardText: noText ? '' : cardText,
       cardStyle,
       creativity,
       noText,

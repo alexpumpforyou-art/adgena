@@ -2,12 +2,12 @@ import fs from 'fs';
 import path from 'path';
 
 const OVERRIDES_PATH = path.join(process.cwd(), 'data', 'prompt-overrides.json');
-const PRODUCT_FIDELITY_RU = `Сохрани точную идентичность товара с референса: форму, пропорции, цвет, материал, упаковку, расположение этикетки/логотипа и узнаваемые детали. Не редизайни товар, не меняй цвет и не добавляй несуществующие элементы.`;
-const PRODUCT_FIDELITY_EN = `Preserve the exact product identity from the reference image: shape, proportions, color, material, packaging, label placement, logo position and distinctive details. Do not redesign the product, change its color, or add non-existing elements.`;
-const MARKETPLACE_SAFE_RU = `ВАЖНО ДЛЯ МАРКЕТПЛЕЙСА: товар должен быть главным объектом и занимать 55-70% кадра. Используй максимум 3-5 коротких преимуществ, не больше 2-4 слов каждое. Не добавляй мелкий нечитаемый текст, случайные цифры, артикулы, SKU, штрихкоды, выдуманные сертификаты или характеристики. Артикул/код товара можно писать только если пользователь явно указал его в тексте. Оставь безопасные поля минимум 10% от боковых и нижнего края и минимум 14% от верхнего края, чтобы текст не обрезался. Дизайн должен выглядеть как готовая карточка для Wildberries/Ozon: чисто, контрастно, продающе.`;
-const MARKETPLACE_SAFE_EN = `MARKETPLACE REQUIREMENTS: the product must be the main object and occupy 55-70% of the frame. Use up to 3-5 short benefits, 2-4 words each. Do not add tiny unreadable text, random numbers, article numbers, SKUs, barcodes, fake certifications, or invented specs. Product article/SKU may be written only if the user explicitly provided it in text. Keep safe margins of at least 10% from side/bottom edges and at least 14% from the top edge so text is not cropped. The design must look like a finished marketplace card: clean, high-contrast, conversion-focused.`;
-const SAFE_ZONE_RU = `Держи весь текст, цену и CTA внутри безопасных полей: минимум 14% сверху и минимум 10% слева, справа и снизу. Не размещай заголовок у самого верхнего края. Не обрезай текст, товар, ценник или кнопку.`;
-const SAFE_ZONE_EN = `Keep all text, price and CTA inside safe margins: at least 14% from the top and at least 10% from left, right and bottom edges. Do not place the headline against the top edge. Do not crop text, product, price badge or CTA.`;
+const PRODUCT_FIDELITY_RU = `Сохрани точную идентичность товара с референса: форму, пропорции, цвет, материал, упаковку, расположение этикетки/логотипа и узнаваемые детали. Если на товаре или упаковке уже есть оригинальная этикетка, логотип, название бренда или мелкий заводской текст — не удаляй и не затирай его, сохрани как часть самого товара. Не редизайни товар, не меняй цвет и не добавляй несуществующие элементы.`;
+const PRODUCT_FIDELITY_EN = `Preserve the exact product identity from the reference image: shape, proportions, color, material, packaging, label placement, logo position and distinctive details. If the product or packaging already has an original label, logo, brand name or small factory text, do not remove or erase it; preserve it as part of the product itself. Do not redesign the product, change its color, or add non-existing elements.`;
+const MARKETPLACE_SAFE_RU = `ВАЖНО ДЛЯ МАРКЕТПЛЕЙСА: товар должен быть главным объектом и занимать 50-65% кадра, оставляя место для выносок и текста. Используй максимум 2-4 коротких преимущества, не больше 2-3 слов каждое. Не добавляй мелкий нечитаемый текст, случайные цифры, артикулы, SKU, штрихкоды, выдуманные сертификаты или характеристики. Артикул/код товара можно писать только если пользователь явно указал его в тексте. Оставь безопасные поля минимум 16% сверху и минимум 12% слева, справа и снизу; все добавленные заголовки, подписи, иконки, выноски, линии, бейджи и CTA должны полностью помещаться внутри этих полей. Дизайн должен выглядеть как готовая карточка для Wildberries/Ozon: чисто, контрастно, продающе.`;
+const MARKETPLACE_SAFE_EN = `MARKETPLACE REQUIREMENTS: the product must be the main object and occupy 50-65% of the frame, leaving space for callouts and text. Use up to 2-4 short benefits, 2-3 words each. Do not add tiny unreadable text, random numbers, article numbers, SKUs, barcodes, fake certifications, or invented specs. Product article/SKU may be written only if the user explicitly provided it in text. Keep safe margins of at least 16% from the top and at least 12% from left, right and bottom edges; every added headline, label, icon, callout, line, badge and CTA must fit completely inside these margins. The design must look like a finished marketplace card: clean, high-contrast, conversion-focused.`;
+const SAFE_ZONE_RU = `Держи весь добавленный текст, цену, иконки, линии-указатели, выноски и CTA внутри безопасных полей: минимум 16% сверху и минимум 12% слева, справа и снизу. Никакой добавленный текст не должен касаться края или выходить за кадр. Не размещай заголовок в верхних 16% кадра. Не обрезай текст, товар, ценник или кнопку. Перед финалом мысленно проверь рамку: все буквы должны быть целиком видны.`;
+const SAFE_ZONE_EN = `Keep all added text, price, icons, pointer lines, callouts and CTA inside safe margins: at least 16% from the top and at least 12% from left, right and bottom edges. No added text may touch the edge or leave the frame. Do not place the headline in the top 16% of the frame. Do not crop text, product, price badge or CTA. Before final output, check the frame: every letter must be fully visible.`;
 const NEGATIVES = `Avoid: distorted shapes, wrong product color, changed packaging, incorrect logo, extra labels, fake article numbers, fake SKUs, fake barcodes, fake certifications, warped text, unreadable small text, misspelled text, blurry edges, low resolution, cartoon style, watermarks, AI artifacts, gibberish text, cropped product, cropped text, cluttered composition, duplicated products unless requested, extra fingers, deformed products.`;
 const PHOTO_TECH = `photorealistic, ultra-sharp focus, 8k resolution, high-end commercial photography, professional color grading, shot on Canon EOS R5 with 85mm lens`;
 
@@ -244,7 +244,7 @@ function getCardStyleHint(cardStyle, category, isRu) {
     clothing: 'Категория одежда/обувь: сохрани фасон, длину, посадку, принт, цвет, ремешки, швы и пропорции. Используй нейтральные подписи к видимым деталям: крой, воротник, рукав, принт, фактура, посадка. Не указывай размерный ряд, материал, сезон, состав ткани или свойства ткани, если пользователь явно не написал это в тексте.',
     accessories: 'Категория аксессуары: сохрани форму, фурнитуру, камни, застёжки, логотипы и масштаб. Используй нейтральные подписи к видимым деталям. Не указывай материал, размер, комплектность или покрытие, если пользователь явно не написал это в тексте.',
     food: 'Категория еда/напитки: сохрани упаковку, этикетку, форму продукта и бренд. Используй только видимые детали и текст пользователя. Не указывай состав, вкус, вес, объём, калорийность или натуральность, если пользователь явно не написал это в тексте.',
-    beauty: 'Категория косметика/уход: сохрани упаковку, этикетку, дозатор, цвет и форму флакона. Используй только видимые детали и текст пользователя. Не указывай эффект, тип кожи/волос, активный компонент, объём или способ применения, если пользователь явно не написал это в тексте.',
+    beauty: 'Категория косметика/уход: сохрани упаковку, этикетку, дозатор, цвет жидкости/крема, прозрачность стекла, форму флакона и премиальный clean-beauty вид. Оригинальная этикетка и брендовый текст на флаконе должны остаться на месте, не превращай её в пустую белую наклейку. Для инфографики используй тонкие белые/светлые zoom-выноски фактуры, крышки, пипетки, стекла или текстуры средства. Не указывай эффект, тип кожи/волос, активный компонент, объём или способ применения, если пользователь явно не написал это в тексте.',
     gadgets: 'Категория гаджеты/техника: сохрани форму устройства, экран, кнопки, порты и материалы. Используй только видимые детали и текст пользователя. Не указывай мощность, ёмкость, совместимость, гарантию или технические характеристики, если пользователь явно не написал это в тексте.',
     home: 'Категория дом/сад: сохрани цвет, форму, фактуру и масштаб товара. Используй только видимые детали и текст пользователя. Не указывай материал, размер, назначение, стиль интерьера или уход, если пользователь явно не написал это в тексте.',
     kids: 'Категория детские товары: мягкий дружелюбный дизайн, пастельные цвета, округлые формы. Используй только видимые детали и текст пользователя. Не указывай возраст, материал, безопасность, размер или сертификацию, если пользователь явно не написал это в тексте.',
@@ -254,19 +254,19 @@ function getCardStyleHint(cardStyle, category, isRu) {
     clothing: 'Clothing/footwear category: preserve cut, length, fit, print, color, straps, seams and proportions. Use neutral labels for visible details: cut, collar, sleeve, print, texture, fit. Do not mention size range, material, season, fabric composition or fabric properties unless the user explicitly wrote them.',
     accessories: 'Accessories category: preserve shape, hardware, stones, clasp, logos and scale. Use neutral labels for visible details. Do not mention material, size, set contents or coating unless the user explicitly wrote them.',
     food: 'Food/drinks category: preserve packaging, label, product shape and brand. Use only visible details and user text. Do not mention ingredients, taste, weight, volume, calories or naturalness unless the user explicitly wrote them.',
-    beauty: 'Beauty category: preserve packaging, label, pump, bottle shape and color. Use only visible details and user text. Do not mention effect, skin/hair type, active ingredient, volume or usage unless the user explicitly wrote them.',
+    beauty: 'Beauty category: preserve packaging, label, pump/dropper, liquid/cream color, glass transparency, bottle shape and premium clean-beauty look. Original label and brand text on the bottle must remain in place; do not turn it into a blank white sticker. For infographic cards, use thin white/light zoom callouts for texture, cap, dropper, glass or product texture. Do not mention effect, skin/hair type, active ingredient, volume or usage unless the user explicitly wrote them.',
     gadgets: 'Gadgets/electronics category: preserve device shape, screen, buttons, ports and materials. Use only visible details and user text. Do not mention power, capacity, compatibility, warranty or specs unless the user explicitly wrote them.',
     home: 'Home/garden category: preserve color, shape, texture and scale. Use only visible details and user text. Do not mention material, size, purpose, interior style or care unless the user explicitly wrote them.',
     kids: 'Kids category: soft friendly design, pastel colors, rounded shapes. Use only visible details and user text. Do not mention age, material, safety, size or certification unless the user explicitly wrote them.',
     other: 'Universal category: product is the hero, labels only for visible details and user-provided data, no invented parameters.',
   };
   const styleHintsRu = {
-    infographic: 'Инфографичная карточка как в fashion-примере: серый/нейтральный фон, товар крупно по центру, 3-4 круглые zoom-выноски видимых деталей, аккуратные подписи сбоку/снизу. Главный заголовок размещай заметно ниже верхнего края, внутри safe area, не ближе 14% от верха; лучше 1-2 строки без касания рамки. Не добавляй блоки размеров, материала, сезона или характеристик без явного текста пользователя.',
+    infographic: 'Инфографичная карточка: нейтральный/светлый фон, товар по центру, 2-4 круглые zoom-выноски только видимых деталей, аккуратные короткие подписи сбоку/снизу. Главный заголовок размещай внутри safe area, не ближе 16% от верха и 12% от левого/правого края; если заголовок длинный — уменьши размер, перенеси на 2 строки или размести ниже, но не обрезай. Запрещено ставить текст частично за кадром. Не добавляй блоки размеров, материала, сезона или характеристик без явного текста пользователя.',
     typography: 'Типографичная карточка: огромная полупрозрачная фоновая типографика за товаром, товар поверх букв, сверху 2-3 короткие нейтральные фразы только на основе текста пользователя или визуально очевидного назначения, минимум мелкого текста. Фоновая типографика должна быть очень светлой, низкоконтрастной, декоративной, не мешать читаемости, не спорить с товаром и не перекрывать важные детали товара. Не делай фоновую типографику слишком темной, слишком плотной или визуально агрессивной. Типографика должна быть чистой, крупной, аккуратной и современной, в стиле сильной маркетплейс-карточки. Используй короткие русские фразы, максимум 2 строки в одном блоке. Не создавай длинные абзацы. Не перегружай карточку текстом. Избегай сложной мелкой кириллицы, длинных описаний и плотных текстовых массивов. Все текстовые блоки должны быть легко читаемыми с первого взгляда. Иерархия текста: 1 главный верхний заголовок или 2 короткие верхние строки; 1 крупное акцентное слово или фраза; 2-3 короткие подписи к видимым деталям товара; минимум мелкого текста; не более 5 текстовых блоков на всей карточке. Композиция должна быть вертикальной, чистой и сбалансированной: товар в центре внимания, фоновая типографика позади, короткие подписи расположены так, чтобы не мешать товару и не выходить за safe zone. Не ставь текст вплотную к краям. Не делай слишком плотную или хаотичную верстку.',
     lifestyle: 'Lifestyle-карточка: создай реалистичную premium lifestyle/editorial сцену, как брендовая съёмка товара в естественном окружении. Это НЕ инфографика и НЕ typography-постер. Запрещены стрелки, линии-указатели, zoom-выноски, подписи деталей, технические callout-блоки, огромные слова на весь кадр и перечисление характеристик. Товар должен быть в красивом жизненном контексте: для обуви — на улице, в спортивной раздевалке, рядом с беговой дорожкой, на стильной поверхности или в динамичной fashion/editorial композиции; для других категорий — подходящее реальное окружение. Фон должен быть полноценной сценой с глубиной, естественным светом, мягкими тенями и атмосферой дорогой рекламной фотосъёмки. Текст лучше не добавлять; если очень нужен — максимум одна короткая аккуратная фраза мелко/средне, без доминирования над товаром.',
   };
   const styleHintsEn = {
-    infographic: 'Infographic card like a fashion example: gray/neutral background, large centered product, 3-4 circular zoom callouts for visible details, clean labels on side/bottom. Place the main headline clearly below the top edge, inside the safe area, at least 14% from the top; prefer 1-2 lines that never touch the frame. Do not add size, material, season or specs blocks without explicit user text.',
+    infographic: 'Infographic card: neutral/light background, centered product, 2-4 circular zoom callouts only for visible details, clean short labels on side/bottom. Place the main headline inside the safe area, at least 16% from the top and 12% from left/right edges; if the headline is long, reduce size, wrap to 2 lines or place it lower, but never crop it. Text partially outside the frame is forbidden. Do not add size, material, season or specs blocks without explicit user text.',
     typography: 'Typography card: huge translucent background typography behind the product, product over the letters, 2-3 short neutral phrases only based on user text or visually obvious purpose, minimal small text.',
     lifestyle: 'Lifestyle card: create a realistic premium lifestyle/editorial scene, like a branded product photoshoot in a natural environment. This is NOT an infographic and NOT a typography poster. No arrows, pointer lines, zoom callouts, detail labels, technical callout blocks, huge words across the image, or feature lists. Place the product in a beautiful real-life context: for shoes — outdoors, locker room, near a running track, on a stylish surface, or in a dynamic fashion/editorial composition; for other categories — use an appropriate real environment. The background must be a full scene with depth, natural light, soft shadows, and an expensive advertising photoshoot mood. Prefer no text; if text is necessary — at most one short subtle phrase, small/medium, never dominating the product.',
   };
@@ -352,13 +352,13 @@ function adExtras({ price, showButton, cta }, lang) {
   const parts = [];
   if (price) {
     parts.push(en
-      ? `- Price badge: a perfectly circular badge (~15-18% of frame height) in bright yellow (#FACC15) with a thin glowing outer ring and soft drop shadow. Inside: bold ultra-condensed dark text reading EXACTLY "${price}". Use this exact price — do not invent a different number. Optionally add tiny starburst rays emanating from the badge outline for extra visual energy.`
-      : `- Бейдж цены: идеально круглый бейдж (~15-18% высоты кадра) насыщенно-жёлтый (#FACC15) с тонким светящимся внешним кольцом и мягкой тенью. Внутри: жирный ультра-узкий тёмный текст РОВНО "${price}". Использовать именно эту цену — не придумывать другие цифры. Опционально добавь маленькие лучики-звезду по контуру бейджа для энергии.`);
+      ? `- Price badge: a perfectly circular badge (~13-16% of frame height) in bright yellow (#FACC15) with a thin glowing outer ring and soft drop shadow. Place it fully inside the safe area. Inside: bold ultra-condensed dark text reading EXACTLY "${price}". Use this exact price — do not invent a different number. Optionally add tiny starburst rays emanating from the badge outline for extra visual energy.`
+      : `- Бейдж цены: идеально круглый бейдж (~13-16% высоты кадра) насыщенно-жёлтый (#FACC15) с тонким светящимся внешним кольцом и мягкой тенью. Размести его полностью внутри safe area. Внутри: жирный ультра-узкий тёмный текст РОВНО "${price}". Использовать именно эту цену — не придумывать другие цифры. Опционально добавь маленькие лучики-звезду по контуру бейджа для энергии.`);
   }
   if (showButton && cta) {
     parts.push(en
-      ? `- CTA button "${cta}" — large rounded pill shape, solid bright yellow (#FACC15) fill with a subtle gradient highlight on the top edge, bold dark text, clear drop shadow underneath, and a small right-arrow icon "→" after the text. The button should look clickable and substantial.`
-      : `- CTA-кнопка "${cta}" — крупный скруглённый pill, залитый ярко-жёлтым (#FACC15) с лёгким градиентным бликом по верху, жирный тёмный текст, отчётливая тень под кнопкой, маленькая иконка-стрелка "→" после текста. Кнопка должна выглядеть кликабельной и весомой.`);
+      ? `- CTA button "${cta}" — rounded pill shape, solid bright yellow (#FACC15), bold dark text, clear drop shadow, fully inside the safe area. The button should look clickable and substantial.`
+      : `- CTA-кнопка "${cta}" — скруглённый pill, ярко-жёлтый (#FACC15), жирный тёмный текст, отчётливая тень, полностью внутри safe area. Кнопка должна выглядеть кликабельной и весомой.`);
   }
   const forbid = [];
   if (!price)          forbid.push(en ? 'no price tags or discount numbers anywhere' : 'никаких ценников и процентов скидок');
@@ -425,7 +425,7 @@ COMPOSITION (layered & dynamic):
 
 TYPOGRAPHY (multi-layer):
 - Main headline "${h}" — top-right, bold condensed sans-serif (Montserrat Black / Bebas Neue vibe), pure white, oversized, tight leading. If the headline is two words, stack them for impact.
-- Supporting tagline underneath the headline — 1 short line in lighter weight (e.g. "Limited time", "Free shipping", "New collection") — pick something relevant to the product category, half the size, slightly muted white.
+- Supporting tagline: only if explicitly provided by the user; otherwise omit it. Do not invent shipping, discount, limited-time, quality or product claims.
 ${extras}
 
 BACKGROUND (rich, not flat):
@@ -456,7 +456,7 @@ ${fidelity}
 
 ТИПОГРАФИКА (многоуровневая):
 - Главный заголовок "${h}" — справа сверху, жирный узкий шрифт без засечек (в духе Montserrat Black / Bebas Neue), чисто белый, крупный, плотный межстрочный. Если заголовок из двух слов — раздели на две строки.
-- Подзаголовок под заголовком — одна короткая строка более тонким шрифтом (например «Ограниченное предложение», «Бесплатная доставка», «Новая коллекция») — выбери релевантное категории товара, в два раза меньше, слегка приглушённо-белый.
+- Подзаголовок добавляй только если он явно указан пользователем; иначе пропусти. Не выдумывай доставку, скидку, ограниченность акции, качество или свойства товара.
 ${extras}
 
 ФОН (насыщенный, не плоский):
@@ -494,7 +494,7 @@ COMPOSITION:
 
 TYPOGRAPHY:
 - Main headline "${h}" — elegant high-contrast sans-serif or modern serif, restrained size, precise spacing.
-- Add one short premium tagline underneath (e.g. "Selected quality", "Designed to impress", "Limited edition") relevant to the product.
+- Add a short premium tagline only if explicitly provided by the user; otherwise omit it. Do not invent quality, exclusivity or product claims.
 ${extras}
 
 BACKGROUND:
@@ -518,7 +518,7 @@ ${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally ker
 
 ТИПОГРАФИКА:
 - Главный заголовок "${h}" — элегантный контрастный sans-serif или современный serif, сдержанный размер, точная разрядка.
-- Под ним один короткий премиальный подзаголовок (например «Отборное качество», «Создано впечатлять», «Лимитированная серия») релевантно товару.
+- Под ним добавь короткий премиальный подзаголовок только если он явно указан пользователем; иначе пропусти. Не выдумывай качество, эксклюзивность или свойства товара.
 ${extras}
 
 ФОН:
@@ -551,7 +551,7 @@ COMPOSITION:
 
 TYPOGRAPHY:
 - Main headline "${h}" — friendly rounded sans-serif, clear and modern, not too heavy.
-- Add one short positive tagline underneath (e.g. "For everyday comfort", "Light and natural", "Made for your routine") relevant to the product.
+- Add one short positive tagline only if explicitly provided by the user; otherwise omit it. Do not invent benefits, ingredients, naturalness or usage claims.
 ${extras}
 
 BACKGROUND:
@@ -575,7 +575,7 @@ ${PHOTO_TECH}. All text must be sharp, perfectly legible, and professionally ker
 
 ТИПОГРАФИКА:
 - Главный заголовок "${h}" — дружелюбный округлый sans-serif, чистый и современный, не слишком тяжёлый.
-- Под ним один короткий позитивный подзаголовок (например «Для комфорта каждый день», «Легко и натурально», «Для вашего ритма») релевантно товару.
+- Под ним добавь короткий позитивный подзаголовок только если он явно указан пользователем; иначе пропусти. Не выдумывай пользу, состав, натуральность или способ применения.
 ${extras}
 
 ФОН:
