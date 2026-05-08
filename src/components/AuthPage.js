@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { reachGoal } from '@/lib/metrics';
 import styles from '../app/auth/auth.module.css';
 
 const OAUTH_ERRORS_RU = {
@@ -77,6 +78,7 @@ function AuthForm({ locale = 'ru' }) {
 
   const handleSendCode = async () => {
     if (!email) { setError(isEn ? 'Enter email' : 'Введите email'); return; }
+    reachGoal('auth_started', { method: 'email', mode });
     setError('');
     setSuccess('');
     setLoading(true);
@@ -88,6 +90,7 @@ function AuthForm({ locale = 'ru' }) {
       });
       const data = await res.json();
       if (data.success) {
+        reachGoal('auth_code_sent', { mode });
         setStep('code');
         setSuccess(isEn ? `Code sent to ${email}` : `Код отправлен на ${email}`);
         setCountdown(60);
@@ -140,6 +143,7 @@ function AuthForm({ locale = 'ru' }) {
       });
       const data = await res.json();
       if (data.success) {
+        reachGoal('registration', { method: 'email' });
         const redirectUrl = searchParams.get('redirect');
         const targetUrl = redirectUrl || '/dashboard';
         const separator = targetUrl.includes('?') ? '&' : '?';
@@ -166,6 +170,7 @@ function AuthForm({ locale = 'ru' }) {
       });
       const data = await res.json();
       if (data.success) {
+        reachGoal('login_success', { method: 'email' });
         const redirectUrl = searchParams.get('redirect');
         window.location.href = redirectUrl || '/dashboard';
       } else {

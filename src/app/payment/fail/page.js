@@ -1,8 +1,14 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { reachGoal } from '@/lib/metrics';
 
 export default function PaymentFailPage() {
+  useEffect(() => {
+    reachGoal('payment_fail');
+  }, []);
+
   return (
     <div style={{
       minHeight: '100vh',

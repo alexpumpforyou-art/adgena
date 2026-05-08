@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { reachGoal } from '@/lib/metrics';
 
 const PLANS_RU = {
   trial3:   { name: 'Пробный', price: 90, gens: 3, period: '7 дней', recurringText: '7 дней' },
@@ -38,6 +39,7 @@ function CheckoutForm({ locale = 'ru' }) {
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
+    if (planId) reachGoal('checkout_open', { plan: planId, locale });
     fetch('/api/auth/me').then(r => r.json()).then(data => {
       if (!data.user) {
         window.location.href = `${authUrl}?redirect=${checkoutUrl}?plan=${planId}`;
@@ -78,6 +80,7 @@ function CheckoutForm({ locale = 'ru' }) {
 
   const handlePay = async () => {
     if (!agreed) return;
+    reachGoal('checkout_pay_click', { plan: planId, locale });
     setLoading(true);
     try {
       await fetch('/api/robokassa/consent', {
@@ -86,6 +89,7 @@ function CheckoutForm({ locale = 'ru' }) {
         body: JSON.stringify({ planId }),
       });
     } catch { /* non-critical */ }
+    reachGoal('robokassa_redirect', { plan: planId, locale });
     window.location.href = `/api/robokassa/checkout?plan=${planId}`;
   };
 
@@ -108,7 +112,7 @@ function CheckoutForm({ locale = 'ru' }) {
           </div>
           <div style={pageStyles.planDetails}>
             <span>{plan.gens} {plan.period ? (isEn ? 'generations for the period' : 'генерации за период') : (isEn ? 'generations per month' : 'генераций в месяц')}</span>
-            <span>{isEn ? `Auto-renews every ${plan.recurringText || '30 days'}` : `Автопродление каждые ${plan.recurringText || '30 дней'}`}</span>
+            <span>{isEn ? 'Access starts immediately after payment' : 'Доступ откроется сразу после оплаты'}</span>
           </div>
         </div>
 
@@ -120,20 +124,20 @@ function CheckoutForm({ locale = 'ru' }) {
         <div style={pageStyles.infoBox}>
           <p style={pageStyles.infoText}>
             {isEn ? (
-              <>Payment is charged <strong>automatically every {plan.recurringText || '30 days'}</strong> from your bank card. You will be notified before the charge. You can cancel anytime in your <Link href="/profile" style={pageStyles.link}>profile</Link>.</>
+              <>Get your generations immediately after payment. You can manage or cancel access anytime in your <Link href="/profile" style={pageStyles.link}>profile</Link>.</>
             ) : (
-              <>Оплата списывается <strong>автоматически каждые {plan.recurringText || '30 дней'}</strong> с банковской карты. Вы получите уведомление перед списанием. Отменить подписку можно в любой момент в <Link href="/profile" style={pageStyles.link}>профиле</Link>.</>
+              <>Получите генерации сразу после оплаты. Управлять доступом и отменить продление можно в любой момент в <Link href="/profile" style={pageStyles.link}>профиле</Link>.</>
             )}
           </p>
         </div>
 
         <label style={pageStyles.checkboxLabel}>
-          <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={pageStyles.checkbox} />
+          <input type="checkbox" checked={agreed} onChange={(e) => { setAgreed(e.target.checked); if (e.target.checked) reachGoal('checkout_agree', { plan: planId, locale }); }} style={pageStyles.checkbox} />
           <span style={pageStyles.checkboxText}>
             {isEn ? (
-              <>I agree to automatic charges per the <Link href="/en/terms" target="_blank" style={pageStyles.link}>terms of service</Link>. ${plan.price} will be charged every {plan.recurringText || '30 days'}.</>
+              <>I accept the <Link href="/en/terms" target="_blank" style={pageStyles.link}>terms of service</Link> and payment terms.</>
             ) : (
-              <>Я согласен на автоматические списания согласно условиям <Link href="/terms" target="_blank" style={pageStyles.link}>оферты</Link>. Списание {plan.price.toLocaleString()} ₽ будет производиться каждые {plan.recurringText || '30 дней'}.</>
+              <>Я принимаю условия <Link href="/terms" target="_blank" style={pageStyles.link}>оферты</Link> и оплаты.</>
             )}
           </span>
         </label>
@@ -149,7 +153,7 @@ function CheckoutForm({ locale = 'ru' }) {
         >
           {loading
             ? (isEn ? 'Redirecting to payment...' : 'Переход к оплате...')
-            : (isEn ? `Pay $${plan.price}` : `Оплатить ${plan.price.toLocaleString()} ₽`)}
+            : (isEn ? `Get ${plan.gens} generations` : `Получить ${plan.gens} генерации`)}
         </button>
 
         <div style={pageStyles.links}>

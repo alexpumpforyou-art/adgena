@@ -2,10 +2,11 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { reachGoal } from '@/lib/metrics';
 
 export default function PaymentSuccessPage() {
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.ym) window.ym(109048904, 'reachGoal', 'payment');
+    reachGoal('payment');
   }, []);
 
   return (

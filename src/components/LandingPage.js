@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import styles from '../app/page.module.css';
+import { reachGoal } from '@/lib/metrics';
 
 // ========================================
 // SMART "Start" button
@@ -457,7 +458,13 @@ function Pricing({ t, locale }) {
                 {t.currency === '$' ? `$${p.price}` : `${p.price.toLocaleString()} ${t.currency}`}
               </div>
               <ul className={styles.priceFeats}>{p.feat.map((f, i) => <li key={i}>{f}</li>)}</ul>
-              <Link href={`${checkoutBase}?plan=${p.id}`} className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}>{p.cta}</Link>
+              <Link
+                href={`${checkoutBase}?plan=${p.id}`}
+                className={`${p.hl ? styles.btnPrimary : styles.btnOutline} ${styles.priceCta}`}
+                onClick={() => reachGoal('pricing_click', { plan: p.id, locale })}
+              >
+                {p.cta}
+              </Link>
             </div>
           ))}
         </div>

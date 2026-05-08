@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import styles from './dashboard.module.css';
+import { reachGoal } from '@/lib/metrics';
 import {
   IconFire, IconDiamond, IconLeaf, IconSparkle, IconPhone,
   IconSun, IconMoon, IconWand, IconLoader, IconDownload, IconRefresh,
@@ -315,6 +316,7 @@ export default function DashboardPage() {
       return;
     }
     setUploadedImage(file);
+    reachGoal('dashboard_upload', { type: file.type, size_mb: Math.round((file.size / 1024 / 1024) * 10) / 10 });
     const reader = new FileReader();
     reader.onload = (ev) => setImagePreview(ev.target.result);
     reader.readAsDataURL(file);
@@ -396,7 +398,10 @@ export default function DashboardPage() {
 
   const handleGenerateClick = () => {
     if (!canGenerate) {
-      if (quotaExceeded) setShowLimitModal(true);
+      if (quotaExceeded) {
+        reachGoal('limit_modal_show', { source: 'generate_click', plan: user?.plan || 'free' });
+        setShowLimitModal(true);
+      }
       return;
     }
     // For ads and cards — show text preview dialog
@@ -435,6 +440,7 @@ export default function DashboardPage() {
 
   const handleGenerate = async (noteTextOverride, formOverrides) => {
     if (!canGenerate) return;
+    reachGoal('generate_click', { type: tab, category, style: tab === 'card' ? cardStyle : selectedConcept || 'none' });
     setGenerating(true);
     setGeneratedResult(null);
     try {
@@ -447,6 +453,7 @@ export default function DashboardPage() {
         data = null;
       }
       if (!data) {
+        reachGoal('generation_failed', { reason: res.ok ? 'empty_response' : `http_${res.status}`, type: tab });
         setGeneratedResult({
           error: res.ok
             ? 'Сервер вернул пустой ответ. Попробуйте ещё раз.'
@@ -476,48 +483,62 @@ export default function DashboardPage() {
               break;
             }
             if (item?.status === 'failed') {
+              reachGoal('generation_failed', { reason: 'async_failed', type: tab });
               setGeneratedResult({ error: 'Генерация не удалась. Попробуйте другой стиль или повторите позже.' });
               return;
             }
           }
           if (!completed) {
+            reachGoal('generation_slow', { type: tab });
             setGeneratedResult({ error: 'Генерация занимает больше обычного. Обычно это 3–4 минуты; результат появится в истории после завершения.' });
             return;
           }
           addToWorkspace(completed);
+          reachGoal('generation_success', { type: tab, category, style: tab === 'card' ? cardStyle : selectedConcept || 'none' });
           setGeneratedResult(completed);
           setShowResult(true);
           fetch('/api/auth/me').then(r => r.json()).then(d => {
             if (d.success) {
               setUser(d.user);
-              if ((d.user.plan || 'free') === 'free' && d.user.generations_used >= d.user.generations_limit) setShowLimitModal(true);
+              if ((d.user.plan || 'free') === 'free' && d.user.generations_used >= d.user.generations_limit) {
+                reachGoal('limit_modal_show', { source: 'after_generation', plan: 'free' });
+                setShowLimitModal(true);
+              }
             }
           }).catch(() => {});
           return;
         }
         if (!data.imageUrl && !data.imageDataUrl) {
+          reachGoal('generation_failed', { reason: 'empty_image', type: tab });
           setGeneratedResult({ error: 'AI вернул пустое изображение. Попробуйте ещё раз.' });
           setShowResult(false);
           return;
         }
         addToWorkspace(data);
+        reachGoal('generation_success', { type: tab, category, style: tab === 'card' ? cardStyle : selectedConcept || 'none' });
         setGeneratedResult(data);
         setShowResult(true);
         // Refresh user counter (generations_used)
         fetch('/api/auth/me').then(r => r.json()).then(d => {
           if (d.success) {
             setUser(d.user);
-            if ((d.user.plan || 'free') === 'free' && d.user.generations_used >= d.user.generations_limit) setShowLimitModal(true);
+            if ((d.user.plan || 'free') === 'free' && d.user.generations_used >= d.user.generations_limit) {
+              reachGoal('limit_modal_show', { source: 'after_generation', plan: 'free' });
+              setShowLimitModal(true);
+            }
           }
         }).catch(() => {});
       } else {
         if (/лимит|quota|403/i.test(data.error || '')) {
+          reachGoal('limit_modal_show', { source: 'api_limit', plan: user?.plan || 'free' });
           setShowLimitModal(true);
         }
+        reachGoal('generation_failed', { reason: data.error || 'api_error', type: tab });
         setGeneratedResult({ error: data.error || 'Ошибка генерации' });
         setShowResult(false);
       }
     } catch (err) {
+      reachGoal('generation_failed', { reason: 'network_error', type: tab });
       setGeneratedResult({ error: err.message });
       setShowResult(false);
     } finally {
@@ -1080,7 +1101,7 @@ export default function DashboardPage() {
             <div className={styles.limitIcon}>⚡</div>
             <h3 className={styles.limitTitle}>Генерации закончились</h3>
             <p className={styles.limitText}>
-              Дарим 3 генерации по себестоимости — 90₽ за 3 карточки на 7 дней. Отличный способ попробовать ещё несколько вариантов без большого тарифа.
+              Сделаем ещё 3 варианта карточки за 90₽: можно попробовать другой стиль, фон или текст и выбрать лучший результат.
             </p>
             {user && (
               <div className={styles.limitStats}>
@@ -1089,7 +1110,7 @@ export default function DashboardPage() {
               </div>
             )}
             <div className={styles.limitActions}>
-              <a href="/checkout?plan=trial3" className={styles.limitPrimary}>Получить 3 генерации за 90₽</a>
+              <a href="/checkout?plan=trial3" className={styles.limitPrimary} onClick={() => reachGoal('trial_offer_click', { source: 'limit_modal' })}>Получить 3 генерации за 90₽</a>
               <a href="/profile" className={styles.limitSecondary}>Открыть профиль</a>
             </div>
           </div>
