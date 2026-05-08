@@ -1,7 +1,7 @@
 # AdGena — Проектная документация
 
 > AI-генератор рекламных креативов для маркетплейсов
-> Последнее обновление: 2026-05-06
+> Последнее обновление: 2026-05-08
 
 ---
 
@@ -12,7 +12,7 @@
 | Фреймворк | Next.js 16 (App Router, standalone output) |
 | UI | React 19, CSS Modules |
 | БД | SQLite (better-sqlite3), файл `data/adgena.db` |
-| AI | APIYI (gpt-image-2, gemini-3-pro, GPT 5.4) |
+| AI | OpenAI gpt-image-2 напрямую + APIYI Gemini/GPT |
 | Хранилище | Yandex Object Storage (S3-совместимое) |
 | Платежи | Robokassa (разовые + рекуррентные) |
 | OAuth | Google, Яндекс ID |
@@ -111,6 +111,7 @@ start.js                     — Точка входа (Next.js + встроен
 | GET | `/api/admin/users/history` | История генераций пользователя |
 | POST | `/api/admin/users/impersonate` | Войти как пользователь |
 | GET/POST | `/api/admin/subscriptions` | Список подписок / отмена |
+| GET/PUT | `/api/admin/settings` | Persistent settings админки (`settings` table) |
 | POST | `/api/admin/trigger-recurring` | Ручной запуск ребила |
 | GET/POST | `/api/admin/tickets` | Управление тикетами |
 | GET/PUT | `/api/admin/prompts` | Управление промптами |
@@ -125,6 +126,7 @@ start.js                     — Точка входа (Next.js + встроен
 | ID | Название | Цена (₽) | Цена ($) | Генераций | Ребил |
 |----|----------|-----------|----------|-----------|-------|
 | test | Тест | 1 | — | 1 | 1 час (только админ) |
+| trial3 | Пробный | 90 | $1 | 3 | 7 дней |
 | lite | Лайт | 390 | $4.50 | 10 | 30 дней |
 | standard | Стандарт | 990 | $11.50 | 30 | 30 дней |
 | pro | Про | 2,490 | $29 | 80 | 30 дней |
@@ -139,9 +141,9 @@ start.js                     — Точка входа (Next.js + встроен
 
 ### Как работает:
 1. Пользователь оплачивает → Robokassa с `Recurring: true`
-2. Robokassa → POST `/api/robokassa/result` → создаёт подписку (next_charge_at = +30 дней)
+2. Robokassa → POST `/api/robokassa/result` → создаёт подписку (`next_charge_at = +7 дней` для `trial3`, `+30 дней` для месячных тарифов)
 3. **CRON** (встроен в `start.js`, каждый час) → GET `/api/robokassa/recurring` → находит подписки к списанию → отправляет recurring в Robokassa
-4. Robokassa подтверждает → result callback → обновляет plan, сбрасывает generations_used, +30 дней
+4. Robokassa подтверждает → result callback → обновляет plan, сбрасывает generations_used, продлевает на период тарифа
 
 ### ✅ CRON: работает автоматически
 - Встроен в `start.js` — запускается каждый **1 час**
@@ -164,6 +166,39 @@ start.js                     — Точка входа (Next.js + встроен
 - Пока подписка в `processing`, CRON и ручной запуск не отправляют повторный ребил
 - Если `processing` завис более 3 часов, следующий запуск CRON вернёт подписку в `idle`
 - Тестовый план `test` доступен только админам через админку, прямой checkout для обычных пользователей запрещён
+- Недельный тариф `trial3`: 90₽, 3 генерации, ребил каждые 7 дней
+
+---
+
+## 🤖 AI-роутинг и промпты
+
+### Модельный роутинг
+- По умолчанию `card` и `ads` генерируются через OpenAI gpt-image-2 напрямую.
+- `photo` генерируется через Gemini (`gemini-3-pro-image-preview`) через APIYI.
+- В админке во вкладке **Инфраструктура → AI-генерация** есть toggle `Card/Ads роутинг`.
+- Toggle сохраняется в DB setting `image_layout_provider`:
+  - `openai` — карточки/реклама идут через OpenAI;
+  - `gemini` — карточки/реклама принудительно идут через Gemini/APIYI.
+- Env override `IMAGE_GEN_MODEL_FORCE` имеет приоритет над админским toggle.
+
+### Качество и UX генерации
+- Default качество OpenAI image generation: `low` (`OPENAI_IMAGE_QUALITY`, default `low`).
+- В dashboard progress-тексты нейтральные: без упоминания конкретной модели, с ожиданием 3–4 минуты.
+
+### Актуальные prompt-правила
+- Lifestyle card prompt усилен: должен быть реалистичной lifestyle-сценой без infographic/UI/ценников/бейджей.
+- Typography card prompt усилен отдельным детальным блоком под типографику.
+- Для lifestyle карточек есть отдельный layout block, чтобы они не выглядели как инфографика.
+
+---
+
+## 🎁 Popup-оффер после free/test лимита
+
+- После успешной бесплатной генерации, если free-лимит исчерпан, dashboard показывает limit modal.
+- При попытке генерации сверх лимита показывается тот же modal.
+- Основной CTA ведёт на `/checkout?plan=trial3`.
+- Текст оффера: `Дарим 3 генерации по себестоимости — 90₽ за 3 карточки на 7 дней`.
+- Checkout для `trial3` показывает согласие на автосписание каждые 7 дней перед Robokassa.
 
 ---
 
