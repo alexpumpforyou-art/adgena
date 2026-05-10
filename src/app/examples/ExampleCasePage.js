@@ -1,40 +1,7 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { EXAMPLE_CASES, EXAMPLE_CASE_SLUGS } from '@/lib/exampleCases';
-import styles from '../ExamplesPage.module.css';
+import styles from './ExamplesPage.module.css';
 
-export function generateStaticParams() {
-  return EXAMPLE_CASE_SLUGS.map((slug) => ({ slug }));
-}
-
-export function generateMetadata({ params }) {
-  const item = EXAMPLE_CASES[params.slug];
-
-  if (!item) {
-    return {};
-  }
-
-  return {
-    title: `${item.title} — пример AdGena`,
-    description: item.description,
-    alternates: { canonical: item.path },
-    openGraph: {
-      title: `${item.title} — пример AdGena`,
-      description: item.description,
-      url: item.path,
-      images: [{ url: item.afterImage }],
-      type: 'article',
-    },
-  };
-}
-
-export default function Page({ params }) {
-  const item = EXAMPLE_CASES[params.slug];
-
-  if (!item) {
-    notFound();
-  }
-
+export default function ExampleCasePage({ item }) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
