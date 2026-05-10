@@ -43,7 +43,6 @@ export async function generateSeoDraft(keywordRow) {
   const prompt = buildPrompt(keywordRow);
   const completion = await client.chat.completions.create({
     model,
-    temperature: 0.7,
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: 'Ты SEO-редактор SaaS AdGena. Пиши полезный, конкретный русский контент без выдуманных функций, гарантий, цифр продаж и медицинских/финансовых обещаний.' },
