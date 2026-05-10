@@ -58,7 +58,7 @@ export default function AdminContentPage() {
         </div>
         <div className={styles.actions}>
           <Link href="/admin" className={styles.secondary}>← Админка</Link>
-          <Link href="/seo" className={styles.secondary}>/seo</Link>
+          <Link href="/blog" className={styles.secondary}>/blog</Link>
         </div>
       </header>
 
@@ -91,7 +91,7 @@ export default function AdminContentPage() {
                 {page.status !== 'published' && <button className={styles.button} onClick={() => updateStatus(page.id, 'published')}>Publish</button>}
                 {page.status !== 'draft' && <button className={styles.secondary} onClick={() => updateStatus(page.id, 'draft')}>Draft</button>}
                 {page.status !== 'rejected' && <button className={styles.danger} onClick={() => updateStatus(page.id, 'rejected')}>Reject</button>}
-                {page.status === 'published' && <Link href={`/seo/${page.slug}`} className={styles.secondary}>Открыть</Link>}
+                {page.status === 'published' && <Link href={`/blog/${page.slug}`} className={styles.secondary}>Открыть</Link>}
               </div>
             </article>
           ))}

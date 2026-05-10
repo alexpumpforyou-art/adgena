@@ -26,7 +26,7 @@ export default function sitemap() {
     priority: 0.7,
   }));
   const generatedSeoPages = getPublishedContentPages(500).map((page) => ({
-    url: `${BASE_URL}/seo/${page.slug}`,
+    url: `${BASE_URL}/blog/${page.slug}`,
     lastModified: page.updated_at ? new Date(page.updated_at) : now,
     changeFrequency: 'weekly',
     priority: 0.65,
@@ -45,7 +45,7 @@ export default function sitemap() {
     ...toolPages,
     { url: `${BASE_URL}/examples`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     ...examplePages,
-    { url: `${BASE_URL}/seo`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${BASE_URL}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     ...generatedSeoPages,
     { url: `${BASE_URL}/news`, lastModified: now, changeFrequency: 'daily', priority: 0.6 },
     ...newsPages,

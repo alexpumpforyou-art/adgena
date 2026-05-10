@@ -23,7 +23,7 @@ export default function SeoGeneratedPage({ page }) {
             <img src="/logo-icon.webp" alt="AdGena" />
             <span>AdGena</span>
           </Link>
-          <p className={styles.kicker}>AI SEO guide</p>
+          <p className={styles.kicker}>Блог AdGena</p>
           <h1>{page.h1}</h1>
           <p className={styles.lead}>{page.lead}</p>
           <div className={styles.actions}>
