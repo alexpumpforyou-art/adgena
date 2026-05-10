@@ -378,6 +378,9 @@ export default function AdminPage() {
         <button className={`${styles.tab} ${activeTab === 'infra' ? styles.tabActive : ''}`} onClick={() => setActiveTab('infra')}>
           🏗️ Инфраструктура
         </button>
+        <Link href="/admin/content" className={styles.tab}>
+          🔎 SEO Engine
+        </Link>
       </div>
 
       {/* ===== TAB: USERS ===== */}

@@ -185,6 +185,39 @@ function initTables() {
     );
     CREATE INDEX IF NOT EXISTS idx_referral_withdrawals_user ON referral_withdrawals(user_id);
     CREATE INDEX IF NOT EXISTS idx_referral_withdrawals_status ON referral_withdrawals(status);
+
+    CREATE TABLE IF NOT EXISTS content_keywords (
+      id TEXT PRIMARY KEY,
+      keyword TEXT UNIQUE NOT NULL,
+      cluster TEXT DEFAULT '',
+      intent TEXT DEFAULT '',
+      priority INTEGER DEFAULT 50,
+      status TEXT DEFAULT 'new',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS content_pages (
+      id TEXT PRIMARY KEY,
+      keyword_id TEXT,
+      slug TEXT UNIQUE NOT NULL,
+      keyword TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      h1 TEXT NOT NULL,
+      lead TEXT NOT NULL,
+      body_json TEXT NOT NULL,
+      status TEXT DEFAULT 'draft',
+      model TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      published_at TEXT,
+      FOREIGN KEY (keyword_id) REFERENCES content_keywords(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_content_keywords_status ON content_keywords(status, priority);
+    CREATE INDEX IF NOT EXISTS idx_content_pages_status ON content_pages(status, updated_at);
+    CREATE INDEX IF NOT EXISTS idx_content_pages_slug ON content_pages(slug);
   `);
 
   // Migrate: add role column if missing
@@ -590,6 +623,105 @@ export function logEmail({ email, type = 'otp', provider = 'resend', status = 's
   } catch (err) {
     console.error('[logEmail] error:', err.message);
   }
+}
+
+// ========================================
+// AI SEO CONTENT ENGINE
+// ========================================
+
+export function seedContentKeywords(keywords = []) {
+  const d = getDb();
+  const stmt = d.prepare(`
+    INSERT OR IGNORE INTO content_keywords (id, keyword, cluster, intent, priority)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  const tx = d.transaction((items) => {
+    for (const item of items) {
+      const keyword = typeof item === 'string' ? item : item.keyword;
+      if (!keyword?.trim()) continue;
+      stmt.run(crypto.randomUUID(), keyword.trim(), item.cluster || '', item.intent || '', item.priority || 50);
+    }
+  });
+  tx(keywords);
+}
+
+export function listContentKeywords(limit = 200) {
+  return getDb().prepare('SELECT * FROM content_keywords ORDER BY status ASC, priority DESC, created_at DESC LIMIT ?').all(limit);
+}
+
+export function getNextContentKeywords(limit = 3) {
+  return getDb().prepare(`
+    SELECT * FROM content_keywords
+    WHERE status = 'new'
+    ORDER BY priority DESC, created_at ASC
+    LIMIT ?
+  `).all(limit);
+}
+
+export function upsertContentPage(page) {
+  const d = getDb();
+  const id = page.id || crypto.randomUUID();
+  d.prepare(`
+    INSERT INTO content_pages (id, keyword_id, slug, keyword, title, description, h1, lead, body_json, status, model)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(slug) DO UPDATE SET
+      keyword = excluded.keyword,
+      title = excluded.title,
+      description = excluded.description,
+      h1 = excluded.h1,
+      lead = excluded.lead,
+      body_json = excluded.body_json,
+      status = excluded.status,
+      model = excluded.model,
+      updated_at = datetime('now')
+  `).run(
+    id,
+    page.keywordId || null,
+    page.slug,
+    page.keyword,
+    page.title,
+    page.description,
+    page.h1,
+    page.lead,
+    JSON.stringify(page.body || {}),
+    page.status || 'draft',
+    page.model || ''
+  );
+  if (page.keywordId) {
+    d.prepare("UPDATE content_keywords SET status = 'generated', updated_at = datetime('now') WHERE id = ?").run(page.keywordId);
+  }
+  return id;
+}
+
+export function listContentPages(status = null, limit = 100) {
+  const d = getDb();
+  const rows = status
+    ? d.prepare('SELECT * FROM content_pages WHERE status = ? ORDER BY updated_at DESC LIMIT ?').all(status, limit)
+    : d.prepare('SELECT * FROM content_pages ORDER BY updated_at DESC LIMIT ?').all(limit);
+  return rows.map(parseContentPage);
+}
+
+export function getContentPageBySlug(slug, statuses = null) {
+  const d = getDb();
+  const row = statuses?.length
+    ? d.prepare(`SELECT * FROM content_pages WHERE slug = ? AND status IN (${statuses.map(() => '?').join(',')})`).get(slug, ...statuses)
+    : d.prepare('SELECT * FROM content_pages WHERE slug = ?').get(slug);
+  return row ? parseContentPage(row) : null;
+}
+
+export function updateContentPageStatus(id, status) {
+  const published = status === 'published' ? ", published_at = COALESCE(published_at, datetime('now'))" : '';
+  getDb().prepare(`UPDATE content_pages SET status = ?, updated_at = datetime('now')${published} WHERE id = ?`).run(status, id);
+}
+
+export function getPublishedContentPages(limit = 500) {
+  return listContentPages('published', limit);
+}
+
+function parseContentPage(row) {
+  let body = {};
+  try { body = JSON.parse(row.body_json || '{}'); } catch { body = {}; }
+  return { ...row, body };
 }
 
 export default getDb;
