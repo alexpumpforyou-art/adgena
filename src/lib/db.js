@@ -737,6 +737,16 @@ export function updateContentPageStatus(id, status) {
   getDb().prepare(`UPDATE content_pages SET status = ?, updated_at = datetime('now')${published} WHERE id = ?`).run(status, id);
 }
 
+export function getNextDraftContentPage() {
+  const row = getDb().prepare(`
+    SELECT * FROM content_pages
+    WHERE status = 'draft'
+    ORDER BY updated_at ASC
+    LIMIT 1
+  `).get();
+  return row ? parseContentPage(row) : null;
+}
+
 export function getPublishedContentPages(limit = 500) {
   return listContentPages('published', limit);
 }
@@ -813,6 +823,22 @@ export function hasNewsSourceUrl(sourceUrl) {
 export function updateNewsStatus(id, status) {
   const published = status === 'published' ? ", published_at = COALESCE(published_at, datetime('now'))" : '';
   getDb().prepare(`UPDATE news_items SET status = ?, updated_at = datetime('now')${published} WHERE id = ?`).run(status, id);
+}
+
+export function getNextPublishableNewsItem(minQualityScore = 80, maxAgeHours = 72) {
+  const row = getDb().prepare(`
+    SELECT * FROM news_items
+    WHERE status = 'draft'
+      AND quality_score >= ?
+      AND (
+        source_published_at IS NULL
+        OR datetime(source_published_at) >= datetime('now', ?)
+        OR julianday(source_published_at) IS NULL
+      )
+    ORDER BY quality_score DESC, source_published_at DESC, updated_at ASC
+    LIMIT 1
+  `).get(minQualityScore, `-${maxAgeHours} hours`);
+  return row ? parseNewsItem(row) : null;
 }
 
 export function getPublishedNewsItems(limit = 500) {
