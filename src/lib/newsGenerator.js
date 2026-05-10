@@ -39,17 +39,16 @@ export async function generateNewsDraft(candidate) {
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 120000 });
   const completion = await client.chat.completions.create({
     model,
-    temperature: 0.65,
     response_format: { type: 'json_object' },
     messages: [
-      { role: 'system', content: 'Ты редактор AI News Digest для AdGena. Делай краткий русскоязычный пересказ новости с источником, анализом для маркетинга/e-commerce и мягким упоминанием AdGena. Не копируй исходный текст.' },
+      { role: 'system', content: 'Ты русскоязычный редактор AI News Digest для AdGena. Все публичные поля ответа должны быть на русском языке, кроме slug. Переводи англоязычные заголовки и описания на русский. Делай краткий пересказ новости с источником, анализом для маркетинга/e-commerce и мягким упоминанием AdGena. Не копируй исходный текст.' },
       { role: 'user', content: buildNewsPrompt(candidate) },
     ],
   });
 
   const raw = completion.choices?.[0]?.message?.content || '{}';
   const data = JSON.parse(raw);
-  const title = cleanText(data.title, candidate.title, 100);
+  const title = cleanText(data.title, `AI-новость от ${candidate.sourceName}`, 100);
 
   return {
     sourceName: candidate.sourceName,
@@ -59,7 +58,7 @@ export async function generateNewsDraft(candidate) {
     slug: slugifyRu(data.slug || title),
     title,
     description: cleanText(data.description, `AI-новость: ${title}`, 160),
-    summary: cleanText(data.summary, candidate.description || title, 500),
+    summary: cleanText(data.summary, title, 500),
     body: normalizeNewsBody(data, candidate),
     imageUrl: '',
     status: (Number(data.qualityScore || 0) >= 85 && process.env.NEWS_AUTO_PUBLISH === 'true') ? 'published' : 'draft',
@@ -75,19 +74,21 @@ URL: ${candidate.url}
 Дата: ${candidate.publishedAt || 'не указана'}
 Описание из RSS: ${candidate.description || ''}
 
-Сделай AI news digest на русском. Верни строго JSON без markdown:
+Сделай AI news digest на русском языке. Верни строго JSON без markdown:
 {
   "slug": "latin-url-slug",
-  "title": "новостной SEO title до 90 символов",
-  "description": "meta description до 155 символов",
-  "summary": "краткое резюме 2-3 предложения",
+  "title": "русский новостной SEO title до 90 символов",
+  "description": "русский meta description до 155 символов",
+  "summary": "русское краткое резюме 2-3 предложения",
   "sections": [{"title":"Что произошло","text":"..."},{"title":"Почему это важно","text":"..."},{"title":"Что это значит для маркетинга и e-commerce","text":"..."}],
-  "adgenaAngle": "мягкий абзац про то, что AdGena помогает делать AI-визуалы для карточек, рекламы и соцсетей",
-  "sourceNote": "Источник: ...",
+  "adgenaAngle": "русский мягкий абзац про то, что AdGena помогает делать AI-визуалы для карточек, рекламы и соцсетей",
+  "sourceNote": "русская строка с указанием источника",
   "qualityScore": 0-100
 }
 
 Правила:
+- Все поля, кроме slug и URL, должны быть на русском языке.
+- Английский заголовок обязательно переведи и адаптируй на русский.
 - Не копируй текст источника, делай summary + commentary.
 - Не выдумывай факты сверх RSS-описания.
 - Если фактов мало, пиши осторожно: "согласно источнику", "компания сообщила".
