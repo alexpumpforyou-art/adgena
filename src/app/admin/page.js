@@ -381,6 +381,9 @@ export default function AdminPage() {
         <Link href="/admin/content" className={styles.tab}>
           🔎 SEO Engine
         </Link>
+        <Link href="/admin/news" className={styles.tab}>
+          🗞️ AI News
+        </Link>
       </div>
 
       {/* ===== TAB: USERS ===== */}

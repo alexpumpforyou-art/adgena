@@ -218,6 +218,29 @@ function initTables() {
     CREATE INDEX IF NOT EXISTS idx_content_keywords_status ON content_keywords(status, priority);
     CREATE INDEX IF NOT EXISTS idx_content_pages_status ON content_pages(status, updated_at);
     CREATE INDEX IF NOT EXISTS idx_content_pages_slug ON content_pages(slug);
+
+    CREATE TABLE IF NOT EXISTS news_items (
+      id TEXT PRIMARY KEY,
+      source_name TEXT DEFAULT '',
+      source_url TEXT UNIQUE NOT NULL,
+      source_title TEXT NOT NULL,
+      source_published_at TEXT,
+      slug TEXT UNIQUE NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      body_json TEXT NOT NULL,
+      image_url TEXT DEFAULT '',
+      status TEXT DEFAULT 'draft',
+      quality_score INTEGER DEFAULT 0,
+      model TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      published_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_news_items_status ON news_items(status, updated_at);
+    CREATE INDEX IF NOT EXISTS idx_news_items_slug ON news_items(slug);
   `);
 
   // Migrate: add role column if missing
@@ -719,6 +742,84 @@ export function getPublishedContentPages(limit = 500) {
 }
 
 function parseContentPage(row) {
+  let body = {};
+  try { body = JSON.parse(row.body_json || '{}'); } catch { body = {}; }
+  return { ...row, body };
+}
+
+// ========================================
+// AI NEWS DIGEST
+// ========================================
+
+export function upsertNewsItem(item) {
+  const d = getDb();
+  const id = item.id || crypto.randomUUID();
+  d.prepare(`
+    INSERT INTO news_items (id, source_name, source_url, source_title, source_published_at, slug, title, description, summary, body_json, image_url, status, quality_score, model)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(source_url) DO UPDATE SET
+      source_name = excluded.source_name,
+      source_title = excluded.source_title,
+      source_published_at = excluded.source_published_at,
+      slug = excluded.slug,
+      title = excluded.title,
+      description = excluded.description,
+      summary = excluded.summary,
+      body_json = excluded.body_json,
+      image_url = excluded.image_url,
+      status = excluded.status,
+      quality_score = excluded.quality_score,
+      model = excluded.model,
+      updated_at = datetime('now')
+  `).run(
+    id,
+    item.sourceName || '',
+    item.sourceUrl,
+    item.sourceTitle,
+    item.sourcePublishedAt || null,
+    item.slug,
+    item.title,
+    item.description,
+    item.summary,
+    JSON.stringify(item.body || {}),
+    item.imageUrl || '',
+    item.status || 'draft',
+    item.qualityScore || 0,
+    item.model || ''
+  );
+  return id;
+}
+
+export function listNewsItems(status = null, limit = 100) {
+  const d = getDb();
+  const rows = status
+    ? d.prepare('SELECT * FROM news_items WHERE status = ? ORDER BY updated_at DESC LIMIT ?').all(status, limit)
+    : d.prepare('SELECT * FROM news_items ORDER BY updated_at DESC LIMIT ?').all(limit);
+  return rows.map(parseNewsItem);
+}
+
+export function getNewsItemBySlug(slug, statuses = null) {
+  const d = getDb();
+  const row = statuses?.length
+    ? d.prepare(`SELECT * FROM news_items WHERE slug = ? AND status IN (${statuses.map(() => '?').join(',')})`).get(slug, ...statuses)
+    : d.prepare('SELECT * FROM news_items WHERE slug = ?').get(slug);
+  return row ? parseNewsItem(row) : null;
+}
+
+export function hasNewsSourceUrl(sourceUrl) {
+  return !!getDb().prepare('SELECT id FROM news_items WHERE source_url = ?').get(sourceUrl);
+}
+
+export function updateNewsStatus(id, status) {
+  const published = status === 'published' ? ", published_at = COALESCE(published_at, datetime('now'))" : '';
+  getDb().prepare(`UPDATE news_items SET status = ?, updated_at = datetime('now')${published} WHERE id = ?`).run(status, id);
+}
+
+export function getPublishedNewsItems(limit = 500) {
+  return listNewsItems('published', limit);
+}
+
+function parseNewsItem(row) {
   let body = {};
   try { body = JSON.parse(row.body_json || '{}'); } catch { body = {}; }
   return { ...row, body };

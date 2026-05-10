@@ -1,7 +1,7 @@
 import { SEO_PAGE_SLUGS, SEO_PAGES } from '@/lib/seoPages';
 import { TOOL_PAGE_SLUGS, TOOL_PAGES } from '@/lib/toolPages';
 import { EXAMPLE_CASE_SLUGS, EXAMPLE_CASES } from '@/lib/exampleCases';
-import { getPublishedContentPages } from '@/lib/db';
+import { getPublishedContentPages, getPublishedNewsItems } from '@/lib/db';
 
 const BASE_URL = 'https://adgena.pro';
 
@@ -31,6 +31,12 @@ export default function sitemap() {
     changeFrequency: 'weekly',
     priority: 0.65,
   }));
+  const newsPages = getPublishedNewsItems(500).map((item) => ({
+    url: `${BASE_URL}/news/${item.slug}`,
+    lastModified: item.updated_at ? new Date(item.updated_at) : now,
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }));
 
   return [
     { url: BASE_URL, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
@@ -41,6 +47,8 @@ export default function sitemap() {
     ...examplePages,
     { url: `${BASE_URL}/seo`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
     ...generatedSeoPages,
+    { url: `${BASE_URL}/news`, lastModified: now, changeFrequency: 'daily', priority: 0.6 },
+    ...newsPages,
     { url: `${BASE_URL}/auth`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
