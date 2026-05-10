@@ -28,6 +28,7 @@ export default function sitemap() {
   return [
     { url: BASE_URL, lastModified: now, changeFrequency: 'weekly', priority: 1.0 },
     ...seoPages,
+    { url: `${BASE_URL}/tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     ...toolPages,
     { url: `${BASE_URL}/examples`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     ...examplePages,
