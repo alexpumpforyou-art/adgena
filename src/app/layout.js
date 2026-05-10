@@ -30,12 +30,15 @@ export const metadata = {
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png', sizes: '192x192' },
       { url: '/favicon-48.png', type: 'image/png', sizes: '48x48' },
       { url: '/favicon-192.png', type: 'image/png', sizes: '192x192' },
       { url: '/favicon-512.png', type: 'image/png', sizes: '512x512' },
     ],
+    shortcut: ['/favicon.ico'],
     apple: [{ url: '/favicon-180.png', sizes: '180x180' }],
   },
+  manifest: '/site.webmanifest',
   openGraph: {
     title: 'AdGena — AI-генератор карточек товара для Wildberries и Ozon',
     description: 'Создавайте продающие карточки товара, инфографику и рекламные креативы за секунды.',
@@ -112,12 +115,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ru" className={`${manrope.variable} ${unbounded.variable}`}>
       <head>
+        <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.png" type="image/png" sizes="192x192" />
         <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
         <link rel="icon" href="/favicon-180.png" type="image/png" sizes="180x180" />
         <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
         <link rel="icon" href="/favicon-512.png" type="image/png" sizes="512x512" />
         <link rel="apple-touch-icon" href="/favicon-180.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script dangerouslySetInnerHTML={{ __html: `
           (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
